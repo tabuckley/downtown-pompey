@@ -4,7 +4,7 @@
   "description": "Alternative Archiving — Downtown Pompey",
   "main": "index.html",
   "scripts": {
-    "start": "npx serve ."
+    "start": "npx serve . --cors"
   },
   "keywords": ["archive", "portsmouth", "pompey"],
   "author": "Thomas Buckley",
