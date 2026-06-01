@@ -28,6 +28,13 @@
     --radius:       2px;
 }
 
+body[data-mode="scrapbook"] {
+    background-image: url('textures/paper-pink.jpg');
+    background-size: cover;
+    background-attachment: fixed;
+    background-blend-mode: multiply;
+}
+
 /* ===== ACCESSIBLE MODE ===== */
 [data-mode="accessible"] {
     --bg:           #ffffff;
