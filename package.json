@@ -1,0 +1,12 @@
+{
+  "name": "alternative-archiving",
+  "version": "1.0.0",
+  "description": "Alternative Archiving — Downtown Pompey",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": ["archive", "portsmouth", "pompey"],
+  "author": "Thomas Buckley",
+  "license": "MIT"
+}
