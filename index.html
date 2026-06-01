@@ -4,19 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alternative Archiving | Downtown Pompey</title>
+
+    <!-- Three.js via importmap -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
     <link rel="stylesheet" href="styles.css">
 </head>
 <body data-mode="editorial">
 
+    <!-- Custom cursor (editorial mode only) -->
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-dot" id="cursorDot"></div>
+
     <!-- Mode Switcher -->
     <div class="mode-switcher">
-        <button class="mode-btn active" data-mode="editorial">Editorial</button>
-        <button class="mode-btn" data-mode="scrapbook">Scrapbook</button>
-        <button class="mode-btn" data-mode="easy">Easy</button>
+        <button class="mode-btn active" data-mode="editorial" title="Art experience">Editorial</button>
+        <button class="mode-btn" data-mode="scrapbook" title="Visual & fun">Scrapbook</button>
+        <button class="mode-btn" data-mode="accessible" title="For researchers & accessibility">Accessible</button>
     </div>
 
     <!-- Hero Section -->
     <section id="home" class="hero">
+
+        <!-- Three.js canvas — editorial mode only -->
+        <canvas id="hero-canvas"></canvas>
+
         <nav class="side-nav">
             <ul class="side-nav-menu">
                 <li><a href="#home">Home</a></li>
@@ -82,6 +101,6 @@
         </ul>
     </div>
 
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>

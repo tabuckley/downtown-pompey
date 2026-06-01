@@ -1,3 +1,5 @@
+import { initScene, loadModel } from './three-scene.js';
+
 const SHEET_ID = '1INsPP2txSuajj7NYpGTbBhy-6nnTTgtbqhg-veMtgyk';
 
 function sheetUrl(tabName) {
@@ -7,8 +9,7 @@ function sheetUrl(tabName) {
 async function fetchSheet(tabName) {
     const res = await fetch(sheetUrl(tabName));
     if (!res.ok) throw new Error(`Failed to fetch sheet: ${tabName}`);
-    const csv = await res.text();
-    return parseCSV(csv);
+    return parseCSV(await res.text());
 }
 
 function parseCSV(csv) {
@@ -22,16 +23,14 @@ function parseCSV(csv) {
 
 function parseCSVRow(row) {
     const result = [];
-    let current = '';
-    let inQuotes = false;
+    let current = '', inQuotes = false;
     for (let i = 0; i < row.length; i++) {
         const ch = row[i];
         if (ch === '"') {
             if (inQuotes && row[i + 1] === '"') { current += '"'; i++; }
             else inQuotes = !inQuotes;
         } else if (ch === ',' && !inQuotes) {
-            result.push(current);
-            current = '';
+            result.push(current); current = '';
         } else {
             current += ch;
         }
@@ -41,8 +40,8 @@ function parseCSVRow(row) {
 }
 
 // ===== MODE SWITCHING =====
-const MODES = ['editorial', 'scrapbook', 'easy'];
 let currentMode = localStorage.getItem('aa-mode') || 'editorial';
+let sceneReady = false;
 
 function setMode(mode) {
     currentMode = mode;
@@ -51,15 +50,40 @@ function setMode(mode) {
     document.querySelectorAll('.mode-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.mode === mode);
     });
+    if (mode === 'editorial' && !sceneReady) {
+        initScene();
+        sceneReady = true;
+    }
 }
 
 document.querySelectorAll('.mode-btn').forEach(btn => {
     btn.addEventListener('click', () => setMode(btn.dataset.mode));
 });
 
+// ===== CUSTOM CURSOR =====
+const cursor = document.getElementById('cursor');
+const cursorDot = document.getElementById('cursorDot');
+let curX = 0, curY = 0, dotX = 0, dotY = 0;
+
+document.addEventListener('mousemove', (e) => {
+    curX = e.clientX;
+    curY = e.clientY;
+    cursorDot.style.left = curX + 'px';
+    cursorDot.style.top  = curY + 'px';
+});
+
+function animateCursor() {
+    dotX += (curX - dotX) * 0.08;
+    dotY += (curY - dotY) * 0.08;
+    cursor.style.left = dotX + 'px';
+    cursor.style.top  = dotY + 'px';
+    requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
 // ===== MOBILE NAV =====
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-const mobileNav = document.getElementById('mobileNav');
+const mobileNav     = document.getElementById('mobileNav');
 const mobileNavClose = document.getElementById('mobileNavClose');
 
 mobileMenuBtn.addEventListener('click', () => mobileNav.classList.add('open'));
@@ -70,13 +94,14 @@ mobileNav.querySelectorAll('a').forEach(link => {
 
 // ===== ACTIVE NAV ON SCROLL =====
 const sections = document.querySelectorAll('section[id]');
-const navLinks = document.querySelectorAll('.side-nav-menu a');
+const navLinks  = document.querySelectorAll('.side-nav-menu a');
 
 const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
             navLinks.forEach(link => {
-                link.style.color = link.getAttribute('href') === `#${entry.target.id}` ? 'var(--white)' : '';
+                link.style.color = link.getAttribute('href') === `#${entry.target.id}`
+                    ? 'var(--text)' : '';
             });
         }
     });
@@ -84,35 +109,26 @@ const observer = new IntersectionObserver((entries) => {
 
 sections.forEach(s => observer.observe(s));
 
-// ===== INIT =====
+// ===== SHEET + RENDER =====
 async function init() {
     setMode(currentMode);
 
     try {
         const [index, config] = await Promise.all([
             fetchSheet('_index'),
-            fetchSheet('_config')
+            fetchSheet('_config'),
         ]);
 
-        // Apply config
         const cfg = Object.fromEntries(config.map(r => [r.key, r.value]));
-        if (cfg.site_title) document.title = cfg.site_title;
-        if (cfg.mode_1_name) updateModeName(0, cfg.mode_1_name);
-        if (cfg.mode_2_name) updateModeName(1, cfg.mode_2_name);
-        if (cfg.mode_3_name) updateModeName(2, cfg.mode_3_name);
+        if (cfg.site_title) document.title = cfg.site_title + ' | Downtown Pompey';
 
-        // Render archive list from index
         const published = index.filter(p => p.status === 'published');
         renderArchive(published);
 
     } catch (err) {
-        console.warn('Sheet not yet published or accessible:', err.message);
+        console.warn('Sheet not yet accessible:', err.message);
+        document.querySelector('.archive-empty').textContent = 'Archive coming soon.';
     }
-}
-
-function updateModeName(i, name) {
-    const btns = document.querySelectorAll('.mode-btn');
-    if (btns[i]) btns[i].textContent = name;
 }
 
 function renderArchive(projects) {
@@ -120,10 +136,14 @@ function renderArchive(projects) {
     if (!list) return;
     list.innerHTML = '';
 
+    if (!projects.length) {
+        list.innerHTML = '<p class="archive-empty">No published projects yet.</p>';
+        return;
+    }
+
     projects.forEach(p => {
         const row = document.createElement('div');
         row.className = 'archive-row';
-        row.dataset.project = p.id;
         row.innerHTML = `
             <div class="archive-year">${p.year}</div>
             <div class="archive-info">
@@ -139,10 +159,14 @@ function renderArchive(projects) {
 async function openProject(project) {
     try {
         const items = await fetchSheet(project.tab);
-        console.log(`Loaded ${items.length} items from ${project.tab}`);
-        // Project viewer will be built out next
+        const models = items.filter(i => i.type === '3d' && i.url);
+        models.forEach((m, idx) => {
+            const x = (idx - models.length / 2) * 3;
+            loadModel(m.url, [x, 0, 0]);
+        });
+        console.log(`Loaded project: ${project.title}`, items);
     } catch (err) {
-        console.warn('Could not load project tab:', err.message);
+        console.warn('Could not load project:', err.message);
     }
 }
 
