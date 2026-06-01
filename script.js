@@ -114,13 +114,16 @@ async function init() {
     setMode(currentMode);
 
     try {
-        const [index, config] = await Promise.all([
+        const [index, config, copy] = await Promise.all([
             fetchSheet('_index'),
             fetchSheet('_config'),
+            fetchSheet('_copy'),
         ]);
 
         const cfg = Object.fromEntries(config.map(r => [r.key, r.value]));
         if (cfg.site_title) document.title = cfg.site_title + ' | Downtown Pompey';
+
+        applyCopy(copy);
 
         const published = index.filter(p => p.status === 'published');
         renderArchive(published);
@@ -129,6 +132,14 @@ async function init() {
         console.warn('Sheet not yet accessible:', err.message);
         document.querySelector('.archive-empty').textContent = 'Archive coming soon.';
     }
+}
+
+function applyCopy(rows) {
+    const copy = Object.fromEntries(rows.map(r => [r.key, r.value]));
+    document.querySelectorAll('[data-copy]').forEach(el => {
+        const val = copy[el.dataset.copy];
+        if (val) el.textContent = val;
+    });
 }
 
 function renderArchive(projects) {
