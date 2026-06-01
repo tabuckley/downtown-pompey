@@ -6,7 +6,14 @@
     <title>Alternative Archiving | Downtown Pompey</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body data-mode="editorial">
+
+    <!-- Mode Switcher -->
+    <div class="mode-switcher">
+        <button class="mode-btn active" data-mode="editorial">Editorial</button>
+        <button class="mode-btn" data-mode="scrapbook">Scrapbook</button>
+        <button class="mode-btn" data-mode="easy">Easy</button>
+    </div>
 
     <!-- Hero Section -->
     <section id="home" class="hero">
@@ -20,9 +27,12 @@
         </nav>
 
         <div class="hero-content">
+            <p class="hero-kicker">Downtown Pompey</p>
             <h1 class="hero-title">Alternative<br>Archiving</h1>
-            <p class="hero-subtitle">Downtown Pompey</p>
+            <p class="hero-subtitle">An ongoing record of spaces, people<br>and moments that resist official history.</p>
         </div>
+
+        <div class="hero-scroll-hint">Scroll</div>
     </section>
 
     <!-- About Section -->
@@ -38,7 +48,7 @@
         <div class="container">
             <h2 class="section-title">Archive</h2>
             <div class="archive-list">
-                <!-- Archive entries go here -->
+                <p class="archive-empty">Loading archive...</p>
             </div>
         </div>
     </section>
@@ -46,7 +56,7 @@
     <!-- Contact Section -->
     <section id="contact" class="contact">
         <div class="container">
-            <h2 class="section-title" style="text-align: center;">Get Involved</h2>
+            <h2 class="section-title">Get Involved</h2>
             <p class="contact-text">Have something to contribute to the archive?</p>
             <div class="social-links">
                 <a href="mailto:Thomas@Thomas-Buckley.com" class="social-btn">Email</a>

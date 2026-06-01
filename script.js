@@ -41,8 +41,8 @@ function parseCSVRow(row) {
 }
 
 // ===== MODE SWITCHING =====
-const MODES = ['gallery', 'archive', 'playground'];
-let currentMode = localStorage.getItem('aa-mode') || 'gallery';
+const MODES = ['editorial', 'scrapbook', 'easy'];
+let currentMode = localStorage.getItem('aa-mode') || 'editorial';
 
 function setMode(mode) {
     currentMode = mode;
@@ -52,6 +52,10 @@ function setMode(mode) {
         btn.classList.toggle('active', btn.dataset.mode === mode);
     });
 }
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => setMode(btn.dataset.mode));
+});
 
 // ===== MOBILE NAV =====
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
