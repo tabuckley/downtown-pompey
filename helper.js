@@ -1,4 +1,14 @@
 // Archie — the site helper. Scripted, page-aware, Clippy-spirited.
+//
+// Dialogue is editable from the Google Sheet without touching code: add
+// rows to the _copy tab using the keys
+//   archie_<page>_intro   — shown automatically on first visit
+//   archie_<page>_tip_1, archie_<page>_tip_2, ... — cycled by "another tip?"
+// where <page> is landing / editorial / scrapbook / accessible / process.
+// The defaults below are the fallback used until the sheet loads (or if a
+// key is left blank), so the helper always has something to say.
+
+import { getCopyMap } from './copy.js';
 
 // Placeholder torso-up figure until the final PNG is ready — swap this one
 // constant for the real asset URL (e.g. an R2 link) and nothing else changes.
@@ -12,7 +22,9 @@ const ARCHIE_IMAGE_URL = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
 </svg>
 `.trim());
 
-const SCRIPTS = {
+const MAX_TIPS = 8;
+
+const DEFAULT_SCRIPTS = {
     landing: {
         intro: "Hello! I'm Archie, the archive helper. Pick one of the buttons above — each shows the archive in a different way.",
         tips: [
@@ -55,12 +67,31 @@ const SCRIPTS = {
     },
 };
 
+// Merges any archie_<page>_intro / archie_<page>_tip_N values found in the
+// _copy sheet on top of the defaults. Mutates `script` in place so anything
+// already holding a reference (buildHelper's closures) picks up the change.
+function applyArchieOverrides(page, script) {
+    getCopyMap().then(copy => {
+        const introKey = `archie_${page}_intro`;
+        if (copy[introKey]) script.intro = copy[introKey];
+
+        const tips = [];
+        for (let i = 1; i <= MAX_TIPS; i++) {
+            const val = copy[`archie_${page}_tip_${i}`];
+            if (val) tips.push(val);
+        }
+        if (tips.length) script.tips = tips;
+    });
+}
+
 function buildHelper() {
     const mount = document.getElementById('site-helper');
     if (!mount) return;
 
     const page = document.body.dataset.page || 'landing';
-    const script = SCRIPTS[page] || SCRIPTS.landing;
+    // Clone the default so sheet overrides don't mutate the shared constant.
+    const script = { ...(DEFAULT_SCRIPTS[page] || DEFAULT_SCRIPTS.landing) };
+    applyArchieOverrides(page, script);
     let tipIndex = -1;
 
     const widget = document.createElement('div');
