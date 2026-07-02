@@ -713,7 +713,7 @@ a.mode-btn {
 
 .home-logo {
     display: block;
-    height: 30px;
+    height: 90px;
     width: auto;
 }
 
@@ -988,7 +988,7 @@ body.landing {
 
 /* ===== SCRAPBOOK ARCHIVE PAGE ===== */
 .scrap-header {
-    padding: 6rem 4vw 0.5rem;
+    padding: 8.5rem 4vw 0.5rem;
 }
 
 .scrap-title {
@@ -1009,7 +1009,7 @@ body.landing {
     position: sticky;
     top: 0;
     z-index: 200;
-    padding: 3.4rem 4vw 0.7rem;
+    padding: 8rem 4vw 0.7rem;
     background: color-mix(in srgb, var(--bg) 84%, transparent);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -1281,7 +1281,7 @@ body.landing {
    itself has no accessible representation of what's on display. */
 .room-items-toggle {
     position: fixed;
-    top: 4.4rem;
+    top: 8.6rem;
     left: 1.6rem;
     z-index: 100;
     font-family: var(--font-mono);
@@ -1412,7 +1412,7 @@ body.is-hovering .cursor {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 6rem 10vw;
+    padding: 9rem 10vw 6rem;
 }
 
 .shell-kicker {
@@ -1452,12 +1452,12 @@ body.is-hovering .cursor {
     .landing-btn { min-height: 130px; }
 
     .page-topbar { padding: 0.6rem 0.7rem; flex-wrap: wrap; row-gap: 0.4rem; }
-    .page-topbar .home-logo { height: 24px; }
+    .page-topbar .home-logo { height: 60px; }
     .page-topbar .mode-btn { padding: 0.4rem 0.6rem; font-size: 0.52rem; }
 
-    .scrap-header { padding: 6.5rem 4vw 0.5rem; }
+    .scrap-header { padding: 9rem 4vw 0.5rem; }
     /* Reserve enough space for the topbar even when it wraps to two rows */
-    .filter-bar { padding-top: 5.6rem; }
+    .filter-bar { padding-top: 8.5rem; }
     /* 16px min prevents iOS Safari from auto-zooming the page on focus */
     .search-input { font-size: 1rem; }
     .media-grid { columns: 2 150px; padding: 1rem 3vw 3rem; }
@@ -1474,7 +1474,7 @@ body.is-hovering .cursor {
     .lightbox-next { right: 1.2rem; }
 
     .info-panel { width: 100vw; }
-    .shell-main { padding: 6rem 8vw; }
+    .shell-main { padding: 9rem 8vw 6rem; }
 }
 
 /* ===== REDUCED MOTION ===== */
