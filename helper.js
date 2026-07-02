@@ -89,14 +89,21 @@ function buildHelper() {
     mount.appendChild(widget);
 
     const textEl = bubble.querySelector('.helper-bubble-text');
+    let autoCloseTimer = null;
 
-    function say(text) {
+    // autoClose is only used for the unprompted first-visit intro, so it
+    // doesn't sit over the page indefinitely; anything the user opens on
+    // purpose (clicking Archie, "another tip") stays open until dismissed.
+    function say(text, autoClose = false) {
+        clearTimeout(autoCloseTimer);
         textEl.textContent = text;
         bubble.classList.add('open');
         btn.setAttribute('aria-expanded', 'true');
+        if (autoClose) autoCloseTimer = setTimeout(close, 6000);
     }
 
     function close() {
+        clearTimeout(autoCloseTimer);
         bubble.classList.remove('open');
         btn.setAttribute('aria-expanded', 'false');
         sessionStorage.setItem('aa-helper-seen-' + page, '1');
@@ -118,9 +125,15 @@ function buildHelper() {
         if (action === 'close') close();
     });
 
-    // Auto-introduce once per page per session
+    // Hovering or focusing the bubble means someone is actually reading it —
+    // cancel the auto-dismiss so it doesn't vanish mid-sentence.
+    bubble.addEventListener('mouseenter', () => clearTimeout(autoCloseTimer));
+    bubble.addEventListener('focusin', () => clearTimeout(autoCloseTimer));
+
+    // Auto-introduce once per page per session, then auto-dismiss shortly
+    // after so it doesn't sit over the page indefinitely.
     if (!sessionStorage.getItem('aa-helper-seen-' + page)) {
-        setTimeout(() => say(script.intro), 1400);
+        setTimeout(() => say(script.intro, true), 1400);
     }
 }
 

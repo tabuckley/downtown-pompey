@@ -901,9 +901,9 @@ body.landing {
 
 .helper-figure-img {
     display: block;
-    height: 16.66vh;
-    min-height: 130px;
-    max-height: 240px;
+    height: 14vh;
+    min-height: 100px;
+    max-height: 190px;
     width: auto;
     filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.35));
 }
@@ -911,16 +911,18 @@ body.landing {
 .helper-bubble {
     position: relative;
     align-self: flex-end;
-    width: min(300px, calc(100vw - 2.8rem));
+    width: clamp(190px, 62vw, 240px);
+    max-height: 40vh;
+    overflow-y: auto;
     background: var(--card-bg);
     border: 1px solid var(--border);
     color: var(--text);
-    border-radius: 14px;
-    padding: 1rem 1.1rem;
+    border-radius: 12px;
+    padding: 0.8rem 0.9rem;
     margin-bottom: 0.3rem;
     font-family: var(--font-mono);
-    font-size: 0.78rem;
-    line-height: 1.55;
+    font-size: 0.7rem;
+    line-height: 1.5;
     opacity: 0;
     visibility: hidden;
     transform: translateY(8px);
