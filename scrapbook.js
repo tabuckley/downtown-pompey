@@ -1,4 +1,4 @@
-import { fetchSheet } from './sheet.js';
+import { fetchSheet, yearFrom, dateStamp } from './sheet.js';
 
 const TAGS = [
     'Event', 'Press', 'Drag', 'Capture', 'Landmarks', 'Medium', 'Identity',
@@ -12,6 +12,7 @@ const TAGS = [
 ];
 
 const BATCH = 20;
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let allItems = [];
 let filtered = [];
@@ -30,17 +31,22 @@ const sentinel = document.getElementById('scrollSentinel');
 const lightbox = document.getElementById('lightbox');
 const lightboxMedia = document.getElementById('lightboxMedia');
 const lightboxInfo = document.getElementById('lightboxInfo');
+const lightboxClose = document.getElementById('lightboxClose');
 let lightboxIndex = -1;
+let lastFocused = null;
 
 // ===== TAG BAR =====
 TAGS.forEach(tag => {
     const pill = document.createElement('button');
     pill.className = 'tag-pill';
     pill.textContent = tag;
+    pill.setAttribute('aria-pressed', 'false');
     pill.addEventListener('click', () => {
         if (activeTags.has(tag)) activeTags.delete(tag);
         else activeTags.add(tag);
-        pill.classList.toggle('active');
+        const active = activeTags.has(tag);
+        pill.classList.toggle('active', active);
+        pill.setAttribute('aria-pressed', String(active));
         applyFilters();
     });
     tagBar.appendChild(pill);
@@ -60,26 +66,43 @@ clearBtn.addEventListener('click', () => {
     activeTags.clear();
     query = '';
     searchInput.value = '';
-    tagBar.querySelectorAll('.tag-pill.active').forEach(p => p.classList.remove('active'));
+    tagBar.querySelectorAll('.tag-pill.active').forEach(p => {
+        p.classList.remove('active');
+        p.setAttribute('aria-pressed', 'false');
+    });
     applyFilters();
 });
 
 // ===== FILTERING =====
+// Expand each comma-separated tag into the full value plus its slash parts,
+// so "Coastal/Edge" on an item matches the "Seaside/Coastal/Edge" pill and
+// vice versa.
 function itemTags(item) {
-    return (item.tags || '').toLowerCase().split(',').map(t => t.trim()).filter(Boolean);
+    const parts = [];
+    (item.tags || '').toLowerCase().split(',').forEach(raw => {
+        const full = raw.trim();
+        if (!full) return;
+        parts.push(full);
+        if (full.includes('/')) {
+            full.split('/').forEach(p => {
+                const s = p.trim();
+                if (s) parts.push(s);
+            });
+        }
+    });
+    return parts;
 }
 
 function matchesTag(item, tag) {
     const tags = itemTags(item);
     const wanted = tag.toLowerCase();
     if (tags.includes(wanted)) return true;
-    // "Seaside/Coastal/Edge" matches any of its parts
     return wanted.split('/').some(part => tags.includes(part.trim()));
 }
 
 function matchesQuery(item) {
     if (!query) return true;
-    const haystack = [item.title, item.description, item.credit, item.tags]
+    const haystack = [item.title, item.description, item.credit, item.tags, item.project, item.type]
         .join(' ').toLowerCase();
     return query.split(/\s+/).every(word => haystack.includes(word));
 }
@@ -90,16 +113,30 @@ function applyFilters() {
     );
     shown = 0;
     grid.innerHTML = '';
-    gridStatus.textContent = '';
     clearBtn.classList.toggle('visible', activeTags.size > 0 || query.length > 0);
-    loadMore();
+    fillViewport();
     updateCount();
 }
 
 function updateCount() {
-    if (!allItems.length) return;
+    if (!allItems.length) {
+        itemCount.textContent = 'The archive is growing';
+        return;
+    }
     const label = filtered.length === 1 ? 'item' : 'items';
     itemCount.textContent = `${filtered.length} ${label}`;
+}
+
+function updateStatus() {
+    if (!allItems.length) {
+        gridStatus.textContent = 'Nothing in the archive yet — check back soon.';
+    } else if (!filtered.length) {
+        gridStatus.textContent = 'Nothing matches those filters — try removing one.';
+    } else if (shown >= filtered.length) {
+        gridStatus.textContent = '· end of the archive ·';
+    } else {
+        gridStatus.textContent = '';
+    }
 }
 
 // ===== RENDERING =====
@@ -116,8 +153,10 @@ function mediaElement(item, { large = false } = {}) {
         v.muted = !large;
         v.loop = true;
         v.playsInline = true;
-        v.controls = large;
-        if (!large) v.autoplay = true;
+        v.preload = 'metadata';
+        // Respect reduced motion: no autoplay, give controls instead
+        v.controls = large || reduceMotion;
+        if (!large && !reduceMotion) v.autoplay = true;
         return v;
     }
     if (item.type === 'audio') {
@@ -143,48 +182,68 @@ function loadMore() {
     batch.forEach(item => {
         const card = document.createElement('article');
         card.className = 'media-item';
+        card.tabIndex = 0;
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', `View ${item.title || 'archive item'}`);
         card.appendChild(mediaElement(item));
 
         const caption = document.createElement('div');
         caption.className = 'media-item-caption';
-        const year = item.date ? new Date(item.date).getFullYear() : '';
+        const year = yearFrom(item.date, item.projectYear);
         caption.innerHTML = `
             <div class="media-item-title">${esc(item.title)}</div>
             <div class="media-item-meta">${esc([item.project, year].filter(Boolean).join(' · '))}</div>
         `;
         card.appendChild(caption);
 
-        const index = filtered.indexOf(item);
-        card.addEventListener('click', () => openLightbox(index));
+        card.addEventListener('click', (e) => {
+            // Let the inline audio player be used without opening the lightbox
+            if (e.target.closest('audio')) return;
+            openLightbox(filtered.indexOf(item));
+        });
+        card.addEventListener('keydown', (e) => {
+            if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('audio')) {
+                e.preventDefault();
+                openLightbox(filtered.indexOf(item));
+            }
+        });
         grid.appendChild(card);
     });
     shown += batch.length;
-
-    if (!allItems.length) return;
-    if (!filtered.length) {
-        gridStatus.textContent = activeTags.size || query
-            ? 'Nothing matches those filters — try removing one.'
-            : 'Nothing in the archive yet — check back soon.';
-    } else if (shown >= filtered.length) {
-        gridStatus.textContent = '· end of the archive ·';
-    }
+    updateStatus();
 }
 
 // ===== INFINITE SCROLL =====
+// IntersectionObserver only fires on state *transitions*, so if a batch
+// doesn't push the sentinel out of range the callback would never re-fire.
+// fillViewport keeps loading (a frame at a time) until the sentinel clears
+// the trigger zone or everything is shown.
+function sentinelNear() {
+    return sentinel.getBoundingClientRect().top < window.innerHeight + 600;
+}
+
+function fillViewport() {
+    loadMore();
+    if (shown < filtered.length && sentinelNear()) {
+        requestAnimationFrame(fillViewport);
+    }
+}
+
 new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting && shown < filtered.length) loadMore();
+    if (entries[entries.length - 1].isIntersecting && shown < filtered.length) fillViewport();
 }, { rootMargin: '600px' }).observe(sentinel);
 
 // ===== LIGHTBOX =====
 function openLightbox(index) {
     if (index < 0 || index >= filtered.length) return;
+    const wasOpen = lightbox.classList.contains('open');
     lightboxIndex = index;
     const item = filtered[index];
 
     lightboxMedia.innerHTML = '';
     lightboxMedia.appendChild(mediaElement(item, { large: true }));
 
-    const year = item.date ? new Date(item.date).getFullYear() : '';
+    const year = yearFrom(item.date, item.projectYear);
     const meta = [item.project, year, item.credit ? `© ${item.credit}` : '']
         .filter(Boolean).join(' · ');
     const tags = itemTags(item);
@@ -196,25 +255,49 @@ function openLightbox(index) {
         <div class="lb-tags">${tags.map(t => `<span class="lb-tag">${esc(t)}</span>`).join('')}</div>
     `;
     lightbox.classList.add('open');
+
+    if (!wasOpen) {
+        lastFocused = document.activeElement;
+        document.body.style.overflow = 'hidden';
+        lightboxClose.focus();
+    }
 }
 
 function closeLightbox() {
     lightbox.classList.remove('open');
     lightboxMedia.innerHTML = '';
     lightboxIndex = -1;
+    document.body.style.overflow = '';
+    if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+    lastFocused = null;
 }
 
-document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+lightboxClose.addEventListener('click', closeLightbox);
 document.getElementById('lightboxPrev').addEventListener('click', () => openLightbox(lightboxIndex - 1));
 document.getElementById('lightboxNext').addEventListener('click', () => openLightbox(lightboxIndex + 1));
 lightbox.addEventListener('click', (e) => {
     if (e.target === lightbox || e.target === lightboxMedia) closeLightbox();
 });
+
 document.addEventListener('keydown', (e) => {
     if (!lightbox.classList.contains('open')) return;
     if (e.key === 'Escape') closeLightbox();
     if (e.key === 'ArrowLeft') openLightbox(lightboxIndex - 1);
     if (e.key === 'ArrowRight') openLightbox(lightboxIndex + 1);
+    if (e.key === 'Tab') {
+        // Keep focus inside the dialog while it is open
+        const focusables = lightbox.querySelectorAll('button, audio, video, [href], [tabindex]:not([tabindex="-1"])');
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+        }
+    }
 });
 
 // ===== DATA LOAD =====
@@ -233,13 +316,8 @@ async function init() {
             });
         });
 
-        allItems.sort((a, b) => (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0));
+        allItems.sort((a, b) => dateStamp(b.date) - dateStamp(a.date));
         applyFilters();
-
-        if (!allItems.length) {
-            itemCount.textContent = 'The archive is growing';
-            gridStatus.textContent = 'Nothing in the archive yet — check back soon.';
-        }
     } catch (err) {
         console.warn('Archive load failed:', err.message);
         itemCount.textContent = 'Archive unavailable';

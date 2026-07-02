@@ -66,6 +66,7 @@ function buildHelper() {
     const btn = document.createElement('button');
     btn.className = 'helper-btn';
     btn.setAttribute('aria-label', 'Site helper');
+    btn.setAttribute('aria-expanded', 'false');
     btn.innerHTML = `
         <svg viewBox="0 0 40 40" aria-hidden="true">
             <path d="M7 15 L20 8 L33 15 L33 32 a3 3 0 0 1 -3 3 L10 35 a3 3 0 0 1 -3 -3 Z" fill="#c8b89a" stroke="#3a2a10" stroke-width="1.5"/>
@@ -84,10 +85,12 @@ function buildHelper() {
     function say(text) {
         textEl.textContent = text;
         bubble.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
     }
 
     function close() {
         bubble.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
         sessionStorage.setItem('aa-helper-seen-' + page, '1');
     }
 

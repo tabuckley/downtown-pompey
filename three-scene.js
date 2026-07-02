@@ -9,6 +9,7 @@ let clickCb = null;
 let hoverCb = null;
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // Wall slots for framed photos: back wall, then left and right walls.
 const PHOTO_SLOTS = [
@@ -76,6 +77,25 @@ export function initRoom(canvasId = 'room-canvas') {
     window.addEventListener('resize', onResize);
     canvas.addEventListener('click', onClick);
     canvas.addEventListener('pointermove', onPointerMove);
+    canvas.addEventListener('pointerleave', () => { if (hoverCb) hoverCb(false); });
+
+    // Touch look-around: drag pans the camera (mousemove never fires on touch)
+    let dragging = false, lastPX = 0, lastPY = 0;
+    canvas.addEventListener('pointerdown', (e) => {
+        if (e.pointerType !== 'mouse') {
+            dragging = true;
+            lastPX = e.clientX;
+            lastPY = e.clientY;
+        }
+    });
+    canvas.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        mouseX = clamp(mouseX - (e.clientX - lastPX) / 150, -2, 2);
+        mouseY = clamp(mouseY - (e.clientY - lastPY) / 200, -1.5, 1.5);
+        lastPX = e.clientX;
+        lastPY = e.clientY;
+    });
+    window.addEventListener('pointerup', () => { dragging = false; });
 
     animate();
 }
@@ -83,68 +103,81 @@ export function initRoom(canvasId = 'room-canvas') {
 export function onObjectClick(cb) { clickCb = cb; }
 export function onObjectHover(cb) { hoverCb = cb; }
 
+// Resolves with the item's data on success, null on failure — callers can
+// count what actually made it into the scene. Slots are only consumed on
+// success so a failed load doesn't leave a permanent gap on the wall.
 export function addFramedPhoto(url, data) {
-    if (!scene) return;
-    const slot = PHOTO_SLOTS[photoSlot % PHOTO_SLOTS.length];
-    photoSlot++;
+    return new Promise((resolve) => {
+        if (!scene) return resolve(null);
+        new THREE.TextureLoader().load(url, (tex) => {
+            tex.colorSpace = THREE.SRGBColorSpace;
+            const aspect = tex.image.width / tex.image.height;
+            let h = 2.6;
+            let w = h * aspect;
+            if (w > 4.4) { w = 4.4; h = w / aspect; }
 
-    new THREE.TextureLoader().load(url, (tex) => {
-        tex.colorSpace = THREE.SRGBColorSpace;
-        const aspect = tex.image.width / tex.image.height;
-        let h = 2.6;
-        let w = h * aspect;
-        if (w > 4.4) { w = 4.4; h = w / aspect; }
+            const group = new THREE.Group();
 
-        const group = new THREE.Group();
+            const frame = new THREE.Mesh(
+                new THREE.BoxGeometry(w + 0.28, h + 0.28, 0.12),
+                new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.4 })
+            );
+            group.add(frame);
 
-        const frame = new THREE.Mesh(
-            new THREE.BoxGeometry(w + 0.28, h + 0.28, 0.12),
-            new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.4 })
-        );
-        group.add(frame);
+            const photo = new THREE.Mesh(
+                new THREE.PlaneGeometry(w, h),
+                new THREE.MeshBasicMaterial({ map: tex })
+            );
+            photo.position.z = 0.07;
+            group.add(photo);
 
-        const photo = new THREE.Mesh(
-            new THREE.PlaneGeometry(w, h),
-            new THREE.MeshBasicMaterial({ map: tex })
-        );
-        photo.position.z = 0.07;
-        group.add(photo);
-
-        group.position.set(...slot.pos);
-        group.rotation.y = slot.rotY;
-        group.userData.itemData = data;
-        scene.add(group);
-        clickables.push(group);
-    }, undefined, (err) => console.warn('Photo load failed:', url, err));
+            const slot = PHOTO_SLOTS[photoSlot % PHOTO_SLOTS.length];
+            photoSlot++;
+            group.position.set(...slot.pos);
+            group.rotation.y = slot.rotY;
+            group.userData.itemData = data;
+            scene.add(group);
+            clickables.push(group);
+            resolve(data);
+        }, undefined, (err) => {
+            console.warn('Photo load failed:', url, err);
+            resolve(null);
+        });
+    });
 }
 
 export function addModel(url, data) {
-    if (!scene) return;
-    const slot = MODEL_SLOTS[modelSlot % MODEL_SLOTS.length];
-    modelSlot++;
+    return new Promise((resolve) => {
+        if (!scene) return resolve(null);
+        new GLTFLoader().load(url, (gltf) => {
+            const model = gltf.scene;
 
-    new GLTFLoader().load(url, (gltf) => {
-        const model = gltf.scene;
+            // Normalise size so the largest dimension is ~2.2 units
+            const box = new THREE.Box3().setFromObject(model);
+            const size = box.getSize(new THREE.Vector3());
+            const scale = 2.2 / Math.max(size.x, size.y, size.z, 0.001);
+            model.scale.setScalar(scale);
 
-        // Normalise size so the largest dimension is ~2.2 units
-        const box = new THREE.Box3().setFromObject(model);
-        const size = box.getSize(new THREE.Vector3());
-        const scale = 2.2 / Math.max(size.x, size.y, size.z, 0.001);
-        model.scale.setScalar(scale);
+            // Sit it on the floor
+            const slot = MODEL_SLOTS[modelSlot % MODEL_SLOTS.length];
+            modelSlot++;
+            const scaledBox = new THREE.Box3().setFromObject(model);
+            model.position.set(slot[0], slot[1] - scaledBox.min.y, slot[2]);
 
-        // Sit it on the floor
-        const scaledBox = new THREE.Box3().setFromObject(model);
-        model.position.set(slot[0], slot[1] - scaledBox.min.y, slot[2]);
-
-        model.userData.itemData = data;
-        scene.add(model);
-        clickables.push(model);
-        spinners.push(model);
-    }, undefined, (err) => console.warn('Model load failed:', url, err));
+            model.userData.itemData = data;
+            scene.add(model);
+            clickables.push(model);
+            spinners.push(model);
+            resolve(data);
+        }, undefined, (err) => {
+            console.warn('Model load failed:', url, err);
+            resolve(null);
+        });
+    });
 }
 
 export function addPlaceholders() {
-    if (!scene) return;
+    if (!scene) return [];
     const wireMat = new THREE.MeshStandardMaterial({
         color: 0xffffff, wireframe: true, transparent: true, opacity: 0.5,
     });
@@ -153,6 +186,7 @@ export function addPlaceholders() {
         new THREE.TorusKnotGeometry(0.8, 0.24, 64, 8),
         new THREE.OctahedronGeometry(1.0),
     ];
+    const placed = [];
     geos.forEach((geo, i) => {
         const mesh = new THREE.Mesh(geo, wireMat.clone());
         const slot = MODEL_SLOTS[i % MODEL_SLOTS.length];
@@ -166,7 +200,13 @@ export function addPlaceholders() {
         scene.add(mesh);
         clickables.push(mesh);
         spinners.push(mesh);
+        placed.push(mesh.userData.itemData);
     });
+    return placed;
+}
+
+function clamp(v, min, max) {
+    return Math.min(max, Math.max(min, v));
 }
 
 function findItemData(object) {
@@ -212,13 +252,17 @@ function onResize() {
 function animate() {
     requestAnimationFrame(animate);
 
-    targetX += (mouseX - targetX) * 0.04;
-    targetY += (mouseY - targetY) * 0.04;
-    camera.position.x = targetX * 2.2;
-    camera.position.y = 0.4 - targetY * 1.2;
-    camera.lookAt(0, 0.2, -2);
+    // Under prefers-reduced-motion: static camera, no spinning — the scene
+    // still renders so async-loaded photos/models appear.
+    if (!reduceMotion) {
+        targetX += (mouseX - targetX) * 0.04;
+        targetY += (mouseY - targetY) * 0.04;
+        camera.position.x = targetX * 2.2;
+        camera.position.y = 0.4 - targetY * 1.2;
+        camera.lookAt(0, 0.2, -2);
 
-    spinners.forEach(obj => { obj.rotation.y += 0.004; });
+        spinners.forEach(obj => { obj.rotation.y += 0.004; });
+    }
 
     renderer.render(scene, camera);
 }

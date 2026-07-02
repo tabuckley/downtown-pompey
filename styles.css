@@ -5,7 +5,7 @@
 :root {
     --bg:           #0d0d0d;
     --text:         #f0ece4;
-    --muted:        #666;
+    --muted:        #8f8f8f;
     --accent:       #e8000a;
     --border:       #222;
     --card-bg:      #111;
@@ -104,8 +104,15 @@ body {
     transform: translateX(-50%) rotate(-0.5deg);
 }
 
-/* ===== CUSTOM CURSOR (editorial only) ===== */
-[data-mode="editorial"] { cursor: none; }
+/* ===== CUSTOM CURSOR (editorial, fine-pointer devices only) ===== */
+/* cursor.js adds .has-custom-cursor after confirming (pointer: fine) — this
+   keeps touch/coarse-pointer devices on their normal cursor with no stray
+   ring/dot elements. cursor:none applies to every element (not just body)
+   so the native pointer doesn't reappear over links/buttons. */
+body.has-custom-cursor,
+body.has-custom-cursor * {
+    cursor: none;
+}
 
 .cursor,
 .cursor-dot {
@@ -117,8 +124,8 @@ body {
     transition: opacity 0.3s;
 }
 
-[data-mode="editorial"] .cursor,
-[data-mode="editorial"] .cursor-dot { opacity: 1; }
+body.has-custom-cursor .cursor,
+body.has-custom-cursor .cursor-dot { opacity: 1; }
 
 .cursor {
     width: 36px;
@@ -709,12 +716,11 @@ a.mode-btn {
 .home-link:hover { color: var(--text); }
 
 /* ===== LANDING PAGE ===== */
-/* Pink paper border, white centre panel. Swap the texture URL for the R2
-   public URL once the bucket is public. */
+/* Pink paper border, white centre panel. Texture served from Cloudflare R2. */
 body.landing {
     min-height: 100vh;
     background-color: #d8a8a0;
-    background-image: url('textures/paper-pink.jpg');
+    background-image: url('https://pub-ecb21a155b924fadb12efa79814f20b3.r2.dev/Pink-Texture.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -932,13 +938,15 @@ body.landing {
     font-size: 0.78rem;
     line-height: 1.55;
     opacity: 0;
+    visibility: hidden;
     transform: translateY(8px);
     pointer-events: none;
-    transition: opacity 0.25s ease, transform 0.25s ease;
+    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
 }
 
 .helper-bubble.open {
     opacity: 1;
+    visibility: visible;
     transform: none;
     pointer-events: auto;
 }
@@ -1019,7 +1027,11 @@ body.landing {
     transition: border-color 0.2s;
 }
 
-.search-input:focus { border-color: var(--accent); }
+.search-input:focus {
+    border-color: var(--accent);
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
 
 .search-input::placeholder { color: var(--muted); }
 
@@ -1259,6 +1271,64 @@ body.landing {
     z-index: 100;
     max-width: 40ch;
     line-height: 1.8;
+    pointer-events: none;
+}
+
+/* Keyboard/screen-reader route to the room's content, since the 3D canvas
+   itself has no accessible representation of what's on display. */
+.room-items-toggle {
+    position: fixed;
+    top: 4.4rem;
+    left: 1.6rem;
+    z-index: 100;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--muted);
+}
+
+.room-items-toggle summary {
+    cursor: pointer;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    background: rgba(13, 13, 13, 0.6);
+    list-style: none;
+}
+
+.room-items-toggle summary::-webkit-details-marker { display: none; }
+
+.room-items-toggle[open] summary { margin-bottom: 0.5rem; }
+
+.room-items-toggle ul {
+    list-style: none;
+    background: rgba(13, 13, 13, 0.85);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.5rem;
+    max-width: 240px;
+}
+
+.room-items-toggle li { margin: 0.15rem 0; }
+
+.room-items-toggle button {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-align: left;
+    padding: 0.35rem 0.5rem;
+    width: 100%;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.room-items-toggle button:hover,
+.room-items-toggle button:focus-visible {
+    background: rgba(255, 255, 255, 0.08);
+    outline: 1px solid var(--accent);
 }
 
 .info-panel {
@@ -1378,11 +1448,15 @@ body.is-hovering .cursor {
     .landing-nav { grid-template-columns: 1fr; }
     .landing-btn { min-height: 130px; }
 
-    .page-topbar { padding: 0.7rem 0.8rem; flex-wrap: wrap; }
-    .page-topbar .mode-btn { padding: 0.4rem 0.7rem; font-size: 0.55rem; }
+    .page-topbar { padding: 0.6rem 0.7rem; flex-wrap: wrap; row-gap: 0.4rem; }
+    .page-topbar .home-link { font-size: 0.55rem; letter-spacing: 0.12em; }
+    .page-topbar .mode-btn { padding: 0.4rem 0.6rem; font-size: 0.52rem; }
 
-    .scrap-header { padding: 5.5rem 4vw 0.5rem; }
-    .filter-bar { padding-top: 3rem; }
+    .scrap-header { padding: 6.5rem 4vw 0.5rem; }
+    /* Reserve enough space for the topbar even when it wraps to two rows */
+    .filter-bar { padding-top: 5.6rem; }
+    /* 16px min prevents iOS Safari from auto-zooming the page on focus */
+    .search-input { font-size: 1rem; }
     .media-grid { columns: 2 150px; padding: 1rem 3vw 3rem; }
 
     .lightbox.open { flex-direction: column; }
@@ -1398,5 +1472,19 @@ body.is-hovering .cursor {
 
     .info-panel { width: 100vw; }
     .shell-main { padding: 6rem 8vw; }
+}
+
+/* ===== REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .hover-shake:hover,
+    .hover-wave:hover { animation: none; }
+    .helper-eye { animation: none; }
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
