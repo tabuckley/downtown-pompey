@@ -709,100 +709,91 @@ a.mode-btn {
 .home-link:hover { color: var(--text); }
 
 /* ===== LANDING PAGE ===== */
+/* Pink paper border, white centre panel. Swap the texture URL for the R2
+   public URL once the bucket is public. */
 body.landing {
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    background-color: #d8a8a0;
+    background-image: url('textures/paper-pink.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    padding: clamp(1.2rem, 3.5vw, 3rem);
 }
 
-.landing-header {
-    padding: 2.5rem 8vw 1rem;
-    position: relative;
-    z-index: 2;
+.landing-panel {
+    background: #faf8f4;
+    color: #1a1a1a;
+    min-height: calc(100vh - 2 * clamp(1.2rem, 3.5vw, 3rem));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2.6rem;
+    padding: 3rem clamp(1.5rem, 5vw, 4rem);
+    box-shadow: 0 12px 40px rgba(60, 20, 20, 0.3);
+}
+
+.landing-header { text-align: center; }
+
+.landing-logo {
+    max-width: min(280px, 65vw);
+    height: auto;
+    display: block;
+    margin: 0 auto 1.4rem;
 }
 
 .landing-kicker {
     font-family: var(--font-mono);
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     letter-spacing: 0.4em;
     text-transform: uppercase;
-    color: var(--accent);
+    color: #e8000a;
     margin-bottom: 0.6rem;
 }
 
 .landing-title {
     font-family: var(--font-display);
-    font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+    font-size: clamp(1.8rem, 4vw, 3rem);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: -0.02em;
+    color: #1a1a1a;
 }
 
 .landing-nav {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 2rem 8vw;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+    width: 100%;
+    max-width: 1000px;
 }
 
 .landing-btn {
     position: relative;
-    display: block;
-    padding: 1.5rem 0;
-    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 240px;
+    border: 1px solid #1a1a1a;
     text-decoration: none;
-    color: var(--text);
+    color: #1a1a1a;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.landing-btn:last-child { border-bottom: 1px solid var(--border); }
-
-.landing-btn-label {
-    position: relative;
-    z-index: 2;
-    display: grid;
-    grid-template-columns: 4rem 1fr auto;
-    align-items: baseline;
-    gap: 1.5rem;
-}
-
-.landing-btn-number {
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    color: var(--muted);
-}
-
-.landing-btn-name {
-    font-family: var(--font-display);
-    font-size: clamp(2rem, 5vw, 3.4rem);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: -0.02em;
-    line-height: 1.05;
-    transition: color 0.2s, transform 0.25s ease;
-}
-
-.landing-btn-desc {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--muted);
-}
-
-.landing-btn:hover .landing-btn-name {
-    color: var(--accent);
-    transform: translateX(0.5rem);
+.landing-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 6px 6px 0 rgba(26, 26, 26, 0.15);
 }
 
 .landing-btn-preview {
-    position: fixed;
+    position: absolute;
     inset: 0;
-    z-index: 0;
     opacity: 0;
     background-size: cover;
     background-position: center;
-    transition: opacity 0.35s ease;
+    transition: opacity 0.3s ease;
     pointer-events: none;
 }
 
@@ -810,30 +801,72 @@ body.landing {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(rgba(13,13,13,0.55), rgba(13,13,13,0.8));
+    background: linear-gradient(transparent 35%, rgba(250, 248, 244, 0.96));
 }
 
 .landing-btn:hover .landing-btn-preview { opacity: 1; }
 
-.landing-footer {
-    padding: 1.5rem 8vw 2.5rem;
+.landing-btn-label {
     position: relative;
     z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 1.2rem 1.3rem;
 }
+
+.landing-btn-number {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: #999;
+}
+
+.landing-btn-name {
+    font-family: var(--font-display);
+    font-size: clamp(1.3rem, 2.4vw, 1.8rem);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    transition: color 0.2s;
+}
+
+.landing-btn:hover .landing-btn-name { color: #e8000a; }
+
+.landing-btn-desc {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #777;
+}
+
+.process-link {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    color: #555;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    transition: color 0.2s;
+}
+
+.process-link:hover { color: #e8000a; }
+
+.landing-footer { width: 100%; max-width: 1000px; }
 
 .logo-strip {
     display: flex;
     gap: 1.5rem;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
 }
 
 .logo-placeholder {
     width: 110px;
     height: 44px;
-    border: 1px dashed #333;
+    border: 1px dashed #bbb;
     position: relative;
-    opacity: 0.6;
 }
 
 .logo-placeholder::after {
@@ -847,7 +880,7 @@ body.landing {
     font-size: 0.55rem;
     letter-spacing: 0.3em;
     text-transform: uppercase;
-    color: #444;
+    color: #bbb;
 }
 
 /* ===== SITE HELPER ===== */
@@ -1336,12 +1369,14 @@ body.is-hovering .cursor {
 
 /* ===== REDESIGN RESPONSIVE ===== */
 @media (max-width: 768px) {
-    .landing-header { padding: 2rem 6vw 0.5rem; }
-    .landing-nav { padding: 1.5rem 6vw; }
-    .landing-btn-label { grid-template-columns: 2.4rem 1fr; }
-    .landing-btn-desc { grid-column: 2; font-size: 0.58rem; }
-    .landing-btn-name { font-size: 1.7rem; }
-    .landing-footer { padding: 1rem 6vw 5.5rem; }
+    body.landing { padding: 0.9rem; }
+    .landing-panel {
+        min-height: calc(100vh - 1.8rem);
+        padding: 2.5rem 1.2rem 5.5rem;
+        gap: 2rem;
+    }
+    .landing-nav { grid-template-columns: 1fr; }
+    .landing-btn { min-height: 130px; }
 
     .page-topbar { padding: 0.7rem 0.8rem; flex-wrap: wrap; }
     .page-topbar .mode-btn { padding: 0.4rem 0.7rem; font-size: 0.55rem; }

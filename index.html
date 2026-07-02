@@ -6,61 +6,59 @@
     <title>Alternative Archiving | Downtown Pompey</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="landing">
+<body class="landing" data-page="landing">
 
-    <div class="landing-header">
-        <p class="landing-kicker">Downtown Pompey</p>
-        <h1 class="landing-title">Alternative Archiving</h1>
+    <div class="landing-panel">
+
+        <header class="landing-header">
+            <img src="images/dtp-logo.png" alt="Downtown Pompey" class="landing-logo" onerror="this.style.display='none'">
+            <p class="landing-kicker">Downtown Pompey presents</p>
+            <h1 class="landing-title">Alternative Archiving</h1>
+        </header>
+
+        <nav class="landing-nav">
+
+            <a href="editorial.html" class="landing-btn">
+                <div class="landing-btn-preview" style="background-color:#1a1a1a; background-image:url('images/preview-editorial.jpg');"></div>
+                <div class="landing-btn-label">
+                    <span class="landing-btn-number">01</span>
+                    <span class="landing-btn-name">Editorial</span>
+                    <span class="landing-btn-desc">The art experience</span>
+                </div>
+            </a>
+
+            <a href="scrapbook.html" class="landing-btn">
+                <div class="landing-btn-preview" style="background-color:#ede5d8; background-image:url('images/preview-scrapbook.jpg');"></div>
+                <div class="landing-btn-label">
+                    <span class="landing-btn-number">02</span>
+                    <span class="landing-btn-name">Scrapbook</span>
+                    <span class="landing-btn-desc">Visual &amp; fun</span>
+                </div>
+            </a>
+
+            <a href="accessible.html" class="landing-btn">
+                <div class="landing-btn-preview" style="background-color:#e8e8e8; background-image:url('images/preview-accessible.jpg');"></div>
+                <div class="landing-btn-label">
+                    <span class="landing-btn-number">03</span>
+                    <span class="landing-btn-name">Accessible</span>
+                    <span class="landing-btn-desc">Clear &amp; easy to use</span>
+                </div>
+            </a>
+
+        </nav>
+
+        <a href="process.html" class="process-link">&#8627; How this archive was made &mdash; The Process</a>
+
+        <footer class="landing-footer">
+            <div class="logo-strip">
+                <div class="logo-placeholder"></div>
+                <div class="logo-placeholder"></div>
+                <div class="logo-placeholder"></div>
+                <div class="logo-placeholder"></div>
+            </div>
+        </footer>
+
     </div>
-
-    <nav class="landing-nav">
-
-        <a href="editorial.html" class="landing-btn">
-            <div class="landing-btn-preview" style="background-color:#1a1a1a; background-image:url('images/preview-editorial.jpg');"></div>
-            <div class="landing-btn-label">
-                <span class="landing-btn-number">01</span>
-                <span class="landing-btn-name">Editorial</span>
-                <span class="landing-btn-desc">High — art experience</span>
-            </div>
-        </a>
-
-        <a href="scrapbook.html" class="landing-btn">
-            <div class="landing-btn-preview" style="background-color:#ede5d8; background-image:url('images/preview-scrapbook.jpg');"></div>
-            <div class="landing-btn-label">
-                <span class="landing-btn-number">02</span>
-                <span class="landing-btn-name">Scrapbook</span>
-                <span class="landing-btn-desc">Medium — visual & fun</span>
-            </div>
-        </a>
-
-        <a href="accessible.html" class="landing-btn">
-            <div class="landing-btn-preview" style="background-color:#e8e8e8; background-image:url('images/preview-accessible.jpg');"></div>
-            <div class="landing-btn-label">
-                <span class="landing-btn-number">03</span>
-                <span class="landing-btn-name">Accessible</span>
-                <span class="landing-btn-desc">Low — researchers & accessibility</span>
-            </div>
-        </a>
-
-        <a href="process.html" class="landing-btn landing-btn--process">
-            <div class="landing-btn-preview" style="background-color:#1a1a2e;"></div>
-            <div class="landing-btn-label">
-                <span class="landing-btn-number">↗</span>
-                <span class="landing-btn-name">The Process</span>
-                <span class="landing-btn-desc">How the archive was made</span>
-            </div>
-        </a>
-
-    </nav>
-
-    <footer class="landing-footer">
-        <div class="logo-strip">
-            <div class="logo-placeholder"></div>
-            <div class="logo-placeholder"></div>
-            <div class="logo-placeholder"></div>
-            <div class="logo-placeholder"></div>
-        </div>
-    </footer>
 
     <div id="site-helper"></div>
     <script type="module" src="helper.js"></script>
