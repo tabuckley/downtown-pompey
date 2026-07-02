@@ -749,15 +749,6 @@ body.landing {
     margin: 0 auto 1.4rem;
 }
 
-.landing-kicker {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.4em;
-    text-transform: uppercase;
-    color: #e8000a;
-    margin-bottom: 0.6rem;
-}
-
 .landing-title {
     font-family: var(--font-display);
     font-size: clamp(1.8rem, 4vw, 3rem);
@@ -779,7 +770,7 @@ body.landing {
     position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
+    justify-content: center;
     min-height: 240px;
     border: 1px solid #1a1a1a;
     text-decoration: none;
@@ -807,7 +798,7 @@ body.landing {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(transparent 35%, rgba(250, 248, 244, 0.96));
+    background: rgba(250, 248, 244, 0.88);
 }
 
 .landing-btn:hover .landing-btn-preview { opacity: 1; }
@@ -816,20 +807,15 @@ body.landing {
     position: relative;
     z-index: 2;
     display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    padding: 1.2rem 1.3rem;
-}
-
-.landing-btn-number {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: #999;
+    align-items: center;
+    justify-content: center;
+    padding: 1.4rem 1.3rem;
+    text-align: center;
 }
 
 .landing-btn-name {
     font-family: var(--font-display);
-    font-size: clamp(1.3rem, 2.4vw, 1.8rem);
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: -0.01em;
@@ -837,14 +823,6 @@ body.landing {
 }
 
 .landing-btn:hover .landing-btn-name { color: #e8000a; }
-
-.landing-btn-desc {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: #777;
-}
 
 .process-link {
     font-family: var(--font-mono);
@@ -890,50 +868,56 @@ body.landing {
 }
 
 /* ===== SITE HELPER ===== */
-.helper-btn {
+/* Archie sits in the bottom-right corner at ~1/6 of the viewport height —
+   a torso-up figure (placeholder SVG until the final PNG is supplied, see
+   ARCHIE_IMAGE_URL in helper.js). The bubble stacks above it in the same
+   fixed-position flex column, so it repositions itself automatically if
+   the figure's size changes. */
+.helper-widget {
     position: fixed;
-    bottom: 1.4rem;
+    bottom: 0;
     right: 1.4rem;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    cursor: pointer;
     z-index: 500;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.7rem;
+    pointer-events: none;
+}
+
+.helper-widget > * { pointer-events: auto; }
+
+.helper-figure-btn {
+    background: none;
+    border: none;
     padding: 0;
+    margin: 0;
+    line-height: 0;
+    cursor: pointer;
     transition: transform 0.2s ease;
 }
 
-.helper-btn:hover { transform: scale(1.08) rotate(-5deg); }
+.helper-figure-btn:hover { transform: translateY(-4px); }
 
-.helper-btn svg { width: 34px; height: 34px; display: block; }
-
-.helper-eye {
-    transform-origin: center;
-    transform-box: fill-box;
-    animation: helperBlink 4.2s infinite;
-}
-
-@keyframes helperBlink {
-    0%, 91%, 100% { transform: scaleY(1); }
-    94% { transform: scaleY(0.1); }
+.helper-figure-img {
+    display: block;
+    height: 16.66vh;
+    min-height: 130px;
+    max-height: 240px;
+    width: auto;
+    filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.35));
 }
 
 .helper-bubble {
-    position: fixed;
-    bottom: 5.8rem;
-    right: 1.4rem;
+    position: relative;
+    align-self: flex-end;
     width: min(300px, calc(100vw - 2.8rem));
     background: var(--card-bg);
     border: 1px solid var(--border);
     color: var(--text);
-    border-radius: 10px;
+    border-radius: 14px;
     padding: 1rem 1.1rem;
-    z-index: 500;
+    margin-bottom: 0.3rem;
     font-family: var(--font-mono);
     font-size: 0.78rem;
     line-height: 1.55;
@@ -949,6 +933,20 @@ body.landing {
     visibility: visible;
     transform: none;
     pointer-events: auto;
+}
+
+/* Speech-bubble tail, pointing down toward Archie's head */
+.helper-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    right: 34px;
+    width: 16px;
+    height: 16px;
+    background: var(--card-bg);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    transform: rotate(45deg);
 }
 
 .helper-bubble-name {
@@ -1479,7 +1477,6 @@ body.is-hovering .cursor {
     html { scroll-behavior: auto; }
     .hover-shake:hover,
     .hover-wave:hover { animation: none; }
-    .helper-eye { animation: none; }
     *, *::before, *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;

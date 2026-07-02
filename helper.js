@@ -1,8 +1,20 @@
 // Archie — the site helper. Scripted, page-aware, Clippy-spirited.
 
+// Placeholder torso-up figure until the final PNG is ready — swap this one
+// constant for the real asset URL (e.g. an R2 link) and nothing else changes.
+const ARCHIE_IMAGE_URL = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260">
+  <path d="M20 260 Q20 140 100 140 Q180 140 180 260 Z" fill="#8b3a00" stroke="#3a2a10" stroke-width="5"/>
+  <circle cx="100" cy="72" r="58" fill="#c8b89a" stroke="#3a2a10" stroke-width="5"/>
+  <circle cx="80" cy="68" r="6.5" fill="#3a2a10"/>
+  <circle cx="120" cy="68" r="6.5" fill="#3a2a10"/>
+  <path d="M74 96 Q100 114 126 96" fill="none" stroke="#3a2a10" stroke-width="6" stroke-linecap="round"/>
+</svg>
+`.trim());
+
 const SCRIPTS = {
     landing: {
-        intro: "Hello! I'm Archie, the archive helper. Pick one of the four doors above — each shows the archive in a different way.",
+        intro: "Hello! I'm Archie, the archive helper. Pick one of the buttons above — each shows the archive in a different way.",
         tips: [
             "Editorial is the full art experience — a 3D room you can look around.",
             "Scrapbook is the fun one: scroll forever, filter by tags.",
@@ -51,6 +63,9 @@ function buildHelper() {
     const script = SCRIPTS[page] || SCRIPTS.landing;
     let tipIndex = -1;
 
+    const widget = document.createElement('div');
+    widget.className = 'helper-widget';
+
     const bubble = document.createElement('div');
     bubble.className = 'helper-bubble';
     bubble.setAttribute('role', 'status');
@@ -64,21 +79,14 @@ function buildHelper() {
     `;
 
     const btn = document.createElement('button');
-    btn.className = 'helper-btn';
-    btn.setAttribute('aria-label', 'Site helper');
+    btn.className = 'helper-figure-btn';
+    btn.setAttribute('aria-label', 'Site helper — Archie');
     btn.setAttribute('aria-expanded', 'false');
-    btn.innerHTML = `
-        <svg viewBox="0 0 40 40" aria-hidden="true">
-            <path d="M7 15 L20 8 L33 15 L33 32 a3 3 0 0 1 -3 3 L10 35 a3 3 0 0 1 -3 -3 Z" fill="#c8b89a" stroke="#3a2a10" stroke-width="1.5"/>
-            <path d="M7 15 L20 21 L33 15" fill="none" stroke="#3a2a10" stroke-width="1.5"/>
-            <circle class="helper-eye" cx="15" cy="27" r="1.8" fill="#3a2a10"/>
-            <circle class="helper-eye" cx="25" cy="27" r="1.8" fill="#3a2a10"/>
-            <path d="M16.5 31 q3.5 2.4 7 0" fill="none" stroke="#3a2a10" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-    `;
+    btn.innerHTML = `<img class="helper-figure-img" src="${ARCHIE_IMAGE_URL}" alt="">`;
 
-    mount.appendChild(bubble);
-    mount.appendChild(btn);
+    widget.appendChild(bubble);
+    widget.appendChild(btn);
+    mount.appendChild(widget);
 
     const textEl = bubble.querySelector('.helper-bubble-text');
 
