@@ -9,9 +9,9 @@
     --accent:       #e8000a;
     --border:       #222;
     --card-bg:      #111;
-    --font-display: 'Georgia', serif;
-    --font-body:    'Georgia', serif;
-    --font-mono:    'Courier New', monospace;
+    --font-display: 'Montserrat', sans-serif;
+    --font-body:    'Montserrat', sans-serif;
+    --font-mono:    'Montserrat', sans-serif;
     --hero-size:    clamp(4rem, 10vw, 9rem);
     --radius:       0px;
     --transition:   0.25s ease;
@@ -43,8 +43,8 @@ body[data-mode="scrapbook"] {
     --accent:       #2563eb;
     --border:       #e0e0e0;
     --card-bg:      #f7f7f7;
-    --font-display: system-ui, -apple-system, sans-serif;
-    --font-body:    system-ui, -apple-system, sans-serif;
+    --font-display: 'Montserrat', sans-serif;
+    --font-body:    'Montserrat', sans-serif;
     --radius:       6px;
 }
 
@@ -751,10 +751,10 @@ body.landing {
 
 .landing-title {
     font-family: var(--font-display);
-    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-size: clamp(1.1rem, 2.2vw, 1.6rem);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
     color: #1a1a1a;
 }
 
@@ -902,9 +902,9 @@ body.landing {
 
 .helper-figure-img {
     display: block;
-    height: 16.66vh;
-    min-height: 130px;
-    max-height: 240px;
+    height: 25vh;
+    min-height: 195px;
+    max-height: 360px;
     width: auto;
     filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.35));
 }
@@ -960,7 +960,8 @@ body.landing {
 
 .helper-bubble-actions {
     display: flex;
-    gap: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.4rem;
     margin-top: 0.9rem;
 }
 
@@ -969,11 +970,12 @@ body.landing {
     border: 1px solid var(--border);
     color: var(--muted);
     font-family: var(--font-mono);
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
-    padding: 0.3rem 0.8rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.05em;
+    padding: 0.3rem 0.6rem;
     border-radius: 99px;
     cursor: pointer;
+    white-space: nowrap;
     transition: color 0.2s, border-color 0.2s;
 }
 
