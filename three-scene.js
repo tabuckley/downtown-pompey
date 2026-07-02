@@ -65,9 +65,9 @@ export function initRoom(canvasId = 'room-canvas') {
     key.position.set(4, 8, 6);
     scene.add(key);
 
-    const red = new THREE.PointLight(0xe8000a, 60, 18, 2);
-    red.position.set(-7, 1, 4);
-    scene.add(red);
+    const brandLight = new THREE.PointLight(0xd01359, 60, 18, 2);
+    brandLight.position.set(-7, 1, 4);
+    scene.add(brandLight);
 
     const cool = new THREE.PointLight(0x8899ff, 25, 16, 2);
     cool.position.set(7, 3, -6);

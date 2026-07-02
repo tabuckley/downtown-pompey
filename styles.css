@@ -6,7 +6,7 @@
     --bg:           #0d0d0d;
     --text:         #f0ece4;
     --muted:        #8f8f8f;
-    --accent:       #e8000a;
+    --accent:       #d01359;
     --border:       #222;
     --card-bg:      #111;
     --font-display: 'Montserrat', sans-serif;
@@ -22,7 +22,7 @@
     --bg:           #ede5d8;
     --text:         #1a0f00;
     --muted:        #7a6040;
-    --accent:       #8b3a00;
+    --accent:       #d01359;
     --border:       #c4a882;
     --card-bg:      #f5eed8;
     --radius:       2px;
@@ -40,7 +40,7 @@ body[data-mode="scrapbook"] {
     --bg:           #ffffff;
     --text:         #111111;
     --muted:        #555555;
-    --accent:       #2563eb;
+    --accent:       #d01359;
     --border:       #e0e0e0;
     --card-bg:      #f7f7f7;
     --font-display: 'Montserrat', sans-serif;
@@ -716,10 +716,11 @@ a.mode-btn {
 .home-link:hover { color: var(--text); }
 
 /* ===== LANDING PAGE ===== */
-/* Pink paper border, white centre panel. Texture served from Cloudflare R2. */
+/* Pink paper border, white centre panel. Texture served from Cloudflare R2.
+   Brand colours: #d01359 (pink) and white. */
 body.landing {
     min-height: 100vh;
-    background-color: #d8a8a0;
+    background-color: #d01359;
     background-image: url('https://pub-ecb21a155b924fadb12efa79814f20b3.r2.dev/Pink-Texture.jpg');
     background-size: cover;
     background-position: center;
@@ -728,7 +729,7 @@ body.landing {
 }
 
 .landing-panel {
-    background: #faf8f4;
+    background: #ffffff;
     color: #1a1a1a;
     min-height: calc(100vh - 2 * clamp(1.2rem, 3.5vw, 3rem));
     display: flex;
@@ -798,7 +799,7 @@ body.landing {
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(250, 248, 244, 0.88);
+    background: rgba(255, 255, 255, 0.88);
 }
 
 .landing-btn:hover .landing-btn-preview { opacity: 1; }
@@ -822,7 +823,7 @@ body.landing {
     transition: color 0.2s;
 }
 
-.landing-btn:hover .landing-btn-name { color: #e8000a; }
+.landing-btn:hover .landing-btn-name { color: #d01359; }
 
 .process-link {
     font-family: var(--font-mono);
@@ -834,7 +835,7 @@ body.landing {
     transition: color 0.2s;
 }
 
-.process-link:hover { color: #e8000a; }
+.process-link:hover { color: #d01359; }
 
 .landing-footer { width: 100%; max-width: 620px; }
 
