@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Process | Alternative Archiving</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="process">
+
+    <header class="page-topbar">
+        <a href="index.html" class="home-link">Alternative Archiving</a>
+        <nav class="mode-switcher">
+            <a href="editorial.html" class="mode-btn">Editorial</a>
+            <a href="scrapbook.html" class="mode-btn">Scrapbook</a>
+            <a href="accessible.html" class="mode-btn">Accessible</a>
+        </nav>
+    </header>
+
+    <main class="shell-main">
+        <p class="shell-kicker">Downtown Pompey</p>
+        <h1 class="shell-title">The Process</h1>
+        <p class="shell-text" data-copy="process_intro">
+            How do you archive a culture that was never meant to be archived?
+            This page will tell the story of how Alternative Archiving was made —
+            the thinking, the tools, and the people behind it.
+        </p>
+    </main>
+
+    <div id="site-helper"></div>
+    <script type="module" src="helper.js"></script>
+    <script type="module">
+        import { applyCopy } from './copy.js';
+        applyCopy();
+    </script>
+</body>
+</html>

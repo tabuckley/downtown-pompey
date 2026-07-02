@@ -1,103 +1,200 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-let initialized = false;
-let renderer, scene, camera, animId;
-let mouseX = 0, mouseY = 0;
-let targetX = 0, targetY = 0;
-const objects = [];
+let scene, camera, renderer;
+let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
+const clickables = [];
+const spinners = [];
+let clickCb = null;
+let hoverCb = null;
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
 
-export function initScene() {
-    if (initialized) return;
+// Wall slots for framed photos: back wall, then left and right walls.
+const PHOTO_SLOTS = [
+    { pos: [-5.2, 0.8, -9.8], rotY: 0 },
+    { pos: [0, 0.8, -9.8], rotY: 0 },
+    { pos: [5.2, 0.8, -9.8], rotY: 0 },
+    { pos: [-9.8, 0.8, -4], rotY: Math.PI / 2 },
+    { pos: [-9.8, 0.8, 2], rotY: Math.PI / 2 },
+    { pos: [9.8, 0.8, -4], rotY: -Math.PI / 2 },
+    { pos: [9.8, 0.8, 2], rotY: -Math.PI / 2 },
+];
+let photoSlot = 0;
 
-    const canvas = document.getElementById('hero-canvas');
+// Floor positions for 3D objects.
+const MODEL_SLOTS = [
+    [-3.2, -3.5, -3],
+    [3.2, -3.5, -1.5],
+    [0, -3.5, -5],
+];
+let modelSlot = 0;
+
+export function initRoom(canvasId = 'room-canvas') {
+    const canvas = document.getElementById(canvasId);
     if (!canvas) return;
 
-    initialized = true;
-
     scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x0d0d0d, 16, 34);
 
-    camera = new THREE.PerspectiveCamera(55, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
-    camera.position.z = 9;
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 0.4, 8.5);
 
-    renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x0d0d0d);
 
-    // Lighting
-    scene.add(new THREE.AmbientLight(0xffffff, 0.2));
+    // The room: a box viewed from inside. Floor at y=-3.5, ceiling at y=6.5.
+    const room = new THREE.Mesh(
+        new THREE.BoxGeometry(20, 10, 20),
+        new THREE.MeshStandardMaterial({ color: 0x151515, side: THREE.BackSide, roughness: 0.95 })
+    );
+    room.position.y = 1.5;
+    scene.add(room);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    keyLight.position.set(5, 8, 5);
-    scene.add(keyLight);
+    const grid = new THREE.GridHelper(20, 24, 0x2c2c2c, 0x1b1b1b);
+    grid.position.y = -3.49;
+    scene.add(grid);
 
-    const redLight = new THREE.PointLight(0xe8000a, 4, 12);
-    redLight.position.set(-4, 2, 3);
-    scene.add(redLight);
+    // Lighting: warm key, red + cool accents (r160 physical light units for point lights)
+    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
 
-    const rimLight = new THREE.PointLight(0xffffff, 1, 10);
-    rimLight.position.set(4, -3, -2);
-    scene.add(rimLight);
+    const key = new THREE.DirectionalLight(0xfff1e0, 2.2);
+    key.position.set(4, 8, 6);
+    scene.add(key);
 
-    // Placeholder floating objects
-    const wireMat = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.55,
-    });
+    const red = new THREE.PointLight(0xe8000a, 60, 18, 2);
+    red.position.set(-7, 1, 4);
+    scene.add(red);
 
-    const solidMat = new THREE.MeshStandardMaterial({
-        color: 0x111111,
-        roughness: 0.3,
-        metalness: 0.8,
-    });
-
-    const shapes = [
-        { geo: new THREE.IcosahedronGeometry(1.3, 1), pos: [-3.5, 1.2, 0], mat: wireMat, rotSpeed: [0.004, 0.006] },
-        { geo: new THREE.TorusGeometry(1.0, 0.25, 10, 30), pos: [3.2, -0.8, -1], mat: wireMat, rotSpeed: [0.005, -0.003] },
-        { geo: new THREE.OctahedronGeometry(0.9), pos: [1.8, 2.2, -2.5], mat: solidMat, rotSpeed: [-0.006, 0.004] },
-        { geo: new THREE.IcosahedronGeometry(0.5, 0), pos: [-1.5, -2.5, -1], mat: wireMat, rotSpeed: [0.008, -0.005] },
-        { geo: new THREE.TorusKnotGeometry(0.7, 0.2, 64, 8), pos: [0.5, -1.5, -3], mat: solidMat, rotSpeed: [0.003, 0.007] },
-    ];
-
-    shapes.forEach(({ geo, pos, mat, rotSpeed }) => {
-        const mesh = new THREE.Mesh(geo, mat.clone());
-        mesh.position.set(...pos);
-        mesh.userData.rotSpeed = rotSpeed;
-        mesh.userData.floatOffset = Math.random() * Math.PI * 2;
-        scene.add(mesh);
-        objects.push(mesh);
-    });
+    const cool = new THREE.PointLight(0x8899ff, 25, 16, 2);
+    cool.position.set(7, 3, -6);
+    scene.add(cool);
 
     document.addEventListener('mousemove', onMouseMove);
     window.addEventListener('resize', onResize);
+    canvas.addEventListener('click', onClick);
+    canvas.addEventListener('pointermove', onPointerMove);
 
     animate();
 }
 
-export function pauseScene() {
-    if (animId) cancelAnimationFrame(animId);
+export function onObjectClick(cb) { clickCb = cb; }
+export function onObjectHover(cb) { hoverCb = cb; }
+
+export function addFramedPhoto(url, data) {
+    if (!scene) return;
+    const slot = PHOTO_SLOTS[photoSlot % PHOTO_SLOTS.length];
+    photoSlot++;
+
+    new THREE.TextureLoader().load(url, (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        const aspect = tex.image.width / tex.image.height;
+        let h = 2.6;
+        let w = h * aspect;
+        if (w > 4.4) { w = 4.4; h = w / aspect; }
+
+        const group = new THREE.Group();
+
+        const frame = new THREE.Mesh(
+            new THREE.BoxGeometry(w + 0.28, h + 0.28, 0.12),
+            new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.4 })
+        );
+        group.add(frame);
+
+        const photo = new THREE.Mesh(
+            new THREE.PlaneGeometry(w, h),
+            new THREE.MeshBasicMaterial({ map: tex })
+        );
+        photo.position.z = 0.07;
+        group.add(photo);
+
+        group.position.set(...slot.pos);
+        group.rotation.y = slot.rotY;
+        group.userData.itemData = data;
+        scene.add(group);
+        clickables.push(group);
+    }, undefined, (err) => console.warn('Photo load failed:', url, err));
 }
 
-export function resumeScene() {
-    if (initialized) animate();
-}
+export function addModel(url, data) {
+    if (!scene) return;
+    const slot = MODEL_SLOTS[modelSlot % MODEL_SLOTS.length];
+    modelSlot++;
 
-export function loadModel(url, position = [0, 0, 0], scale = 1.5) {
-    if (!initialized) return;
-    const loader = new GLTFLoader();
-    loader.load(url, (gltf) => {
+    new GLTFLoader().load(url, (gltf) => {
         const model = gltf.scene;
+
+        // Normalise size so the largest dimension is ~2.2 units
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+        const scale = 2.2 / Math.max(size.x, size.y, size.z, 0.001);
         model.scale.setScalar(scale);
-        model.position.set(...position);
-        model.userData.rotSpeed = [0.003, 0.005];
-        model.userData.floatOffset = Math.random() * Math.PI * 2;
+
+        // Sit it on the floor
+        const scaledBox = new THREE.Box3().setFromObject(model);
+        model.position.set(slot[0], slot[1] - scaledBox.min.y, slot[2]);
+
+        model.userData.itemData = data;
         scene.add(model);
-        objects.push(model);
-    }, undefined, (err) => {
-        console.warn('Model load failed:', url, err);
+        clickables.push(model);
+        spinners.push(model);
+    }, undefined, (err) => console.warn('Model load failed:', url, err));
+}
+
+export function addPlaceholders() {
+    if (!scene) return;
+    const wireMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff, wireframe: true, transparent: true, opacity: 0.5,
     });
+    const geos = [
+        new THREE.IcosahedronGeometry(1.1, 1),
+        new THREE.TorusKnotGeometry(0.8, 0.24, 64, 8),
+        new THREE.OctahedronGeometry(1.0),
+    ];
+    geos.forEach((geo, i) => {
+        const mesh = new THREE.Mesh(geo, wireMat.clone());
+        const slot = MODEL_SLOTS[i % MODEL_SLOTS.length];
+        mesh.position.set(slot[0], slot[1] + 1.6, slot[2]);
+        mesh.userData.itemData = {
+            title: 'Placeholder object',
+            project: 'Coming soon',
+            year: '—',
+            description: 'A stand-in until items from the archive are published. Everything you will see here comes from the Downtown Pompey archive.',
+        };
+        scene.add(mesh);
+        clickables.push(mesh);
+        spinners.push(mesh);
+    });
+}
+
+function findItemData(object) {
+    let o = object;
+    while (o && !o.userData.itemData) o = o.parent;
+    return o ? o.userData.itemData : null;
+}
+
+function setPointerFromEvent(e) {
+    pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+}
+
+function raycastClickables() {
+    raycaster.setFromCamera(pointer, camera);
+    const hits = raycaster.intersectObjects(clickables, true);
+    return hits.length ? findItemData(hits[0].object) : null;
+}
+
+function onClick(e) {
+    setPointerFromEvent(e);
+    const data = raycastClickables();
+    if (data && clickCb) clickCb(data);
+}
+
+function onPointerMove(e) {
+    setPointerFromEvent(e);
+    if (hoverCb) hoverCb(!!raycastClickables());
 }
 
 function onMouseMove(e) {
@@ -106,36 +203,22 @@ function onMouseMove(e) {
 }
 
 function onResize() {
-    const canvas = document.getElementById('hero-canvas');
-    if (!canvas || !renderer) return;
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-    camera.aspect = w / h;
+    if (!renderer) return;
+    camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
+    renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 function animate() {
-    animId = requestAnimationFrame(animate);
+    requestAnimationFrame(animate);
 
-    const t = performance.now() * 0.001;
+    targetX += (mouseX - targetX) * 0.04;
+    targetY += (mouseY - targetY) * 0.04;
+    camera.position.x = targetX * 2.2;
+    camera.position.y = 0.4 - targetY * 1.2;
+    camera.lookAt(0, 0.2, -2);
 
-    // Smooth mouse follow for camera
-    targetX += (mouseX - targetX) * 0.035;
-    targetY += (mouseY - targetY) * 0.035;
-
-    camera.position.x = targetX * 1.8;
-    camera.position.y = -targetY * 1.0;
-    camera.lookAt(scene.position);
-
-    // Rotate and float each object
-    objects.forEach(obj => {
-        const [rx, ry] = obj.userData.rotSpeed || [0.003, 0.003];
-        const offset = obj.userData.floatOffset || 0;
-        obj.rotation.x += rx;
-        obj.rotation.y += ry;
-        obj.position.y += Math.sin(t + offset) * 0.002;
-    });
+    spinners.forEach(obj => { obj.rotation.y += 0.004; });
 
     renderer.render(scene, camera);
 }

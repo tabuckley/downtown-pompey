@@ -4,103 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alternative Archiving | Downtown Pompey</title>
-
-    <!-- Three.js via importmap -->
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-        }
-    }
-    </script>
-
     <link rel="stylesheet" href="styles.css">
 </head>
-<body data-mode="editorial">
+<body class="landing">
 
-    <!-- Custom cursor (editorial mode only) -->
-    <div class="cursor" id="cursor"></div>
-    <div class="cursor-dot" id="cursorDot"></div>
-
-    <!-- Mode Switcher -->
-    <div class="mode-switcher">
-        <button class="mode-btn active" data-mode="editorial" title="Art experience">Editorial</button>
-        <button class="mode-btn" data-mode="scrapbook" title="Visual & fun">Scrapbook</button>
-        <button class="mode-btn" data-mode="accessible" title="For researchers & accessibility">Accessible</button>
+    <div class="landing-header">
+        <p class="landing-kicker">Downtown Pompey</p>
+        <h1 class="landing-title">Alternative Archiving</h1>
     </div>
 
-    <!-- Hero Section -->
-    <section id="home" class="hero">
+    <nav class="landing-nav">
 
-        <!-- Three.js canvas — editorial mode only -->
-        <canvas id="hero-canvas"></canvas>
-
-        <nav class="side-nav">
-            <ul class="side-nav-menu">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#archive">Archive</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </nav>
-
-        <div class="hero-content">
-            <p class="hero-kicker" data-copy="hero_kicker">Downtown Pompey</p>
-            <h1 class="hero-title" data-copy="hero_title">Alternative<br>Archiving</h1>
-            <p class="hero-subtitle" data-copy="hero_subtitle">An ongoing record of spaces, people and moments that resist official history.</p>
-        </div>
-
-        <div class="hero-scroll-hint">Scroll</div>
-    </section>
-
-    <!-- About Section -->
-    <section id="about" class="about">
-        <div class="about-content-full">
-            <p>Alternative Archiving is a project documenting the <span class="hover-bold">alternative</span>, <span class="hover-shake">underground</span>, and <span class="hover-glitch">overlooked</span> culture of Portsmouth.</p>
-            <p>An ongoing record of <span class="hover-scale">spaces</span>, <span class="hover-spin">people</span>, and <span class="hover-wave">moments</span> that don't make it into the <span class="hover-blur">official</span> history.</p>
-        </div>
-    </section>
-
-    <!-- Archive Section -->
-    <section id="archive" class="archive">
-        <div class="container">
-            <h2 class="section-title" data-copy="archive_heading">Archive</h2>
-            <div class="archive-list">
-                <p class="archive-empty">Loading archive...</p>
+        <a href="editorial.html" class="landing-btn">
+            <div class="landing-btn-preview" style="background-color:#1a1a1a; background-image:url('images/preview-editorial.jpg');"></div>
+            <div class="landing-btn-label">
+                <span class="landing-btn-number">01</span>
+                <span class="landing-btn-name">Editorial</span>
+                <span class="landing-btn-desc">High — art experience</span>
             </div>
-        </div>
-    </section>
+        </a>
 
-    <!-- Contact Section -->
-    <section id="contact" class="contact">
-        <div class="container">
-            <h2 class="section-title" data-copy="contact_heading">Get Involved</h2>
-            <p class="contact-text" data-copy="contact_text">Have something to contribute to the archive?</p>
-            <div class="social-links">
-                <a href="mailto:Thomas@Thomas-Buckley.com" class="social-btn">Email</a>
+        <a href="scrapbook.html" class="landing-btn">
+            <div class="landing-btn-preview" style="background-color:#ede5d8; background-image:url('images/preview-scrapbook.jpg');"></div>
+            <div class="landing-btn-label">
+                <span class="landing-btn-number">02</span>
+                <span class="landing-btn-name">Scrapbook</span>
+                <span class="landing-btn-desc">Medium — visual & fun</span>
             </div>
-        </div>
-    </section>
+        </a>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <p data-copy="footer_text">Alternative Archiving &copy; 2026</p>
-        <p class="footer-tagline" data-copy="footer_tagline">Downtown Pompey</p>
+        <a href="accessible.html" class="landing-btn">
+            <div class="landing-btn-preview" style="background-color:#e8e8e8; background-image:url('images/preview-accessible.jpg');"></div>
+            <div class="landing-btn-label">
+                <span class="landing-btn-number">03</span>
+                <span class="landing-btn-name">Accessible</span>
+                <span class="landing-btn-desc">Low — researchers & accessibility</span>
+            </div>
+        </a>
+
+        <a href="process.html" class="landing-btn landing-btn--process">
+            <div class="landing-btn-preview" style="background-color:#1a1a2e;"></div>
+            <div class="landing-btn-label">
+                <span class="landing-btn-number">↗</span>
+                <span class="landing-btn-name">The Process</span>
+                <span class="landing-btn-desc">How the archive was made</span>
+            </div>
+        </a>
+
+    </nav>
+
+    <footer class="landing-footer">
+        <div class="logo-strip">
+            <div class="logo-placeholder"></div>
+            <div class="logo-placeholder"></div>
+            <div class="logo-placeholder"></div>
+            <div class="logo-placeholder"></div>
+        </div>
     </footer>
 
-    <!-- Mobile Navigation -->
-    <button class="mobile-menu-btn" id="mobileMenuBtn">Menu</button>
-    <div class="mobile-nav" id="mobileNav">
-        <button class="mobile-nav-close" id="mobileNavClose">Close</button>
-        <ul>
-            <li><a href="#home">Home</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#archive">Archive</a></li>
-            <li><a href="#contact">Contact</a></li>
-        </ul>
-    </div>
-
-    <script type="module" src="script.js"></script>
+    <div id="site-helper"></div>
+    <script type="module" src="helper.js"></script>
 </body>
 </html>

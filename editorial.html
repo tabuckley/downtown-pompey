@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editorial | Alternative Archiving</title>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-mode="editorial" data-page="editorial">
+
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-dot" id="cursorDot"></div>
+
+    <canvas id="room-canvas"></canvas>
+
+    <header class="page-topbar">
+        <a href="index.html" class="home-link">Alternative Archiving</a>
+        <nav class="mode-switcher">
+            <a href="editorial.html" class="mode-btn active">Editorial</a>
+            <a href="scrapbook.html" class="mode-btn">Scrapbook</a>
+            <a href="accessible.html" class="mode-btn">Accessible</a>
+        </nav>
+    </header>
+
+    <p class="room-hint" id="roomHint">Move to look around · click an object to learn its story</p>
+
+    <aside class="info-panel" id="infoPanel">
+        <button class="info-close" id="infoClose" aria-label="Close panel">&times;</button>
+        <p class="info-kicker" id="infoKicker"></p>
+        <h2 class="info-title" id="infoTitle"></h2>
+        <p class="info-meta" id="infoMeta"></p>
+        <p class="info-desc" id="infoDesc"></p>
+        <div class="lb-tags" id="infoTags"></div>
+    </aside>
+
+    <div id="site-helper"></div>
+    <script type="module" src="helper.js"></script>
+    <script type="module" src="editorial.js"></script>
+</body>
+</html>

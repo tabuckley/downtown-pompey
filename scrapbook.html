@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrapbook | Alternative Archiving</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-mode="scrapbook" data-page="scrapbook">
+
+    <header class="page-topbar">
+        <a href="index.html" class="home-link">Alternative Archiving</a>
+        <nav class="mode-switcher">
+            <a href="editorial.html" class="mode-btn">Editorial</a>
+            <a href="scrapbook.html" class="mode-btn active">Scrapbook</a>
+            <a href="accessible.html" class="mode-btn">Accessible</a>
+        </nav>
+    </header>
+
+    <div class="scrap-header">
+        <h1 class="scrap-title">The Scrapbook</h1>
+        <p class="scrap-sub">Scroll forever. Filter by tag. Curate your own archive.</p>
+    </div>
+
+    <div class="filter-bar">
+        <input type="search" class="search-input" id="searchInput" placeholder="Search the archive..." aria-label="Search the archive">
+        <div class="tag-bar" id="tagBar"></div>
+        <div class="filter-meta">
+            <span id="itemCount">Loading the archive...</span>
+            <button class="clear-filters" id="clearFilters">clear filters</button>
+        </div>
+    </div>
+
+    <main class="media-grid" id="mediaGrid"></main>
+    <div class="scroll-sentinel" id="scrollSentinel"></div>
+    <p class="grid-status" id="gridStatus"></p>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
+        <button class="lightbox-close" id="lightboxClose" aria-label="Close">&times;</button>
+        <button class="lightbox-prev" id="lightboxPrev" aria-label="Previous">&#8592;</button>
+        <button class="lightbox-next" id="lightboxNext" aria-label="Next">&#8594;</button>
+        <div class="lightbox-media" id="lightboxMedia"></div>
+        <aside class="lightbox-info" id="lightboxInfo"></aside>
+    </div>
+
+    <div id="site-helper"></div>
+    <script type="module" src="helper.js"></script>
+    <script type="module" src="scrapbook.js"></script>
+</body>
+</html>
