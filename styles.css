@@ -1126,6 +1126,44 @@ body.landing {
 
 .media-item-audio audio { width: 100%; }
 
+/* Test/placeholder content — dashed border marks it clearly as stand-in,
+   not real archive media. Disappears automatically once real items exist. */
+.media-placeholder-box {
+    width: 100%;
+    aspect-ratio: var(--ph-ratio, 1);
+    background: var(--ph-bg, #eee);
+    color: var(--ph-fg, #555);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0.7rem;
+    border: 1px dashed var(--ph-fg, #999);
+    box-sizing: border-box;
+}
+
+.media-placeholder-box--large {
+    aspect-ratio: auto;
+    width: min(60vw, 640px);
+    height: min(60vh, 640px);
+}
+
+.media-placeholder-type {
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.6);
+    padding: 0.2rem 0.5rem;
+    border-radius: 99px;
+}
+
+.media-placeholder-title {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
 .media-item-caption { padding: 0.6rem 0.8rem 0.8rem; }
 
 .media-item-title {

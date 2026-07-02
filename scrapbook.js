@@ -12,7 +12,64 @@ const TAGS = [
 ];
 
 const BATCH = 20;
+const PLACEHOLDER_COUNT = 140;
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Stand-in content for testing the grid/filters/infinite-scroll before real
+// media is published. Every tag gets used at least a few times so filtering
+// can be exercised properly. These vanish automatically the moment a real
+// published project shows up in the sheet — see init() below.
+function makePlaceholderItems(count = PLACEHOLDER_COUNT) {
+    const kinds = ['photo', 'photo', 'photo', 'video', 'audio', '3d'];
+    const projects = ['Test Set A', 'Test Set B', 'Test Set C', 'Test Set D'];
+    const ratios = [0.72, 1, 1, 1.35, 1.6];
+    const items = [];
+
+    for (let i = 0; i < count; i++) {
+        const primaryTag = TAGS[i % TAGS.length];
+        const tags = new Set([primaryTag]);
+        const extra = 1 + Math.floor(Math.random() * 2);
+        while (tags.size < 1 + extra) {
+            tags.add(TAGS[Math.floor(Math.random() * TAGS.length)]);
+        }
+
+        const year = 2019 + (i % 8);
+        const month = String(1 + (i % 12)).padStart(2, '0');
+        const day = String(1 + ((i * 7) % 28)).padStart(2, '0');
+        const hue = Math.round((i * 47) % 360);
+
+        items.push({
+            _placeholder: true,
+            _placeholderBg: `hsl(${hue}, 60%, 90%)`,
+            _placeholderFg: `hsl(${hue}, 45%, 32%)`,
+            _placeholderRatio: ratios[i % ratios.length],
+            type: kinds[i % kinds.length],
+            title: `Placeholder ${i + 1}`,
+            url: '',
+            thumbnail: '',
+            date: `${year}-${month}-${day}`,
+            description: `Stand-in test item. Will be replaced by real archive media tagged: ${[...tags].join(', ')}.`,
+            credit: 'Test data',
+            tags: [...tags].join(', '),
+            project: projects[i % projects.length],
+            projectYear: String(year),
+        });
+    }
+    return items;
+}
+
+function placeholderBox(item, large) {
+    const box = document.createElement('div');
+    box.className = large ? 'media-placeholder-box media-placeholder-box--large' : 'media-placeholder-box';
+    box.style.setProperty('--ph-bg', item._placeholderBg);
+    box.style.setProperty('--ph-fg', item._placeholderFg);
+    if (!large) box.style.setProperty('--ph-ratio', item._placeholderRatio);
+    box.innerHTML = `
+        <span class="media-placeholder-type">${esc(item.type)}</span>
+        <span class="media-placeholder-title">${esc(item.title)}</span>
+    `;
+    return box;
+}
 
 let allItems = [];
 let filtered = [];
@@ -147,6 +204,7 @@ function esc(str) {
 }
 
 function mediaElement(item, { large = false } = {}) {
+    if (item._placeholder) return placeholderBox(item, large);
     if (item.type === 'video') {
         const v = document.createElement('video');
         v.src = item.url;
@@ -251,7 +309,7 @@ function openLightbox(index) {
         <h3>${esc(item.title)}</h3>
         <p class="lb-meta">${esc(meta)}</p>
         <p class="lb-desc">${esc(item.description)}</p>
-        ${item.type === '3d' ? '<p class="lb-desc">3D object — see it in the Editorial room.</p>' : ''}
+        ${item.type === '3d' && !item._placeholder ? '<p class="lb-desc">3D object — see it in the Editorial room.</p>' : ''}
         <div class="lb-tags">${tags.map(t => `<span class="lb-tag">${esc(t)}</span>`).join('')}</div>
     `;
     lightbox.classList.add('open');
@@ -315,6 +373,13 @@ async function init() {
                 allItems.push({ ...row, project: project.title, projectYear: project.year });
             });
         });
+
+        if (!allItems.length) {
+            allItems = makePlaceholderItems();
+            const sub = document.querySelector('.scrap-sub');
+            if (sub) sub.textContent += ' Showing placeholder test items until real content is published.';
+            console.info(`Scrapbook: no published items in the sheet — showing ${allItems.length} placeholder test items.`);
+        }
 
         allItems.sort((a, b) => dateStamp(b.date) - dateStamp(a.date));
         applyFilters();
