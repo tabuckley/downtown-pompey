@@ -705,17 +705,11 @@ a.mode-btn {
 .home-link {
     display: flex;
     align-items: center;
-    padding: 0.35rem 0.6rem;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.92);
     text-decoration: none;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease;
 }
 
-.home-link:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-}
+.home-link:hover { transform: translateY(-1px); }
 
 .home-logo {
     display: block;
@@ -729,7 +723,7 @@ a.mode-btn {
 body.landing {
     min-height: 100vh;
     background-color: #d01359;
-    background-image: url('https://pub-ecb21a155b924fadb12efa79814f20b3.r2.dev/Pink-Texture.jpg');
+    background-image: url('https://media.downtownpompey.online/Pink-Texture.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
