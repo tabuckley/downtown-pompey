@@ -95,6 +95,43 @@ const gridStatus = document.getElementById('gridStatus');
 const itemsListToggle = document.getElementById('scrapItemsToggle');
 const itemsList = document.getElementById('scrapItemsList');
 
+const filterToggle = document.getElementById('filterToggle');
+const filterToggleCount = document.getElementById('filterToggleCount');
+const filterPanel = document.getElementById('filterPanel');
+const filterPanelClose = document.getElementById('filterPanelClose');
+
+// ===== FILTER PANEL (collapsed by default so the canvas stays fully clear
+// and draggable; opens into a solid, non-transparent panel on demand) =====
+function openFilterPanel() {
+    filterPanel.classList.add('open');
+    filterToggle.setAttribute('aria-expanded', 'true');
+    // A zero-delay defer isn't enough — the browser's own default
+    // focus-the-clicked-button behaviour for this same click can still run
+    // after it and steal focus back. A short real delay reliably wins.
+    setTimeout(() => searchInput.focus(), 50);
+}
+
+function closeFilterPanel() {
+    filterPanel.classList.remove('open');
+    filterToggle.setAttribute('aria-expanded', 'false');
+}
+
+filterToggle.addEventListener('click', () => {
+    if (filterPanel.classList.contains('open')) closeFilterPanel();
+    else openFilterPanel();
+});
+filterPanelClose.addEventListener('click', closeFilterPanel);
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && filterPanel.classList.contains('open')) closeFilterPanel();
+});
+
+// Clicking the canvas itself (not a tile) closes an open panel — same
+// "click outside to dismiss" behaviour as the lightbox and Archie's bubble.
+canvasEl.addEventListener('pointerdown', () => {
+    if (filterPanel.classList.contains('open')) closeFilterPanel();
+});
+
 const lightbox = document.getElementById('lightbox');
 const lightboxMedia = document.getElementById('lightboxMedia');
 const lightboxInfo = document.getElementById('lightboxInfo');
@@ -188,10 +225,14 @@ function applyFilters() {
 function updateCount() {
     if (!allItems.length) {
         itemCount.textContent = 'The archive is growing';
+        filterToggleCount.textContent = '';
         return;
     }
     const label = filtered.length === 1 ? 'item' : 'items';
     itemCount.textContent = `${filtered.length} ${label}`;
+    // Visible on the collapsed toggle too, so the count is readable without
+    // opening the panel.
+    filterToggleCount.textContent = filtered.length;
 }
 
 function updateStatus() {

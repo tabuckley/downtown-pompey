@@ -27,7 +27,16 @@
         <p class="scrap-sub">Drag or scroll to explore. Filter by tag. Curate your own archive.</p>
     </div>
 
-    <div class="filter-bar">
+    <button class="filter-toggle" id="filterToggle" aria-expanded="false" aria-controls="filterPanel">
+        <span class="filter-toggle-label">Filter</span>
+        <span class="filter-toggle-count" id="filterToggleCount"></span>
+    </button>
+
+    <div class="filter-panel" id="filterPanel">
+        <div class="filter-panel-head">
+            <span class="filter-panel-title">Filter the archive</span>
+            <button class="filter-panel-close" id="filterPanelClose" aria-label="Close filters">&times;</button>
+        </div>
         <input type="search" class="search-input" id="searchInput" placeholder="Search the archive..." aria-label="Search the archive">
         <div class="tag-bar" id="tagBar"></div>
         <div class="filter-meta">
