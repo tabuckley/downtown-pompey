@@ -1079,6 +1079,35 @@ body.landing {
     padding-bottom: 0.4rem;
 }
 
+/* .room-items-toggle is shared with editorial.html, where it's a small fixed
+   overlay on a dark 3D scene. Here it sits inline in the filter bar and uses
+   the page's own (light, paper-themed) colours instead of the hardcoded dark
+   ones, and its list can run to hundreds of buttons rather than a handful. */
+.filter-bar .room-items-toggle {
+    position: static;
+    margin-top: 0.5rem;
+    color: var(--muted);
+}
+
+.filter-bar .room-items-toggle summary {
+    background: var(--card-bg);
+    border-color: var(--border);
+    display: inline-block;
+}
+
+.filter-bar .room-items-toggle ul {
+    background: var(--card-bg);
+    border-color: var(--border);
+    max-width: none;
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.filter-bar .room-items-toggle button:hover,
+.filter-bar .room-items-toggle button:focus-visible {
+    background: rgba(0, 0, 0, 0.06);
+}
+
 .clear-filters {
     background: none;
     border: none;
@@ -1094,43 +1123,85 @@ body.landing {
 
 .clear-filters.visible { display: inline; }
 
-.media-grid {
-    padding: 1.2rem 4vw 4rem;
-    columns: 4 260px;
-    column-gap: 1.2rem;
+/* ===== PAN CANVAS ===== */
+.pan-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 10;                 /* behind .filter-bar(200) / .page-topbar(300) */
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    cursor: grab;
 }
 
-.media-item {
-    break-inside: avoid;
-    margin-bottom: 1.2rem;
+.pan-canvas.is-dragging { cursor: grabbing; }
+
+/* Outer: raw JS transform every frame — no transition here, or per-frame
+   writes fight the transition system and rubber-band instead of tracking
+   smoothly. */
+.pan-tile {
+    position: absolute;
+    top: 0;
+    left: 0;
+    will-change: transform;
+}
+
+/* Inner: CSS-transitioned scale/opacity, fully decoupled from the outer
+   element's raw positioning. */
+.pan-tile-inner {
+    width: 100%;
+    height: 100%;
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
+    opacity: 0;
+    transform: scale(0.92);
+    transition: opacity 0.4s ease, transform 0.4s ease;
     cursor: pointer;
-    transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.media-item:hover {
-    transform: rotate(-0.6deg) scale(1.015);
-    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.12);
-}
+.pan-tile-inner.tile-in { opacity: 1; transform: scale(1); }
+.pan-tile-inner.tile-fading { opacity: 0; transform: scale(0.9); }
+.pan-tile-inner.tile-active { opacity: 1; transform: scale(1.04); z-index: 2; }
 
-.media-item img,
-.media-item video {
+.pan-tile-inner img,
+.pan-tile-inner video {
     width: 100%;
+    height: 100%;
+    object-fit: cover;
     display: block;
+    -webkit-user-drag: none;
+    pointer-events: none;
 }
 
-.media-item-audio { padding: 1rem 1rem 0.4rem; }
+.pan-tile-inner .media-item-audio {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1rem;
+    pointer-events: auto;
+}
 
-.media-item-audio audio { width: 100%; }
+.pan-hint {
+    position: fixed;
+    bottom: 1.6rem;
+    left: 1.6rem;
+    z-index: 15;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    pointer-events: none;
+}
 
 /* Test/placeholder content — dashed border marks it clearly as stand-in,
    not real archive media. Disappears automatically once real items exist. */
 .media-placeholder-box {
     width: 100%;
-    aspect-ratio: var(--ph-ratio, 1);
+    height: 100%;
     background: var(--ph-bg, #eee);
     color: var(--ph-fg, #555);
     display: flex;
@@ -1142,7 +1213,6 @@ body.landing {
 }
 
 .media-placeholder-box--large {
-    aspect-ratio: auto;
     width: min(60vw, 640px);
     height: min(60vh, 640px);
 }
@@ -1164,31 +1234,24 @@ body.landing {
     font-weight: 700;
 }
 
-.media-item-caption { padding: 0.6rem 0.8rem 0.8rem; }
+.media-item-audio { padding: 1rem 1rem 0.4rem; }
 
-.media-item-title {
-    font-family: var(--font-mono);
-    font-size: 0.82rem;
-    font-weight: 700;
-}
-
-.media-item-meta {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    color: var(--muted);
-    margin-top: 3px;
-    letter-spacing: 0.05em;
-}
-
-.scroll-sentinel { height: 1px; }
+.media-item-audio audio { width: 100%; }
 
 .grid-status {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     font-family: var(--font-mono);
     font-size: 0.72rem;
     color: var(--muted);
     letter-spacing: 0.15em;
-    padding: 2rem 4vw 4rem;
+    pointer-events: none;
+    padding: 0 8vw;
 }
 
 /* ===== LIGHTBOX ===== */
@@ -1498,7 +1561,8 @@ body.is-hovering .cursor {
     .filter-bar { padding-top: 8.5rem; }
     /* 16px min prevents iOS Safari from auto-zooming the page on focus */
     .search-input { font-size: 1rem; }
-    .media-grid { columns: 2 150px; padding: 1rem 3vw 3rem; }
+    /* Pan canvas itself is responsive via JS (computeUnitW in pan-canvas.js) */
+    .pan-hint { left: 1rem; bottom: 1rem; font-size: 0.56rem; }
 
     .lightbox.open { flex-direction: column; }
     .lightbox-media { padding: 3.5rem 1rem 0.5rem; }

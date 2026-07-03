@@ -1,4 +1,5 @@
 import { fetchSheet, yearFrom, dateStamp } from './sheet.js';
+import { initPanCanvas } from './pan-canvas.js';
 
 const TAGS = [
     'Event', 'Press', 'Drag', 'Capture', 'Landmarks', 'Medium', 'Identity',
@@ -11,14 +12,21 @@ const TAGS = [
     'Rubbish', 'Newness', 'Gendered', 'Lost',
 ];
 
-const BATCH = 20;
 const PLACEHOLDER_COUNT = 140;
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// Stand-in content for testing the grid/filters/infinite-scroll before real
-// media is published. Every tag gets used at least a few times so filtering
-// can be exercised properly. These vanish automatically the moment a real
-// published project shows up in the sheet — see init() below.
+function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+// Stand-in content for testing the canvas/filters before real media is
+// published. Every tag gets used at least a few times so filtering can be
+// exercised properly. These vanish automatically the moment a real published
+// project shows up in the sheet — see init() below.
 function makePlaceholderItems(count = PLACEHOLDER_COUNT) {
     const kinds = ['photo', 'photo', 'photo', 'video', 'audio', '3d'];
     const projects = ['Test Set A', 'Test Set B', 'Test Set C', 'Test Set D'];
@@ -60,10 +68,12 @@ function makePlaceholderItems(count = PLACEHOLDER_COUNT) {
 
 function placeholderBox(item, large) {
     const box = document.createElement('div');
+    // Non-large boxes deliberately have no aspect-ratio of their own — they
+    // fill whatever slot pan-canvas.js already sized for this tile, exactly
+    // like a real photo does with object-fit: cover.
     box.className = large ? 'media-placeholder-box media-placeholder-box--large' : 'media-placeholder-box';
     box.style.setProperty('--ph-bg', item._placeholderBg);
     box.style.setProperty('--ph-fg', item._placeholderFg);
-    if (!large) box.style.setProperty('--ph-ratio', item._placeholderRatio);
     box.innerHTML = `
         <span class="media-placeholder-type">${esc(item.type)}</span>
         <span class="media-placeholder-title">${esc(item.title)}</span>
@@ -73,17 +83,17 @@ function placeholderBox(item, large) {
 
 let allItems = [];
 let filtered = [];
-let shown = 0;
 const activeTags = new Set();
 let query = '';
 
-const grid = document.getElementById('mediaGrid');
+const canvasEl = document.getElementById('panCanvas');
 const tagBar = document.getElementById('tagBar');
 const searchInput = document.getElementById('searchInput');
 const itemCount = document.getElementById('itemCount');
 const clearBtn = document.getElementById('clearFilters');
 const gridStatus = document.getElementById('gridStatus');
-const sentinel = document.getElementById('scrollSentinel');
+const itemsListToggle = document.getElementById('scrapItemsToggle');
+const itemsList = document.getElementById('scrapItemsList');
 
 const lightbox = document.getElementById('lightbox');
 const lightboxMedia = document.getElementById('lightboxMedia');
@@ -168,11 +178,11 @@ function applyFilters() {
     filtered = allItems.filter(item =>
         [...activeTags].every(tag => matchesTag(item, tag)) && matchesQuery(item)
     );
-    shown = 0;
-    grid.innerHTML = '';
     clearBtn.classList.toggle('visible', activeTags.size > 0 || query.length > 0);
-    fillViewport();
+    panCanvas.setItems(filtered);
+    rebuildKeyboardList();
     updateCount();
+    updateStatus();
 }
 
 function updateCount() {
@@ -189,10 +199,29 @@ function updateStatus() {
         gridStatus.textContent = 'Nothing in the archive yet — check back soon.';
     } else if (!filtered.length) {
         gridStatus.textContent = 'Nothing matches those filters — try removing one.';
-    } else if (shown >= filtered.length) {
-        gridStatus.textContent = '· end of the archive ·';
     } else {
         gridStatus.textContent = '';
+    }
+}
+
+// ===== KEYBOARD / SCREEN-READER FALLBACK =====
+// The pan canvas is a continuously-moving, pooled/recycled visual surface —
+// DOM order has no coherent relationship to spatial position, so individual
+// tiles are not focusable (see .pan-canvas[aria-hidden] in the HTML). This
+// real, focusable list is the actual way keyboard/AT users reach every item,
+// same pattern as editorial.js's room-items-toggle.
+function rebuildKeyboardList() {
+    itemsList.innerHTML = '';
+    filtered.forEach((item, i) => {
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.textContent = `${item.title || 'Untitled'}${item.project ? ` — ${item.project}` : ''}`;
+        btn.addEventListener('click', () => openLightbox(i));
+        li.appendChild(btn);
+        itemsList.appendChild(li);
+    });
+    if (itemsListToggle) {
+        itemsListToggle.style.display = filtered.length ? '' : 'none';
     }
 }
 
@@ -235,61 +264,21 @@ function mediaElement(item, { large = false } = {}) {
     return img;
 }
 
-function loadMore() {
-    const batch = filtered.slice(shown, shown + BATCH);
-    batch.forEach(item => {
-        const card = document.createElement('article');
-        card.className = 'media-item';
-        card.tabIndex = 0;
-        card.setAttribute('role', 'button');
-        card.setAttribute('aria-label', `View ${item.title || 'archive item'}`);
-        card.appendChild(mediaElement(item));
-
-        const caption = document.createElement('div');
-        caption.className = 'media-item-caption';
-        const year = yearFrom(item.date, item.projectYear);
-        caption.innerHTML = `
-            <div class="media-item-title">${esc(item.title)}</div>
-            <div class="media-item-meta">${esc([item.project, year].filter(Boolean).join(' · '))}</div>
-        `;
-        card.appendChild(caption);
-
-        card.addEventListener('click', (e) => {
-            // Let the inline audio player be used without opening the lightbox
-            if (e.target.closest('audio')) return;
-            openLightbox(filtered.indexOf(item));
+// ===== PAN CANVAS =====
+const panCanvas = initPanCanvas(canvasEl, {
+    renderTile: (item) => mediaElement(item, { large: false }),
+    reduceMotion,
+    onActivate(item, index, tileEl) {
+        const others = shuffle(
+            [...canvasEl.querySelectorAll('.pan-tile')].filter(el => el !== tileEl)
+        );
+        others.forEach((el, i) => {
+            setTimeout(() => el.querySelector('.pan-tile-inner')?.classList.add('tile-fading'), i * 20);
         });
-        card.addEventListener('keydown', (e) => {
-            if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('audio')) {
-                e.preventDefault();
-                openLightbox(filtered.indexOf(item));
-            }
-        });
-        grid.appendChild(card);
-    });
-    shown += batch.length;
-    updateStatus();
-}
-
-// ===== INFINITE SCROLL =====
-// IntersectionObserver only fires on state *transitions*, so if a batch
-// doesn't push the sentinel out of range the callback would never re-fire.
-// fillViewport keeps loading (a frame at a time) until the sentinel clears
-// the trigger zone or everything is shown.
-function sentinelNear() {
-    return sentinel.getBoundingClientRect().top < window.innerHeight + 600;
-}
-
-function fillViewport() {
-    loadMore();
-    if (shown < filtered.length && sentinelNear()) {
-        requestAnimationFrame(fillViewport);
-    }
-}
-
-new IntersectionObserver((entries) => {
-    if (entries[entries.length - 1].isIntersecting && shown < filtered.length) fillViewport();
-}, { rootMargin: '600px' }).observe(sentinel);
+        tileEl.querySelector('.pan-tile-inner')?.classList.add('tile-active');
+        setTimeout(() => openLightbox(filtered.indexOf(item)), 300);
+    },
+});
 
 // ===== LIGHTBOX =====
 function openLightbox(index) {

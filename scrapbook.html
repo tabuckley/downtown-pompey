@@ -24,7 +24,7 @@
 
     <div class="scrap-header">
         <h1 class="scrap-title">The Scrapbook</h1>
-        <p class="scrap-sub">Scroll forever. Filter by tag. Curate your own archive.</p>
+        <p class="scrap-sub">Drag or scroll to explore. Filter by tag. Curate your own archive.</p>
     </div>
 
     <div class="filter-bar">
@@ -34,10 +34,14 @@
             <span id="itemCount">Loading the archive...</span>
             <button class="clear-filters" id="clearFilters">clear filters</button>
         </div>
+        <details class="room-items-toggle" id="scrapItemsToggle">
+            <summary>Browse items as a list</summary>
+            <ul id="scrapItemsList"></ul>
+        </details>
     </div>
 
-    <main class="media-grid" id="mediaGrid"></main>
-    <div class="scroll-sentinel" id="scrollSentinel"></div>
+    <div class="pan-canvas" id="panCanvas" aria-hidden="true"></div>
+    <p class="pan-hint">Drag or scroll to explore · click an item to view it</p>
     <p class="grid-status" id="gridStatus"></p>
 
     <!-- Lightbox -->
