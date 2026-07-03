@@ -407,6 +407,23 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion 
         setItems(newItems) {
             items = newItems;
             rebuildLayout();
+            // recull()'s pool diffing only reacts to GEOMETRIC visibility
+            // changes (same row:col:kx:ky key = same pool slot, left alone).
+            // A filter/search change doesn't move the pan position, so the
+            // same keys stay "wanted" — but cellItemIndex() now maps those
+            // keys to different items (tilePages/cellsPerTile just changed).
+            // Without a full teardown, every currently-mounted tile would
+            // keep showing whatever item it had before the filter changed.
+            pool.forEach(tile => {
+                const video = tile.el.querySelector('video');
+                if (video) {
+                    video.pause();
+                    video.removeAttribute('src');
+                    video.load();
+                }
+                tile.el.remove();
+            });
+            pool.clear();
             recull();
         },
     };
