@@ -112,15 +112,10 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion 
         cellsPerTile = rows * cols;
         tilePages = items.length ? Math.max(1, Math.ceil(items.length / cellsPerTile)) : 1;
 
-        // Rewrap current pan into the new pitch rather than resetting.
-        if (pitchX > 0) {
-            targetPanX = mod(targetPanX, pitchX);
-            renderPanX = mod(renderPanX, pitchX);
-        }
-        if (pitchY > 0) {
-            targetPanY = mod(targetPanY, pitchY);
-            renderPanY = mod(renderPanY, pitchY);
-        }
+        // targetPanX/renderPanX are never wrapped in place (see tick()) — a
+        // pitch change here needs no special handling, mod(renderPanX, pitchX)
+        // is simply computed fresh against whatever pitch is current wherever
+        // it's actually used.
     }
 
     function slotRect(row, col) {
@@ -180,10 +175,15 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion 
         const bufX = unitW * POOL_BUFFER;
         const bufY = unitW * POOL_BUFFER;
 
-        const kxMin = Math.floor((-renderPanX - bufX) / pitchX);
-        const kxMax = Math.ceil((-renderPanX + vw + bufX) / pitchX);
-        const kyMin = Math.floor((-renderPanY - bufY) / pitchY);
-        const kyMax = Math.ceil((-renderPanY + vh + bufY) / pitchY);
+        // renderPanX/Y are unbounded accumulators (see tick()) — wrap into
+        // [0,pitch) here, locally, for this computation only.
+        const panX = mod(renderPanX, pitchX);
+        const panY = mod(renderPanY, pitchY);
+
+        const kxMin = Math.floor((-panX - bufX) / pitchX);
+        const kxMax = Math.ceil((-panX + vw + bufX) / pitchX);
+        const kyMin = Math.floor((-panY - bufY) / pitchY);
+        const kyMax = Math.ceil((-panY + vh + bufY) / pitchY);
 
         const wanted = new Set();
 
@@ -191,13 +191,10 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion 
             for (let col = 0; col < cols; col++) {
                 const rect = slotRect(row, col);
                 for (let ky = kyMin; ky <= kyMax; ky++) {
-                    // Actual on-screen position — must include the pan offset,
-                    // same as positionTiles() computes it, or this check tests
-                    // the wrong quantity entirely once renderPan is non-trivial.
-                    const baseY = rect.y + ky * pitchY + renderPanY;
+                    const baseY = rect.y + ky * pitchY + panY;
                     if (baseY + rect.h < -bufY || baseY > vh + bufY) continue;
                     for (let kx = kxMin; kx <= kxMax; kx++) {
-                        const baseX = rect.x + kx * pitchX + renderPanX;
+                        const baseX = rect.x + kx * pitchX + panX;
                         if (baseX + rect.w < -bufX || baseX > vw + bufX) continue;
                         wanted.add(`${row}:${col}:${kx}:${ky}`);
                     }
@@ -231,10 +228,15 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion 
     }
 
     function positionTiles() {
+        // Same local wrap as recull() — must stay in sync with it, since a
+        // pool entry's (kx,ky) only make sense relative to the same wrapped
+        // reference recull() used when it decided this cell was visible.
+        const panX = mod(renderPanX, pitchX);
+        const panY = mod(renderPanY, pitchY);
         pool.forEach(tile => {
             const rect = slotRect(tile.row, tile.col);
-            const x = rect.x + tile.kx * pitchX + renderPanX;
-            const y = rect.y + tile.ky * pitchY + renderPanY;
+            const x = rect.x + tile.kx * pitchX + panX;
+            const y = rect.y + tile.ky * pitchY + panY;
             tile.el.style.width = rect.w + 'px';
             tile.el.style.height = rect.h + 'px';
             tile.el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
@@ -282,14 +284,14 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion 
             renderPanY += (targetPanY - renderPanY) * lerpFactor;
         }
 
-        if (pitchX > 0) {
-            targetPanX = ((targetPanX % pitchX) + pitchX) % pitchX;
-            renderPanX = ((renderPanX % pitchX) + pitchX) % pitchX;
-        }
-        if (pitchY > 0) {
-            targetPanY = ((targetPanY % pitchY) + pitchY) % pitchY;
-            renderPanY = ((renderPanY % pitchY) + pitchY) % pitchY;
-        }
+        // targetPanX/Y and renderPanX/Y are deliberately never wrapped in
+        // place. Dragging computes targetPanX = startPanX + dx fresh from a
+        // fixed reference point captured at pointerdown — if this wrapped
+        // mid-drag, the very next pointermove would immediately undo the
+        // wrap (since startPanX wasn't updated to match), producing a
+        // visible snap right at the pitch boundary. Wrapping only happens
+        // where the value is actually consumed (positionTiles, recull),
+        // via a local mod() that never feeds back into this state.
 
         panSinceCull = Math.hypot(renderPanX - lastCullX, renderPanY - lastCullY);
         if (panSinceCull > unitW * RECULL_THRESHOLD) {
