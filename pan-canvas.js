@@ -112,10 +112,9 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion 
         cellsPerTile = rows * cols;
         tilePages = items.length ? Math.max(1, Math.ceil(items.length / cellsPerTile)) : 1;
 
-        // targetPanX/renderPanX are never wrapped in place (see tick()) — a
-        // pitch change here needs no special handling, mod(renderPanX, pitchX)
-        // is simply computed fresh against whatever pitch is current wherever
-        // it's actually used.
+        // targetPanX/renderPanX are never wrapped — a pitch change here needs
+        // no special handling, kx/ky ranges are simply recomputed fresh
+        // against whatever pitch is current wherever they're used.
     }
 
     function slotRect(row, col) {
@@ -175,15 +174,19 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion 
         const bufX = unitW * POOL_BUFFER;
         const bufY = unitW * POOL_BUFFER;
 
-        // renderPanX/Y are unbounded accumulators (see tick()) — wrap into
-        // [0,pitch) here, locally, for this computation only.
-        const panX = mod(renderPanX, pitchX);
-        const panY = mod(renderPanY, pitchY);
-
-        const kxMin = Math.floor((-panX - bufX) / pitchX);
-        const kxMax = Math.ceil((-panX + vw + bufX) / pitchX);
-        const kyMin = Math.floor((-panY - bufY) / pitchY);
-        const kyMax = Math.ceil((-panY + vh + bufY) / pitchY);
+        // Deliberately NOT wrapped. The (kx,ky) "which repeat of the pattern"
+        // index already provides the infinite tiling on its own — kx/ky are
+        // just integers that grow arbitrarily large in either direction as
+        // you pan further, exactly mirroring renderPanX/Y's own unbounded
+        // growth. Wrapping renderPanX here as well would make kx/ky jump
+        // discontinuously every time it crossed a pitch boundary — the same
+        // on-screen tile would suddenly be reclassified under a different
+        // (kx,ky), get a new pool key, and get unmounted+remounted (visible
+        // as a flicker/fade right at the boundary) for no visual reason.
+        const kxMin = Math.floor((-renderPanX - bufX) / pitchX);
+        const kxMax = Math.ceil((-renderPanX + vw + bufX) / pitchX);
+        const kyMin = Math.floor((-renderPanY - bufY) / pitchY);
+        const kyMax = Math.ceil((-renderPanY + vh + bufY) / pitchY);
 
         const wanted = new Set();
 
@@ -191,10 +194,10 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion 
             for (let col = 0; col < cols; col++) {
                 const rect = slotRect(row, col);
                 for (let ky = kyMin; ky <= kyMax; ky++) {
-                    const baseY = rect.y + ky * pitchY + panY;
+                    const baseY = rect.y + ky * pitchY + renderPanY;
                     if (baseY + rect.h < -bufY || baseY > vh + bufY) continue;
                     for (let kx = kxMin; kx <= kxMax; kx++) {
-                        const baseX = rect.x + kx * pitchX + panX;
+                        const baseX = rect.x + kx * pitchX + renderPanX;
                         if (baseX + rect.w < -bufX || baseX > vw + bufX) continue;
                         wanted.add(`${row}:${col}:${kx}:${ky}`);
                     }
@@ -228,15 +231,11 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion 
     }
 
     function positionTiles() {
-        // Same local wrap as recull() — must stay in sync with it, since a
-        // pool entry's (kx,ky) only make sense relative to the same wrapped
-        // reference recull() used when it decided this cell was visible.
-        const panX = mod(renderPanX, pitchX);
-        const panY = mod(renderPanY, pitchY);
+        // Raw renderPanX/Y, same as recull() — see the comment there.
         pool.forEach(tile => {
             const rect = slotRect(tile.row, tile.col);
-            const x = rect.x + tile.kx * pitchX + panX;
-            const y = rect.y + tile.ky * pitchY + panY;
+            const x = rect.x + tile.kx * pitchX + renderPanX;
+            const y = rect.y + tile.ky * pitchY + renderPanY;
             tile.el.style.width = rect.w + 'px';
             tile.el.style.height = rect.h + 'px';
             tile.el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
@@ -284,14 +283,18 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion 
             renderPanY += (targetPanY - renderPanY) * lerpFactor;
         }
 
-        // targetPanX/Y and renderPanX/Y are deliberately never wrapped in
-        // place. Dragging computes targetPanX = startPanX + dx fresh from a
-        // fixed reference point captured at pointerdown — if this wrapped
-        // mid-drag, the very next pointermove would immediately undo the
-        // wrap (since startPanX wasn't updated to match), producing a
-        // visible snap right at the pitch boundary. Wrapping only happens
-        // where the value is actually consumed (positionTiles, recull),
-        // via a local mod() that never feeds back into this state.
+        // targetPanX/Y and renderPanX/Y are deliberately never wrapped at
+        // all — not in place, and not even locally where consumed. Dragging
+        // computes targetPanX = startPanX + dx fresh from a fixed reference
+        // point captured at pointerdown, so wrapping the state mid-drag
+        // would desync from that reference and snap (see the drag-jolt fix
+        // above this one). And recull()/positionTiles() need the pan value
+        // to stay perfectly continuous too — the (kx,ky) "which repeat of
+        // the pattern" index is what provides the infinite tiling; wrapping
+        // the pan value as well would make kx/ky jump discontinuously at
+        // every pitch boundary, causing on-screen tiles to be reclassified
+        // under a new pool key and spuriously unmount+remount (a visible
+        // flicker) for no visual reason.
 
         panSinceCull = Math.hypot(renderPanX - lastCullX, renderPanY - lastCullY);
         if (panSinceCull > unitW * RECULL_THRESHOLD) {
