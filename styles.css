@@ -1019,37 +1019,34 @@ body.landing {
    that just happens to hold the controls rather than as a separate strip
    of app chrome laid over the canvas. Always visible, no interaction
    needed to reveal it. */
-.filter-card {
+/* ===== FILTER BAR (bottom) =====
+   A thin, always-visible, fully opaque strip anchored to the bottom of the
+   screen instead of the top — the top edge is already busy with the site's
+   own logo/nav, but the bottom was empty, and a bottom bar needs none of
+   the ~8rem clearance padding a top bar needed to duck under that nav, so
+   it can stay genuinely thin. Right edge stops short of Archie's corner
+   widget rather than running full-bleed underneath it. */
+.filter-bar-bottom {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 150;
-    width: min(680px, calc(100vw - 3rem));
-    max-height: 90vh;
-    overflow-y: auto;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.1rem 1.3rem;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    padding: 0.6rem 1.2rem 0.7rem;
+    padding-right: clamp(1.2rem, 22vw, 260px);
+    background: var(--bg);
+    border-top: 1px solid var(--border);
 }
 
-.filter-card-label {
-    display: inline-block;
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    background: rgba(255, 255, 255, 0.6);
-    padding: 0.2rem 0.5rem;
-    border-radius: 99px;
-    color: var(--text);
-    margin-bottom: 0.8rem;
+.filter-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
 .search-input {
-    width: 100%;
+    flex: 0 0 auto;
+    width: clamp(160px, 20vw, 240px);
     background: none;
     border: none;
     border-bottom: 1px solid var(--border);
@@ -1070,10 +1067,13 @@ body.landing {
 .search-input::placeholder { color: var(--muted); }
 
 .tag-bar {
+    flex: 1;
+    min-width: 0;
     display: flex;
-    flex-wrap: wrap;
     gap: 0.4rem;
-    padding: 0.8rem 0 0.4rem;
+    overflow-x: auto;
+    padding: 0.3rem 0;
+    scrollbar-width: thin;
 }
 
 .tag-pill {
@@ -1100,13 +1100,14 @@ body.landing {
 
 .filter-meta {
     display: flex;
-    justify-content: space-between;
+    flex-wrap: wrap;
     align-items: center;
+    gap: 0.6rem 1rem;
     font-family: var(--font-mono);
     font-size: 0.65rem;
     color: var(--muted);
     letter-spacing: 0.1em;
-    padding-bottom: 0.4rem;
+    padding-top: 0.3rem;
 }
 
 /* .room-items-toggle is shared with editorial.html, where it's a small fixed
@@ -1114,28 +1115,44 @@ body.landing {
    uses the page's own (light, paper-themed) colours instead of the
    hardcoded dark ones, and its list can run to hundreds of buttons rather
    than a handful. */
-.filter-card .room-items-toggle {
-    position: static;
-    margin-top: 0.5rem;
+/* Anchored to the right end of the meta row; its list pops UPWARD (not the
+   base rule's default in-flow expansion) since this toggle now lives in a
+   bar pinned to the bottom of the screen — expanding downward would push
+   it off-screen entirely. */
+.filter-bar-bottom .room-items-toggle {
+    position: relative;
+    /* Reset the base rule's fixed-positioning offsets — position:relative
+       still applies top/left as an offset from natural flow position, so
+       leaving them at 8.6rem/1.6rem would shove this off-screen. */
+    top: auto;
+    left: auto;
+    margin-left: auto;
     color: var(--muted);
 }
 
-.filter-card .room-items-toggle summary {
-    background: var(--bg);
+.filter-bar-bottom .room-items-toggle summary {
+    background: var(--card-bg);
     border-color: var(--border);
     display: inline-block;
 }
 
-.filter-card .room-items-toggle ul {
-    background: var(--bg);
+.filter-bar-bottom .room-items-toggle[open] summary { margin-bottom: 0; }
+
+.filter-bar-bottom .room-items-toggle ul {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 0.6rem;
+    background: var(--card-bg);
     border-color: var(--border);
     max-width: none;
-    max-height: 30vh;
+    width: max(240px, 60vw);
+    max-height: 50vh;
     overflow-y: auto;
 }
 
-.filter-card .room-items-toggle button:hover,
-.filter-card .room-items-toggle button:focus-visible {
+.filter-bar-bottom .room-items-toggle button:hover,
+.filter-bar-bottom .room-items-toggle button:focus-visible {
     background: rgba(0, 0, 0, 0.06);
 }
 
@@ -1158,7 +1175,7 @@ body.landing {
 .pan-canvas {
     position: fixed;
     inset: 0;
-    z-index: 10;                 /* behind .filter-card(150) / .page-topbar(300) */
+    z-index: 10;                 /* behind .filter-bar-bottom(200) / .page-topbar(300) */
     overflow: hidden;
     touch-action: none;
     user-select: none;
@@ -1217,7 +1234,9 @@ body.landing {
 
 .pan-hint {
     position: fixed;
-    bottom: 1.6rem;
+    /* Clears .filter-bar-bottom, which now occupies the lower strip of the
+       screen. */
+    bottom: 6.8rem;
     left: 1.6rem;
     z-index: 15;
     font-family: var(--font-mono);
@@ -1226,6 +1245,11 @@ body.landing {
     text-transform: uppercase;
     color: var(--muted);
     pointer-events: none;
+    /* Tile captions can end up at the same height — an opaque pill keeps
+       this legible regardless of what's behind it. */
+    background: rgba(255, 255, 255, 0.75);
+    padding: 0.3rem 0.6rem;
+    border-radius: 99px;
 }
 
 /* Test/placeholder content — dashed border marks it clearly as stand-in,
@@ -1589,10 +1613,21 @@ body.is-hovering .cursor {
 
     .scrap-header { padding: 9rem 4vw 0.5rem; }
     /* 16px min prevents iOS Safari from auto-zooming the page on focus */
-    .search-input { font-size: 1rem; }
+    .search-input { font-size: 1rem; width: clamp(120px, 32vw, 180px); }
     /* Pan canvas itself is responsive via JS (computeUnitW in pan-canvas.js) */
-    .pan-hint { left: 1rem; bottom: 1rem; font-size: 0.56rem; }
-    .filter-card { max-height: min(75vh, 560px); }
+    .pan-hint { left: 1rem; bottom: 5.6rem; font-size: 0.56rem; }
+    /* Archie's figure doesn't shrink on mobile (min-height:195px, ~150px
+       wide), and his speech bubble (220px, right-aligned) reaches further
+       left still when open. Fully clearing the bubble every time would cost
+       more width than a mobile bar can spare, so this is a middle ground —
+       clears the idle figure with room to spare; a fully-open bubble may
+       still brush the corner briefly, which is an acceptable trade since
+       the bubble is transient and dismissible. */
+    .filter-bar-bottom { padding: 0.5rem 1rem 0.6rem; padding-right: 200px; }
+    .filter-bar-bottom .room-items-toggle ul { width: max(200px, 70vw); }
+    /* Let meta content wrap onto its own line rather than force the toggle
+       to hug the exact corner where Archie's bubble tends to open. */
+    .filter-bar-bottom .room-items-toggle { margin-left: 0; }
 
     .lightbox.open { flex-direction: column; }
     .lightbox-media { padding: 3.5rem 1rem 0.5rem; }
