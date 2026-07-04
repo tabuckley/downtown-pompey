@@ -1012,18 +1012,44 @@ body.landing {
    that it was always on screen. Solid var(--bg) also means the centred
    .grid-status "0 results" message (rendered behind this bar when the bar
    overlaps the viewport centre) can never look like it's just missing. */
-.filter-bar {
-    position: sticky;
-    top: 0;
-    z-index: 200;
-    padding: 8rem 4vw 0.7rem;
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
+/* ===== FILTER CARD =====
+   A neither-transparent-bar-nor-click-to-reveal-panel: styled and sized like
+   the media tiles themselves (same border/background/radius as
+   .pan-tile-inner) and fixed dead-centre, so it reads as "one of the boxes"
+   that just happens to hold the controls rather than as a separate strip
+   of app chrome laid over the canvas. Always visible, no interaction
+   needed to reveal it. */
+.filter-card {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 150;
+    width: min(300px, calc(100vw - 3rem));
+    max-height: min(70vh, 560px);
+    overflow-y: auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+}
+
+.filter-card-label {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.6);
+    padding: 0.2rem 0.5rem;
+    border-radius: 99px;
+    color: var(--text);
+    margin-bottom: 0.8rem;
 }
 
 .search-input {
     width: 100%;
-    max-width: 420px;
     background: none;
     border: none;
     border-bottom: 1px solid var(--border);
@@ -1045,10 +1071,9 @@ body.landing {
 
 .tag-bar {
     display: flex;
-    gap: 0.45rem;
-    overflow-x: auto;
-    padding: 0.7rem 0;
-    scrollbar-width: thin;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.8rem 0 0.4rem;
 }
 
 .tag-pill {
@@ -1085,31 +1110,32 @@ body.landing {
 }
 
 /* .room-items-toggle is shared with editorial.html, where it's a small fixed
-   overlay on a dark 3D scene. Here it sits inline in the filter bar and uses
-   the page's own (light, paper-themed) colours instead of the hardcoded dark
-   ones, and its list can run to hundreds of buttons rather than a handful. */
-.filter-bar .room-items-toggle {
+   overlay on a dark 3D scene. Here it sits inline in the filter card and
+   uses the page's own (light, paper-themed) colours instead of the
+   hardcoded dark ones, and its list can run to hundreds of buttons rather
+   than a handful. */
+.filter-card .room-items-toggle {
     position: static;
     margin-top: 0.5rem;
     color: var(--muted);
 }
 
-.filter-bar .room-items-toggle summary {
-    background: var(--card-bg);
+.filter-card .room-items-toggle summary {
+    background: var(--bg);
     border-color: var(--border);
     display: inline-block;
 }
 
-.filter-bar .room-items-toggle ul {
-    background: var(--card-bg);
+.filter-card .room-items-toggle ul {
+    background: var(--bg);
     border-color: var(--border);
     max-width: none;
-    max-height: 50vh;
+    max-height: 30vh;
     overflow-y: auto;
 }
 
-.filter-bar .room-items-toggle button:hover,
-.filter-bar .room-items-toggle button:focus-visible {
+.filter-card .room-items-toggle button:hover,
+.filter-card .room-items-toggle button:focus-visible {
     background: rgba(0, 0, 0, 0.06);
 }
 
@@ -1132,7 +1158,7 @@ body.landing {
 .pan-canvas {
     position: fixed;
     inset: 0;
-    z-index: 10;                 /* behind .filter-bar(200) / .page-topbar(300) */
+    z-index: 10;                 /* behind .filter-card(150) / .page-topbar(300) */
     overflow: hidden;
     touch-action: none;
     user-select: none;
@@ -1562,12 +1588,11 @@ body.is-hovering .cursor {
     .page-topbar .mode-btn { padding: 0.4rem 0.6rem; font-size: 0.52rem; }
 
     .scrap-header { padding: 9rem 4vw 0.5rem; }
-    /* Reserve enough space for the topbar even when it wraps to two rows */
-    .filter-bar { padding-top: 8.5rem; }
     /* 16px min prevents iOS Safari from auto-zooming the page on focus */
     .search-input { font-size: 1rem; }
     /* Pan canvas itself is responsive via JS (computeUnitW in pan-canvas.js) */
     .pan-hint { left: 1rem; bottom: 1rem; font-size: 0.56rem; }
+    .filter-card { max-height: min(75vh, 560px); }
 
     .lightbox.open { flex-direction: column; }
     .lightbox-media { padding: 3.5rem 1rem 0.5rem; }
