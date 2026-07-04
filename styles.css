@@ -1067,13 +1067,10 @@ body.landing {
 .search-input::placeholder { color: var(--muted); }
 
 .tag-bar {
-    flex: 1;
-    min-width: 0;
     display: flex;
+    flex-wrap: wrap;
     gap: 0.4rem;
-    overflow-x: auto;
-    padding: 0.3rem 0;
-    scrollbar-width: thin;
+    padding: 0.2rem 0 0.5rem;
 }
 
 .tag-pill {
@@ -1232,25 +1229,10 @@ body.landing {
     pointer-events: auto;
 }
 
-.pan-hint {
-    position: fixed;
-    /* Clears .filter-bar-bottom, which now occupies the lower strip of the
-       screen. */
-    bottom: 6.8rem;
-    left: 1.6rem;
-    z-index: 15;
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--muted);
-    pointer-events: none;
-    /* Tile captions can end up at the same height — an opaque pill keeps
-       this legible regardless of what's behind it. */
-    background: rgba(255, 255, 255, 0.75);
-    padding: 0.3rem 0.6rem;
-    border-radius: 99px;
-}
+/* .pan-hint removed — its "drag or scroll to explore" message duplicated
+   .scrap-sub in the page header, and its fixed position would otherwise
+   need to track .filter-bar-bottom's height, which now varies with how
+   many rows the tags wrap into. */
 
 /* Test/placeholder content — dashed border marks it clearly as stand-in,
    not real archive media. Disappears automatically once real items exist. */
@@ -1614,8 +1596,12 @@ body.is-hovering .cursor {
     .scrap-header { padding: 9rem 4vw 0.5rem; }
     /* 16px min prevents iOS Safari from auto-zooming the page on focus */
     .search-input { font-size: 1rem; width: clamp(120px, 32vw, 180px); }
-    /* Pan canvas itself is responsive via JS (computeUnitW in pan-canvas.js) */
-    .pan-hint { left: 1rem; bottom: 5.6rem; font-size: 0.56rem; }
+    /* All 46 tags wrapped at mobile width need ~16 rows — the bar would
+       grow taller than the viewport itself and (being fixed) extend off
+       the top of the screen with no way to scroll to the rest. Falls back
+       to a single horizontally-scrolling row here only; desktop keeps the
+       full wrapped grid with no scroll. */
+    .tag-bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
     /* Archie's figure doesn't shrink on mobile (min-height:195px, ~150px
        wide), and his speech bubble (220px, right-aligned) reaches further
        left still when open. Fully clearing the bubble every time would cost
