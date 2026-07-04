@@ -1025,13 +1025,13 @@ body.landing {
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 150;
-    width: min(300px, calc(100vw - 3rem));
-    max-height: min(70vh, 560px);
+    width: min(680px, calc(100vw - 3rem));
+    max-height: 90vh;
     overflow-y: auto;
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 1.1rem;
+    padding: 1.1rem 1.3rem;
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
 }
 
