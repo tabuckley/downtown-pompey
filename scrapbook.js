@@ -84,16 +84,11 @@ function placeholderBox(item, large) {
 let allItems = [];
 let filtered = [];
 const activeTags = new Set();
-let query = '';
 
 const canvasEl = document.getElementById('panCanvas');
 const tagBar = document.getElementById('tagBar');
-const searchInput = document.getElementById('searchInput');
-const itemCount = document.getElementById('itemCount');
 const clearBtn = document.getElementById('clearFilters');
 const gridStatus = document.getElementById('gridStatus');
-const itemsListToggle = document.getElementById('scrapItemsToggle');
-const itemsList = document.getElementById('scrapItemsList');
 
 const lightbox = document.getElementById('lightbox');
 const lightboxMedia = document.getElementById('lightboxMedia');
@@ -119,20 +114,8 @@ TAGS.forEach(tag => {
     tagBar.appendChild(pill);
 });
 
-// ===== SEARCH =====
-let searchTimer;
-searchInput.addEventListener('input', () => {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => {
-        query = searchInput.value.trim().toLowerCase();
-        applyFilters();
-    }, 200);
-});
-
 clearBtn.addEventListener('click', () => {
     activeTags.clear();
-    query = '';
-    searchInput.value = '';
     tagBar.querySelectorAll('.tag-pill.active').forEach(p => {
         p.classList.remove('active');
         p.setAttribute('aria-pressed', 'false');
@@ -167,31 +150,11 @@ function matchesTag(item, tag) {
     return wanted.split('/').some(part => tags.includes(part.trim()));
 }
 
-function matchesQuery(item) {
-    if (!query) return true;
-    const haystack = [item.title, item.description, item.credit, item.tags, item.project, item.type]
-        .join(' ').toLowerCase();
-    return query.split(/\s+/).every(word => haystack.includes(word));
-}
-
 function applyFilters() {
-    filtered = allItems.filter(item =>
-        [...activeTags].every(tag => matchesTag(item, tag)) && matchesQuery(item)
-    );
-    clearBtn.classList.toggle('visible', activeTags.size > 0 || query.length > 0);
+    filtered = allItems.filter(item => [...activeTags].every(tag => matchesTag(item, tag)));
+    clearBtn.classList.toggle('visible', activeTags.size > 0);
     panCanvas.setItems(filtered);
-    rebuildKeyboardList();
-    updateCount();
     updateStatus();
-}
-
-function updateCount() {
-    if (!allItems.length) {
-        itemCount.textContent = 'The archive is growing';
-        return;
-    }
-    const label = filtered.length === 1 ? 'item' : 'items';
-    itemCount.textContent = `${filtered.length} ${label}`;
 }
 
 function updateStatus() {
@@ -201,27 +164,6 @@ function updateStatus() {
         gridStatus.textContent = 'Nothing matches those filters — try removing one.';
     } else {
         gridStatus.textContent = '';
-    }
-}
-
-// ===== KEYBOARD / SCREEN-READER FALLBACK =====
-// The pan canvas is a continuously-moving, pooled/recycled visual surface —
-// DOM order has no coherent relationship to spatial position, so individual
-// tiles are not focusable (see .pan-canvas[aria-hidden] in the HTML). This
-// real, focusable list is the actual way keyboard/AT users reach every item,
-// same pattern as editorial.js's room-items-toggle.
-function rebuildKeyboardList() {
-    itemsList.innerHTML = '';
-    filtered.forEach((item, i) => {
-        const li = document.createElement('li');
-        const btn = document.createElement('button');
-        btn.textContent = `${item.title || 'Untitled'}${item.project ? ` — ${item.project}` : ''}`;
-        btn.addEventListener('click', () => openLightbox(i));
-        li.appendChild(btn);
-        itemsList.appendChild(li);
-    });
-    if (itemsListToggle) {
-        itemsListToggle.style.display = filtered.length ? '' : 'none';
     }
 }
 
@@ -365,8 +307,6 @@ async function init() {
 
         if (!allItems.length) {
             allItems = makePlaceholderItems();
-            const sub = document.querySelector('.scrap-sub');
-            if (sub) sub.textContent += ' Showing placeholder test items until real content is published.';
             console.info(`Scrapbook: no published items in the sheet — showing ${allItems.length} placeholder test items.`);
         }
 
@@ -374,7 +314,6 @@ async function init() {
         applyFilters();
     } catch (err) {
         console.warn('Archive load failed:', err.message);
-        itemCount.textContent = 'Archive unavailable';
         gridStatus.textContent = 'Could not reach the archive — try refreshing.';
     }
 }

@@ -29,10 +29,7 @@
 }
 
 body[data-mode="scrapbook"] {
-    background-image: url('textures/paper-pink.jpg');
-    background-size: cover;
-    background-attachment: fixed;
-    background-blend-mode: multiply;
+    background: #ffffff;
 }
 
 /* ===== ACCESSIBLE MODE ===== */
@@ -987,24 +984,6 @@ body.landing {
 }
 
 /* ===== SCRAPBOOK ARCHIVE PAGE ===== */
-.scrap-header {
-    padding: 8.5rem 4vw 0.5rem;
-}
-
-.scrap-title {
-    font-family: var(--font-display);
-    font-size: clamp(1.8rem, 4vw, 3rem);
-    font-weight: 400;
-    margin-bottom: 0.4rem;
-}
-
-.scrap-sub {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-}
-
 /* ===== FILTER BAR =====
    Always visible (no click needed to reveal filters) — but solid/opaque
    instead of transparent+blurred. The transparency was the actual problem:
@@ -1026,6 +1005,8 @@ body.landing {
    the ~8rem clearance padding a top bar needed to duck under that nav, so
    it can stay genuinely thin. Right edge stops short of Archie's corner
    widget rather than running full-bleed underneath it. */
+/* Same pink paper texture the whole page used to have — now confined to
+   just this strip, since the page background itself is plain white. */
 .filter-bar-bottom {
     position: fixed;
     bottom: 0;
@@ -1034,50 +1015,13 @@ body.landing {
     z-index: 200;
     padding: 0.6rem 1.2rem 0.7rem;
     padding-right: clamp(1.2rem, 22vw, 260px);
-    background: var(--bg);
+    background-color: #ede5d8;
+    background-image: url('textures/paper-pink.jpg');
+    background-size: cover;
+    background-position: center;
+    background-blend-mode: multiply;
     border-top: 1px solid var(--border);
 }
-
-/* Sits in the (non-positioned) page header, which paints BELOW the fixed,
-   z-index:10 pan canvas — same reason the title/subtitle behind it are
-   inert decoration. Without its own stacking context above the canvas,
-   the search input and toggle would be visible but unclickable, the
-   canvas's own pointer handlers swallowing every click first. */
-.scrap-header-controls {
-    position: relative;
-    z-index: 200;
-    display: inline-flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-top: 0.8rem;
-    padding: 0.5rem 0.9rem;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-}
-
-.search-input {
-    flex: 0 0 auto;
-    width: clamp(160px, 20vw, 240px);
-    background: none;
-    border: none;
-    border-bottom: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
-    padding: 0.5rem 0.2rem;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-.search-input:focus {
-    border-color: var(--accent);
-    outline: 2px solid var(--accent);
-    outline-offset: 3px;
-}
-
-.search-input::placeholder { color: var(--muted); }
 
 .tag-bar {
     display: flex;
@@ -1088,24 +1032,24 @@ body.landing {
 
 .tag-pill {
     flex-shrink: 0;
-    background: none;
-    border: 1px solid var(--border);
+    background: #ffffff;
+    border: 1px solid var(--accent);
     border-radius: 999px;
     padding: 0.32rem 0.85rem;
     font-family: var(--font-mono);
     font-size: 0.68rem;
-    color: var(--muted);
+    color: var(--accent);
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.tag-pill:hover { color: var(--text); border-color: var(--text); }
+.tag-pill:hover { background: rgba(208, 19, 89, 0.1); }
 
 .tag-pill.active {
-    background: var(--text);
-    color: var(--bg);
-    border-color: var(--text);
+    background: var(--accent);
+    color: #ffffff;
+    border-color: var(--accent);
 }
 
 .filter-meta {
@@ -1118,47 +1062,6 @@ body.landing {
     color: var(--muted);
     letter-spacing: 0.1em;
     padding-top: 0.3rem;
-}
-
-/* .room-items-toggle is shared with editorial.html, where it's a small fixed
-   overlay on a dark 3D scene. Here it sits inline in the header controls and
-   uses the page's own (light, paper-themed) colours instead of the
-   hardcoded dark ones, and its list can run to hundreds of buttons rather
-   than a handful. */
-.scrap-header-controls .room-items-toggle {
-    position: relative;
-    /* Reset the base rule's fixed-positioning offsets — position:relative
-       still applies top/left as an offset from natural flow position, so
-       leaving them at 8.6rem/1.6rem would shove this off-screen. */
-    top: auto;
-    left: auto;
-    color: var(--muted);
-}
-
-.scrap-header-controls .room-items-toggle summary {
-    background: var(--card-bg);
-    border-color: var(--border);
-    display: inline-block;
-}
-
-.scrap-header-controls .room-items-toggle[open] summary { margin-bottom: 0; }
-
-.scrap-header-controls .room-items-toggle ul {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    margin-top: 0.6rem;
-    background: var(--card-bg);
-    border-color: var(--border);
-    max-width: none;
-    width: max(240px, 40vw);
-    max-height: 50vh;
-    overflow-y: auto;
-}
-
-.scrap-header-controls .room-items-toggle button:hover,
-.scrap-header-controls .room-items-toggle button:focus-visible {
-    background: rgba(0, 0, 0, 0.06);
 }
 
 .clear-filters {
@@ -1236,11 +1139,6 @@ body.landing {
     padding: 1rem;
     pointer-events: auto;
 }
-
-/* .pan-hint removed — its "drag or scroll to explore" message duplicated
-   .scrap-sub in the page header, and its fixed position would otherwise
-   need to track .filter-bar-bottom's height, which now varies with how
-   many rows the tags wrap into. */
 
 /* Test/placeholder content — dashed border marks it clearly as stand-in,
    not real archive media. Disappears automatically once real items exist. */
@@ -1601,9 +1499,6 @@ body.is-hovering .cursor {
     .page-topbar .home-logo { height: 60px; }
     .page-topbar .mode-btn { padding: 0.4rem 0.6rem; font-size: 0.52rem; }
 
-    .scrap-header { padding: 9rem 4vw 0.5rem; }
-    /* 16px min prevents iOS Safari from auto-zooming the page on focus */
-    .search-input { font-size: 1rem; width: clamp(120px, 32vw, 180px); }
     /* All 46 tags wrapped at mobile width need ~16 rows — the bar would
        grow taller than the viewport itself and (being fixed) extend off
        the top of the screen with no way to scroll to the rest. Falls back
@@ -1618,7 +1513,6 @@ body.is-hovering .cursor {
        still brush the corner briefly, which is an acceptable trade since
        the bubble is transient and dismissible. */
     .filter-bar-bottom { padding: 0.5rem 1rem 0.6rem; padding-right: 200px; }
-    .scrap-header-controls .room-items-toggle ul { width: max(200px, 70vw); }
 
     .lightbox.open { flex-direction: column; }
     .lightbox-media { padding: 3.5rem 1rem 0.5rem; }
