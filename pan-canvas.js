@@ -3,8 +3,13 @@
 // and gets back setItems(). Mirrors the three-scene.js/editorial.js split:
 // this is the engine, the page wires up what the tiles mean.
 
-const RATIOS = [0.75, 1, 1, 1.3, 1.6];
-const GAP = 14;
+// A wider spread of shapes — strong portrait through to wide landscape —
+// rather than the previous narrow cluster around square, so the grid reads
+// more like a mixed photo album than a uniform tile wall.
+const RATIOS = [0.5, 0.65, 0.8, 1, 1, 1.25, 1.5, 1.78, 2.0];
+const GAP = 26;
+const ROW_STAGGER = 0.5; // alternate rows shift sideways by this fraction of a cell, brick-lay style
+const JITTER_FRAC = 0.24; // per-tile position jitter, as a fraction of its own (smaller) dimension
 const POOL_BUFFER = 1.6; // how many extra tile-widths beyond the viewport to keep mounted
 const DAMPING = 0.96;
 const LERP = 0.13;
@@ -31,6 +36,16 @@ function hash(n) {
 // a real photo would.
 function ratioForSlot(row, col, cols) {
     return RATIOS[hash(row * 92821 + col * 43711 + cols) % RATIOS.length];
+}
+
+// Deterministic per-slot nudge, decorrelated from ratioForSlot's hash (different
+// multipliers) so shape and position don't co-vary in an obviously patterned way.
+// Fixed per (row,col) rather than per wrap-copy — like ratioForSlot, the same
+// slot always gets the same nudge, it's just showing different content each page.
+function jitterForSlot(row, col) {
+    const jx = (hash(row * 12983 + col * 50261) % 1000) / 1000 - 0.5;
+    const jy = (hash(row * 77111 + col * 20441) % 1000) / 1000 - 0.5;
+    return { jx, jy };
 }
 
 function mod(n, m) {
@@ -66,11 +81,12 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion 
     container.classList.add('pan-canvas');
     container.setAttribute('aria-hidden', 'true');
 
+    // 20% smaller than the original 150/190/260 at each breakpoint.
     function computeUnitW() {
         const w = window.innerWidth;
-        if (w <= 480) return 150;
-        if (w <= 768) return 190;
-        return 260;
+        if (w <= 480) return 120;
+        if (w <= 768) return 152;
+        return 208;
     }
 
     let cellsPerTile = 1, tilePages = 1;
@@ -84,10 +100,32 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion 
     // different "pages" of the item list via cellItemIndex(), so panning
     // further keeps surfacing more of the archive instead of looping the
     // same handful of items forever.
+    // A tile's OWN visual footprint, from its own slot's aspect ratio —
+    // distinct from rowH[row]/colX below, which are the row/column's
+    // *reserved* space (the largest any slot in that row/column needs),
+    // used purely to position the next row/column without overlap.
+    // Rendering every tile at a shared cell size was why ratio variety only
+    // ever showed up between rows, never between neighbouring tiles — and
+    // why the layout read as a rigid grid. Both dimensions are derived from
+    // the ratio around a roughly constant area, so a portrait slot is
+    // narrower AND taller (not just taller), a landscape slot wider AND
+    // shorter — genuine footprint variety, not just a crop.
+    function ownSizeForSlot(row, col) {
+        const ratio = ratioForSlot(row, col, cols);
+        const area = unitW * unitW;
+        const w = Math.max(unitW * 0.55, Math.min(unitW, Math.sqrt(area * ratio)));
+        const h = Math.max(unitW * 0.5, Math.min(unitW * 1.9, Math.sqrt(area / ratio)));
+        return { w, h };
+    }
+
     function rebuildLayout() {
         unitW = computeUnitW();
         cols = Math.max(3, Math.min(6, Math.round(window.innerWidth / (unitW + GAP))));
         rows = Math.max(3, Math.ceil(window.innerHeight / (unitW + GAP)) + 2);
+        // Kept even so the alternating row-stagger lines up with itself across
+        // the vertical wrap seam (row `rows` continuing into the next copy's
+        // row 0 needs the same parity, or the stagger pattern visibly flips).
+        if (rows % 2 !== 0) rows += 1;
 
         colX = new Array(cols).fill(0);
         for (let c = 1; c < cols; c++) colX[c] = colX[c - 1] + unitW + GAP;
@@ -96,8 +134,7 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion 
         for (let r = 0; r < rows; r++) {
             let tallest = unitW;
             for (let c = 0; c < cols; c++) {
-                const ratio = ratioForSlot(r, c, cols);
-                const h = Math.max(unitW * 0.55, Math.min(unitW * 1.7, unitW / ratio));
+                const h = ownSizeForSlot(r, c).h;
                 if (h > tallest) tallest = h;
             }
             rowH[r] = tallest;
@@ -117,8 +154,24 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion 
         // against whatever pitch is current wherever they're used.
     }
 
+    // Size is the tile's own, which is usually smaller than its row/column's
+    // reserved space — that leftover slack is what makes the scattered look
+    // possible. Position centers the tile in that slack (rather than
+    // top/left-aligning it, which would just redraw the same grid lines with
+    // smaller boxes) then: (a) shifts alternate rows sideways by half a cell,
+    // brick-lay style, so columns don't line up top-to-bottom, and (b) nudges
+    // every slot by a small fixed jitter so neighbours don't even share a
+    // row/column baseline. Jitter is capped relative to GAP, not to the
+    // slack, so it can never push a tile far enough to overlap its neighbour
+    // regardless of how little slack that particular slot has.
     function slotRect(row, col) {
-        return { x: colX[col], y: rowY[row], w: unitW, h: rowH[row] };
+        const { w, h } = ownSizeForSlot(row, col);
+        const { jx, jy } = jitterForSlot(row, col);
+        const stagger = (row % 2 === 1) ? (unitW + GAP) * ROW_STAGGER : 0;
+        const jitterAmp = Math.min(GAP * 0.8, Math.min(w, h) * JITTER_FRAC);
+        const x = colX[col] + stagger + (unitW - w) / 2 + jx * jitterAmp;
+        const y = rowY[row] + (rowH[row] - h) / 2 + jy * jitterAmp;
+        return { x, y, w, h };
     }
 
     // Which item shows in a given grid slot, for a given wrap-copy. Each
