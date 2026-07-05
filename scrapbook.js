@@ -89,6 +89,20 @@ const canvasEl = document.getElementById('panCanvas');
 const tagBar = document.getElementById('tagBar');
 const clearBtn = document.getElementById('clearFilters');
 const gridStatus = document.getElementById('gridStatus');
+const itemsListToggle = document.getElementById('scrapItemsToggle');
+const itemsList = document.getElementById('scrapItemsList');
+
+// The list pops via position:fixed (see styles.css) rather than a CSS
+// bottom:100% anchor, since .tag-bar's overflow-x:auto (needed for the
+// mobile tag-scroll fallback) would otherwise clip it — so its position
+// is computed here, above the bottom bar and aligned under the toggle.
+itemsListToggle.addEventListener('toggle', () => {
+    if (!itemsListToggle.open) return;
+    const barRect = document.querySelector('.filter-bar-bottom').getBoundingClientRect();
+    const toggleRect = itemsListToggle.getBoundingClientRect();
+    itemsList.style.bottom = `${window.innerHeight - barRect.top + 8}px`;
+    itemsList.style.left = `${toggleRect.left}px`;
+});
 
 const lightbox = document.getElementById('lightbox');
 const lightboxMedia = document.getElementById('lightboxMedia');
@@ -154,6 +168,7 @@ function applyFilters() {
     filtered = allItems.filter(item => [...activeTags].every(tag => matchesTag(item, tag)));
     clearBtn.classList.toggle('visible', activeTags.size > 0);
     panCanvas.setItems(filtered);
+    rebuildKeyboardList();
     updateStatus();
 }
 
@@ -165,6 +180,27 @@ function updateStatus() {
     } else {
         gridStatus.textContent = '';
     }
+}
+
+// ===== KEYBOARD / SCREEN-READER FALLBACK =====
+// The pan canvas is a continuously-moving, pooled/recycled visual surface —
+// DOM order has no coherent relationship to spatial position, so individual
+// tiles are not focusable (see .pan-canvas[aria-hidden] in the HTML). This
+// real, focusable list — styled to sit as the first "tag" in the tag bar,
+// bold rather than a plain pill so it doesn't look like a filter — is the
+// actual way keyboard/AT users reach every item, same pattern as
+// editorial.js's room-items-toggle.
+function rebuildKeyboardList() {
+    itemsList.innerHTML = '';
+    filtered.forEach((item, i) => {
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.textContent = `${item.title || 'Untitled'}${item.project ? ` — ${item.project}` : ''}`;
+        btn.addEventListener('click', () => openLightbox(i));
+        li.appendChild(btn);
+        itemsList.appendChild(li);
+    });
+    itemsListToggle.style.display = filtered.length ? '' : 'none';
 }
 
 // ===== RENDERING =====
