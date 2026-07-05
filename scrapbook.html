@@ -25,20 +25,20 @@
     <div class="scrap-header">
         <h1 class="scrap-title">The Scrapbook</h1>
         <p class="scrap-sub">Drag or scroll to explore. Filter by tag. Curate your own archive.</p>
+        <div class="scrap-header-controls">
+            <input type="search" class="search-input" id="searchInput" placeholder="Search the archive..." aria-label="Search the archive">
+            <details class="room-items-toggle" id="scrapItemsToggle">
+                <summary>Browse items as a list</summary>
+                <ul id="scrapItemsList"></ul>
+            </details>
+        </div>
     </div>
 
     <div class="filter-bar-bottom">
         <div class="tag-bar" id="tagBar"></div>
-        <div class="filter-bar-row">
-            <input type="search" class="search-input" id="searchInput" placeholder="Search the archive..." aria-label="Search the archive">
-            <div class="filter-meta">
-                <span id="itemCount">Loading the archive...</span>
-                <button class="clear-filters" id="clearFilters">clear filters</button>
-                <details class="room-items-toggle" id="scrapItemsToggle">
-                    <summary>Browse items as a list</summary>
-                    <ul id="scrapItemsList"></ul>
-                </details>
-            </div>
+        <div class="filter-meta">
+            <span id="itemCount">Loading the archive...</span>
+            <button class="clear-filters" id="clearFilters">clear filters</button>
         </div>
     </div>
 
