@@ -791,18 +791,12 @@ body.landing {
 .landing-btn-preview {
     position: absolute;
     inset: 0;
-    background-size: cover;
+    background-size: contain;
+    background-repeat: no-repeat;
     background-position: center;
     transform: scale(1);
     transition: transform 0.35s ease;
     pointer-events: none;
-}
-
-.landing-btn-preview::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(255, 255, 255, 0.88);
 }
 
 .landing-btn:hover .landing-btn-preview { transform: scale(1.08); }
