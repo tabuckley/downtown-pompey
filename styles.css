@@ -772,10 +772,10 @@ body.landing {
     flex-direction: column;
     justify-content: center;
     min-height: 150px;
-    border: 1px solid #1a1a1a;
     text-decoration: none;
     color: #1a1a1a;
     overflow: hidden;
+    box-shadow: 3px 3px 0 rgba(26, 26, 26, 0.15);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -784,13 +784,17 @@ body.landing {
     box-shadow: 6px 6px 0 rgba(26, 26, 26, 0.15);
 }
 
+/* Always visible now (previously hover-only) — the preview image is the
+   point, not a hover easter egg. Scale is what now reacts to hover instead
+   of opacity; it needs its own transition since it's the property that
+   actually changes on :hover below. */
 .landing-btn-preview {
     position: absolute;
     inset: 0;
-    opacity: 0;
     background-size: cover;
     background-position: center;
-    transition: opacity 0.3s ease;
+    transform: scale(1);
+    transition: transform 0.35s ease;
     pointer-events: none;
 }
 
@@ -801,7 +805,7 @@ body.landing {
     background: rgba(255, 255, 255, 0.88);
 }
 
-.landing-btn:hover .landing-btn-preview { opacity: 1; }
+.landing-btn:hover .landing-btn-preview { transform: scale(1.08); }
 
 .landing-btn-label {
     position: relative;
