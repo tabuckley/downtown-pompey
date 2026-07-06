@@ -761,6 +761,7 @@ body.landing {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
+    align-items: start;
     width: 100%;
     max-width: 620px;
     margin: 0 auto;
@@ -768,10 +769,7 @@ body.landing {
 
 .landing-btn {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 150px;
+    display: block;
     text-decoration: none;
     color: #1a1a1a;
     overflow: hidden;
@@ -779,30 +777,46 @@ body.landing {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Scrapbook/Accessible have no real media yet — a fixed-height box with a
+   flat background-colour fallback stands in until each gets a real image. */
+.landing-btn--placeholder {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 150px;
+}
+
+/* The whole button scales on hover now, not the image inside a fixed box —
+   scaling the image alone either cropped it against the button's own
+   overflow:hidden, or left it visibly floating past the button's edges. */
 .landing-btn:hover {
-    transform: translateY(-4px);
+    transform: translateY(-4px) scale(1.04);
     box-shadow: 6px 6px 0 rgba(26, 26, 26, 0.15);
 }
 
-/* Always visible now (previously hover-only) — the preview image is the
-   point, not a hover easter egg. Scale is what now reacts to hover instead
-   of opacity; it needs its own transition since it's the property that
-   actually changes on :hover below. */
-.landing-btn-preview {
+/* Scrapbook/Accessible: background-image div filling the placeholder box
+   above. */
+div.landing-btn-preview {
     position: absolute;
     inset: 0;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    transform: scale(1);
-    transition: transform 0.35s ease;
+}
+
+/* Editorial: a real <img>, so the button is exactly the media's own native
+   size and aspect ratio at whatever width the grid column gives it —
+   nothing to crop, hide, or letterbox. */
+img.landing-btn-preview {
+    display: block;
+    width: 100%;
+    height: auto;
     pointer-events: none;
 }
 
-.landing-btn:hover .landing-btn-preview { transform: scale(1.08); }
-
 .landing-btn-label {
-    position: relative;
+    position: absolute;
+    inset: 0;
     z-index: 2;
     display: flex;
     align-items: center;
@@ -1538,7 +1552,7 @@ body.is-hovering .cursor {
         gap: 2rem;
     }
     .landing-nav { grid-template-columns: 1fr; }
-    .landing-btn { min-height: 130px; }
+    .landing-btn--placeholder { min-height: 130px; }
 
     .page-topbar { padding: 0.6rem 0.7rem; flex-wrap: wrap; row-gap: 0.4rem; }
     .page-topbar .home-logo { height: 60px; }
