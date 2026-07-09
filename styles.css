@@ -777,7 +777,7 @@ body.landing {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Scrapbook/Accessible have no real media yet — a fixed-height box with a
+/* No real preview media yet on any of the three — a fixed-height box with a
    flat background-colour fallback stands in until each gets a real image. */
 .landing-btn--placeholder {
     display: flex;
@@ -785,6 +785,11 @@ body.landing {
     justify-content: center;
     min-height: 150px;
 }
+
+/* Editorial's placeholder is dark (echoing its own dark theme) rather than
+   light like Scrapbook/Accessible's — the label needs light text here, or
+   it's invisible against the base rule's dark #1a1a1a. */
+.landing-btn--dark { color: #f0ece4; }
 
 /* The whole button scales on hover now, not the image inside a fixed box —
    scaling the image alone either cropped it against the button's own
@@ -794,24 +799,12 @@ body.landing {
     box-shadow: 6px 6px 0 rgba(26, 26, 26, 0.15);
 }
 
-/* Scrapbook/Accessible: background-image div filling the placeholder box
-   above. */
-div.landing-btn-preview {
+.landing-btn-preview {
     position: absolute;
     inset: 0;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-}
-
-/* Editorial: a real <img>, so the button is exactly the media's own native
-   size and aspect ratio at whatever width the grid column gives it —
-   nothing to crop, hide, or letterbox. */
-img.landing-btn-preview {
-    display: block;
-    width: 100%;
-    height: auto;
-    pointer-events: none;
 }
 
 .landing-btn-label {
