@@ -2,14 +2,13 @@ import { fetchSheet, yearFrom, dateStamp } from './sheet.js';
 import { initPanCanvas } from './pan-canvas.js';
 
 const TAGS = [
-    'Event', 'Press', 'Drag', 'Capture', 'Landmarks', 'Medium', 'Identity',
-    'Haunted', 'Seaside/Coastal/Edge', 'Non-Gendered', 'Vista/View', 'Island',
-    'Journey', 'Foam/Bubbles', 'Wandering', 'Personal', 'Closeup', 'Change',
-    'Found', 'Leisure', 'Statement/Message', 'Trade', 'Going Out-Out',
-    'Movements', 'Uniform', 'Kit', 'Reflections', 'Town', 'Overcast', 'Dream',
-    'Idyllic', 'Structures', 'Impermanence', 'Histories', 'Restrictions',
-    'Symbols', 'Signs', 'Slogan', 'Homey', 'Digestion', 'Communal', 'Flow',
-    'Rubbish', 'Newness', 'Gendered', 'Lost',
+    'Event', 'Drag', 'Capture', 'Landmarks', 'Medium', 'Identity', 'Haunted',
+    'Seaside', 'Non-Gendered', 'View', 'Island', 'Journey', 'Bubbles',
+    'Wandering', 'Personal', 'Closeup', 'Change', 'Found', 'Leisure',
+    'Message', 'Trade', 'Going Out-Out', 'Movements', 'Uniform',
+    'Reflections', 'Town', 'Overcast', 'Dream', 'Structures', 'Impermanence',
+    'Histories', 'Restrictions', 'Symbols', 'Signs', 'Slogan', 'Homey',
+    'Digestion', 'Communal', 'Rubbish', 'Gendered', 'Lost',
 ];
 
 const PLACEHOLDER_COUNT = 140;
@@ -210,8 +209,14 @@ function esc(str) {
     return div.innerHTML;
 }
 
-function mediaElement(item, { large = false } = {}) {
-    if (item._placeholder) return placeholderBox(item, large);
+// The "Content Warning" tag is a curatorial flag, not a filter pill (it's
+// deliberately absent from TAGS) — checked independently here rather than
+// via itemTags()/matchesTag(), which only concern themselves with the pills.
+function hasContentWarning(item) {
+    return (item.tags || '').split(',').some(t => t.trim().toLowerCase() === 'content warning');
+}
+
+function buildMedia(item, large) {
     if (item.type === 'video') {
         const v = document.createElement('video');
         v.src = item.url;
@@ -236,10 +241,45 @@ function mediaElement(item, { large = false } = {}) {
     // photo and 3d (3d shows its thumbnail)
     const img = document.createElement('img');
     img.src = item.type === '3d' ? (item.thumbnail || item.url) : item.url;
-    img.alt = item.title || 'Archive item';
+    img.alt = item.alt || item.title || 'Archive item';
     img.loading = 'lazy';
     img.decoding = 'async';
     return img;
+}
+
+function mediaElement(item, { large = false } = {}) {
+    if (item._placeholder) return placeholderBox(item, large);
+    const media = buildMedia(item, large);
+    if (!hasContentWarning(item)) return media;
+
+    // Grid tiles: blurred with a small badge, tap-through to the lightbox
+    // works exactly as any other tile (the wrapper doesn't intercept the
+    // tap — see .pan-tile-inner img/video pointer-events:none).
+    // Lightbox: blurred behind a real button that must be clicked to reveal.
+    const wrap = document.createElement('div');
+    wrap.className = large ? 'cw-wrap cw-wrap-large' : 'cw-wrap';
+    media.classList.add('cw-blurred');
+    wrap.appendChild(media);
+
+    if (large) {
+        const gate = document.createElement('button');
+        gate.type = 'button';
+        gate.className = 'cw-gate';
+        gate.innerHTML = '<span class="cw-gate-icon">⚠</span><span class="cw-gate-text">Content warning — click to view</span>';
+        gate.addEventListener('click', (e) => {
+            e.stopPropagation();
+            media.classList.remove('cw-blurred');
+            gate.remove();
+        });
+        wrap.appendChild(gate);
+    } else {
+        const badge = document.createElement('span');
+        badge.className = 'cw-badge';
+        badge.textContent = '⚠ Content warning';
+        wrap.appendChild(badge);
+    }
+
+    return wrap;
 }
 
 // ===== PAN CANVAS =====

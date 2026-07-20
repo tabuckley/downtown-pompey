@@ -47,6 +47,9 @@ export function initRoom(canvasId = 'room-canvas') {
     renderer.setClearColor(0x0d0d0d);
 
     // The room: a box viewed from inside. Floor at y=-3.5, ceiling at y=6.5.
+    // Stays in place as an immediate-render fallback — swapped out (see
+    // loadEnvironment below) the moment the real modelled room finishes
+    // loading, so there's never a black void while that (7MB) file downloads.
     const room = new THREE.Mesh(
         new THREE.BoxGeometry(20, 10, 20),
         new THREE.MeshStandardMaterial({ color: 0x151515, side: THREE.BackSide, roughness: 0.95 })
@@ -57,6 +60,8 @@ export function initRoom(canvasId = 'room-canvas') {
     const grid = new THREE.GridHelper(20, 24, 0x2c2c2c, 0x1b1b1b);
     grid.position.y = -3.49;
     scene.add(grid);
+
+    loadEnvironment('models/dtpAAG.glb', room, grid);
 
     // Lighting: warm key, red + cool accents (r160 physical light units for point lights)
     scene.add(new THREE.AmbientLight(0xffffff, 0.35));
@@ -143,6 +148,20 @@ export function addFramedPhoto(url, data) {
             console.warn('Photo load failed:', url, err);
             resolve(null);
         });
+    });
+}
+
+// Swaps the placeholder box room for the actual modelled gallery space once
+// it's loaded — the pop-up placeholder geometry / archive photos & models
+// are added separately (see populate() in editorial.js) and sit in front of
+// whatever room mesh is current at that point, placeholder or real.
+function loadEnvironment(url, fallbackRoom, fallbackGrid) {
+    new GLTFLoader().load(url, (gltf) => {
+        if (!scene) return;
+        scene.remove(fallbackRoom, fallbackGrid);
+        scene.add(gltf.scene);
+    }, undefined, (err) => {
+        console.warn('Room environment load failed, keeping placeholder room:', url, err);
     });
 }
 
