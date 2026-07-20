@@ -49,6 +49,12 @@ export function initRoom(canvasId = 'room-canvas') {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // The room model's spot lights (KHR_lights_punctual) carry Blender's raw
+    // candela values — thousands of units, meant for a tone-mapped renderer.
+    // Without this, those lights just clip straight to solid white.
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setClearColor(0x0d0d0d);
 
     // The room: a box viewed from inside. Floor at y=-3.5, ceiling at y=6.5.
@@ -166,9 +172,93 @@ function loadEnvironment(url, fallbackRoom, fallbackGrid) {
         scene.remove(fallbackRoom, fallbackGrid);
         scene.add(gltf.scene);
         applyCameraMarker(gltf.scene);
+        rescaleImportedLights(gltf.scene);
+        removeScatterVolumeCube(gltf.scene);
     }, undefined, (err) => {
         console.warn('Room environment load failed, keeping placeholder room:', url, err);
     });
+}
+
+// The model is a merge of several separately-sourced sub-assets with
+// inconsistent unit scale baked in (visible in the wildly varying node
+// scale factors throughout the file) — so Blender's raw KHR_lights_punctual
+// candela values, combined with real-world inverse-square falloff, land at
+// wildly different effective brightness per light rather than anything
+// physically sane. Rescaling to the same rough range as this scene's other,
+// hand-tuned lights (see the ~25–60 point lights above) gets a usable result
+// without hand-tuning all ten individually. Each rescaled spot light also
+// gets a soft additive cone standing in for its (Blender-only, not
+// glTF-exportable) volumetric beam — see addLightBeam.
+const IMPORTED_LIGHT_SCALE = 1 / 150;
+function rescaleImportedLights(root) {
+    root.traverse((obj) => {
+        if (obj.isSpotLight || obj.isPointLight) {
+            obj.intensity *= IMPORTED_LIGHT_SCALE;
+        }
+        if (obj.isSpotLight) {
+            scene.add(addLightBeam(obj));
+        }
+    });
+}
+
+// A cheap stand-in for real volumetric scattering (which glTF/Three.js
+// doesn't do out of the box): a soft-edged, additively-blended cone matching
+// the light's actual position/direction/angle/color, brightest near the
+// source and fading along its length. Overlapping beams from several lights
+// naturally glow brighter where they cross, which is most of what reads as
+// "hazy" here — good enough without a real raymarched fog volume.
+const BEAM_LENGTH = 3.2;
+const beamVertexShader = `
+    varying float vY;
+    void main() {
+        vY = position.y;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+`;
+const beamFragmentShader = `
+    uniform vec3 uColor;
+    uniform float uLength;
+    varying float vY;
+    void main() {
+        float t = clamp(-vY / uLength, 0.0, 1.0);
+        float fade = pow(1.0 - t, 2.0);
+        gl_FragColor = vec4(uColor, fade * 0.16);
+    }
+`;
+function addLightBeam(light) {
+    const angle = light.angle ?? Math.PI / 8;
+    const radius = Math.tan(angle) * BEAM_LENGTH;
+    const geo = new THREE.ConeGeometry(radius, BEAM_LENGTH, 24, 1, true);
+    geo.translate(0, -BEAM_LENGTH / 2, 0); // apex at local origin, opening toward -Y
+
+    const mat = new THREE.ShaderMaterial({
+        uniforms: {
+            uColor: { value: light.color.clone() },
+            uLength: { value: BEAM_LENGTH },
+        },
+        vertexShader: beamVertexShader,
+        fragmentShader: beamFragmentShader,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+    });
+
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.copy(light.getWorldPosition(new THREE.Vector3()));
+    const dir = light.getWorldDirection(new THREE.Vector3());
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir);
+    mesh.raycast = () => {}; // decorative only — never blocks clicks on real objects
+    return mesh;
+}
+
+// Stand-in for a proper volumetric-fog bounding volume in Blender (a cube
+// with a Volume Scatter material) — meaningless without that shader, so it's
+// removed rather than rendered as a plain grey box.
+function removeScatterVolumeCube(root) {
+    let cube = null;
+    root.traverse((obj) => { if (obj.name === 'Cube' && obj.isMesh) cube = obj; });
+    if (cube) cube.parent.remove(cube);
 }
 
 // glTF export doesn't carry Blender's camera, so the room is authored with a
