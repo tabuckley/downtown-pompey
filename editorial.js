@@ -77,6 +77,40 @@ function shuffle(arr) {
     return arr;
 }
 
+// ===== FLOATING GIFS =====
+// Lives here (editorial.js), not on the landing page — the whole point is
+// this is an Editorial-only touch. Filenames as they actually exist in the
+// R2 bucket (checked live via rclone; some are junk-named test uploads left
+// over from compressing these, kept anyway per instruction to use all of
+// them). Picks 3 at random on every load so it's different each visit.
+const GIF_BASE = 'https://media.downtownpompey.online/_site-assets/homepage/';
+const GIF_FILES = [
+    '01 (1).gif', '02.gif', 'Birdmaks.gif', 'KitMaks.gif', 'Newspaper01.gif',
+    'Photo01.gif', 'ShipMaks.gif', 'TreeMaks.gif', 'Zine01.gif', 'dfgv.gif',
+    'dgsgsdfg.gif', 'dhghdf.gif', 'download-ezgif.com-speed.gif',
+    'download1-ezgif.com-speed.gif', 'download2-ezgif.com-speed.gif',
+    'dvfbf.gif', 'fffff.gif', 'fg.gif', 'gdfdb.gif', 'gdfdfh.gif',
+    'gdfhdfhd.gif', 'gdgag.gif', 'gdgdfs.gif', 'hmghcv.gif', 'sgsaagg.gif',
+    'vdsvssd.gif',
+];
+const GIF_SLOT_CLASSES = ['room-gif--top-right', 'room-gif--bottom-center', 'room-gif--left-mid'];
+
+function showRandomGifs() {
+    const mount = document.getElementById('roomGifOverlay');
+    if (!mount) return;
+    const picks = shuffle([...GIF_FILES]).slice(0, 3);
+    picks.forEach((file, i) => {
+        const img = document.createElement('img');
+        img.src = GIF_BASE + encodeURIComponent(file);
+        img.alt = '';
+        img.loading = 'lazy';
+        img.className = `room-gif ${GIF_SLOT_CLASSES[i]}`;
+        mount.appendChild(img);
+    });
+}
+
+showRandomGifs();
+
 async function populate() {
     try {
         const index = await fetchSheet('_index');

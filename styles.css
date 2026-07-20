@@ -1492,6 +1492,38 @@ body.landing {
     outline: 1px solid var(--accent);
 }
 
+/* ===== ROOM GIF OVERLAY (editorial only) ===== */
+/* Decorative — never intercepts clicks on the 3D room behind it, so the
+   whole overlay and each image stay pointer-events:none. Three fixed slots
+   chosen to sit clear of the other fixed-position UI (room-hint/toggle on
+   the left, Archie bottom-right, info-panel sliding from the right). */
+.room-gif-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    pointer-events: none;
+}
+
+.room-gif {
+    position: fixed;
+    display: block;
+    width: 130px;
+    height: 130px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+.room-gif--top-right { top: 5.6rem; right: 1.6rem; }
+.room-gif--bottom-center { bottom: 1.8rem; left: 50%; transform: translateX(-50%); }
+.room-gif--left-mid { top: 50%; left: 1.6rem; transform: translateY(-50%); }
+
+@media (max-width: 720px) {
+    .room-gif { width: 88px; height: 88px; }
+    .room-gif--left-mid { display: none; } /* avoid crowding narrow viewports */
+}
+
 .info-panel {
     position: fixed;
     top: 0;
