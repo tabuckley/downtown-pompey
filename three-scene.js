@@ -3,6 +3,11 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 let scene, camera, renderer;
 let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
+// Default framing, overridden by applyCameraMarker() once/if the room
+// model's "Cone" marker object is found — mouse-look parallax in animate()
+// pans around whichever of these is currently active.
+const baseCamPos = new THREE.Vector3(0, 0.4, 8.5);
+const lookTarget = new THREE.Vector3(0, 0.2, -2);
 const clickables = [];
 const spinners = [];
 let clickCb = null;
@@ -39,7 +44,7 @@ export function initRoom(canvasId = 'room-canvas') {
     scene.fog = new THREE.Fog(0x0d0d0d, 16, 34);
 
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(0, 0.4, 8.5);
+    camera.position.copy(baseCamPos);
 
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -160,9 +165,52 @@ function loadEnvironment(url, fallbackRoom, fallbackGrid) {
         if (!scene) return;
         scene.remove(fallbackRoom, fallbackGrid);
         scene.add(gltf.scene);
+        applyCameraMarker(gltf.scene);
     }, undefined, (err) => {
         console.warn('Room environment load failed, keeping placeholder room:', url, err);
     });
+}
+
+// glTF export doesn't carry Blender's camera, so the room is authored with a
+// "Cone" mesh standing in for it instead — apex at the intended camera
+// position, opening up toward what it should look at. Reads that, points
+// the (existing, already-lit/animated) camera to match, and removes the
+// cone itself so it never renders as scene geometry. Silently does nothing
+// if the model has no such marker, leaving the default framing in place.
+function applyCameraMarker(root) {
+    root.updateMatrixWorld(true);
+    let marker = null;
+    root.traverse((obj) => { if (obj.name === 'Cone' && obj.isMesh) marker = obj; });
+    if (!marker) return;
+
+    const posAttr = marker.geometry.attributes.position;
+    const verts = [];
+    const centroid = new THREE.Vector3();
+    for (let i = 0; i < posAttr.count; i++) {
+        const v = new THREE.Vector3().fromBufferAttribute(posAttr, i);
+        verts.push(v);
+        centroid.add(v);
+    }
+    centroid.divideScalar(verts.length);
+
+    // The tip is whichever vertex sits farthest from the local centroid —
+    // works regardless of how the cone's own origin/pivot was set in Blender.
+    let tipIndex = 0, tipDist = -1;
+    verts.forEach((v, i) => {
+        const d = v.distanceTo(centroid);
+        if (d > tipDist) { tipDist = d; tipIndex = i; }
+    });
+
+    const baseCentroid = new THREE.Vector3();
+    verts.forEach((v, i) => { if (i !== tipIndex) baseCentroid.add(v); });
+    baseCentroid.divideScalar(verts.length - 1);
+
+    baseCamPos.copy(verts[tipIndex]).applyMatrix4(marker.matrixWorld);
+    lookTarget.copy(baseCentroid).applyMatrix4(marker.matrixWorld);
+    camera.position.copy(baseCamPos);
+    camera.lookAt(lookTarget);
+
+    marker.parent.remove(marker);
 }
 
 export function addModel(url, data) {
@@ -276,9 +324,10 @@ function animate() {
     if (!reduceMotion) {
         targetX += (mouseX - targetX) * 0.04;
         targetY += (mouseY - targetY) * 0.04;
-        camera.position.x = targetX * 2.2;
-        camera.position.y = 0.4 - targetY * 1.2;
-        camera.lookAt(0, 0.2, -2);
+        camera.position.x = baseCamPos.x + targetX * 2.2;
+        camera.position.y = baseCamPos.y - targetY * 1.2;
+        camera.position.z = baseCamPos.z;
+        camera.lookAt(lookTarget);
 
         spinners.forEach(obj => { obj.rotation.y += 0.004; });
     }
