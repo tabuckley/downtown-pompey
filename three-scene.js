@@ -12,6 +12,17 @@ let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
 // pans around whichever of these is currently active.
 const baseCamPos = new THREE.Vector3(0, 0.4, 8.5);
 const lookTarget = new THREE.Vector3(0, 0.2, -2);
+// The old full-range pan (±2.2 / ±1.2 units) put the best-looking framing at
+// the bottom-left screen corner instead of centre. RECENTER_OFFSET shifts the
+// base position to where that corner used to point, so it becomes the new
+// default. Full corner (fraction 1.0 of (-2.2,-1.2)) was tested and actually
+// over-shoots into an ugly close-up crop; 0.6 was the best-composed of several
+// sampled fractions (0, 0.4, 0.6, 1.0) — dramatic, disco-ball-centred framing
+// while still showing the full room depth. PAN_RANGE_X/Y is ~15% of the old
+// ±2.2/±1.2 so mouse movement is now a subtle parallax, not a wide swing.
+const RECENTER_OFFSET = new THREE.Vector2(-2.2 * 0.6, -1.2 * 0.6);
+const PAN_RANGE_X = 0.33;
+const PAN_RANGE_Y = 0.18;
 const clickables = [];
 const spinners = [];
 let clickCb = null;
@@ -55,9 +66,11 @@ export function initRoom(canvasId = 'room-canvas') {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     // The room model's spot lights (KHR_lights_punctual) carry Blender's raw
     // candela values — thousands of units, meant for a tone-mapped renderer.
-    // Without this, those lights just clip straight to solid white.
+    // Without this, those lights just clip straight to solid white. Exposure
+    // is lower than tone-mapping's own neutral (1.0) on top of that, to get
+    // back the contrast/shadow depth the flat exposure-1 render was missing.
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1;
+    renderer.toneMappingExposure = 0.55;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setClearColor(0x0d0d0d);
 
@@ -65,13 +78,15 @@ export function initRoom(canvasId = 'room-canvas') {
     // actually read as glowing rather than just semi-transparent shapes —
     // passes run in linear HDR space, OutputPass does tone mapping + color
     // space conversion on the way to the screen (must be last in the chain).
+    // Threshold is deliberately high — low thresholds bloomed the curtains'
+    // entire lit surface instead of just the genuinely bright highlights.
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
     bloomPass = new UnrealBloomPass(
         new THREE.Vector2(window.innerWidth, window.innerHeight),
-        0.35,  // strength
-        0.35,  // radius
-        0.85   // threshold — only genuinely bright pixels (lights, beams) bloom
+        0.3,   // strength
+        0.4,   // radius
+        1.0    // threshold
     );
     composer.addPass(bloomPass);
     composer.addPass(new OutputPass());
@@ -93,20 +108,12 @@ export function initRoom(canvasId = 'room-canvas') {
 
     loadEnvironment('models/dtpAAG.glb', room, grid);
 
-    // Lighting: warm key, red + cool accents (r160 physical light units for point lights)
-    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
-
-    const key = new THREE.DirectionalLight(0xfff1e0, 2.2);
-    key.position.set(4, 8, 6);
-    scene.add(key);
-
-    const brandLight = new THREE.PointLight(0xd01359, 60, 18, 2);
-    brandLight.position.set(-7, 1, 4);
-    scene.add(brandLight);
-
-    const cool = new THREE.PointLight(0x8899ff, 25, 16, 2);
-    cool.position.set(7, 3, -6);
-    scene.add(cool);
+    // Low-level fill only — the room model's own 10 spot lights (see
+    // rescaleImportedLights) are the actual designed lighting once loaded.
+    // The old hardcoded key/point lights were compensating for having no
+    // real lights at all; keeping them alongside the real ones double-lit
+    // the scene and was a big part of the washed-out/overexposed look.
+    scene.add(new THREE.AmbientLight(0xffffff, 0.15));
 
     document.addEventListener('mousemove', onMouseMove);
     window.addEventListener('resize', onResize);
@@ -193,6 +200,7 @@ function loadEnvironment(url, fallbackRoom, fallbackGrid) {
         applyCameraMarker(gltf.scene);
         rescaleImportedLights(gltf.scene);
         removeScatterVolumeCube(gltf.scene);
+        fixDiscoBallReflection(gltf.scene);
     }, undefined, (err) => {
         console.warn('Room environment load failed, keeping placeholder room:', url, err);
     });
@@ -264,8 +272,14 @@ function addLightBeam(light) {
     });
 
     const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.copy(light.getWorldPosition(new THREE.Vector3()));
-    const dir = light.getWorldDirection(new THREE.Vector3());
+    const lightPos = light.getWorldPosition(new THREE.Vector3());
+    const targetPos = light.target.getWorldPosition(new THREE.Vector3());
+    mesh.position.copy(lightPos);
+    // Object3D.getWorldDirection() returns local +Z, but glTF/Three.js spot
+    // lights actually shine along -Z — using it here (as this used to) put
+    // every beam exactly backwards. position -> target is what SpotLight
+    // itself uses for real shading, so it's unambiguously the true direction.
+    const dir = targetPos.sub(lightPos).normalize();
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir);
     mesh.raycast = () => {}; // decorative only — never blocks clicks on real objects
     return mesh;
@@ -278,6 +292,45 @@ function removeScatterVolumeCube(root) {
     let cube = null;
     root.traverse((obj) => { if (obj.name === 'Cube' && obj.isMesh) cube = obj; });
     if (cube) cube.parent.remove(cube);
+}
+
+// The "Sphere" mesh (disco/mirror ball) ships as a metalness:1, roughness:0
+// perfect mirror with no envMap and no scene.environment — with nothing to
+// reflect, that's black everywhere except direct specular hotspots, which is
+// exactly the "mostly black" symptom. A real HDRI would need external
+// assets, so instead this bakes one reflection probe of the actual lit room
+// via CubeCamera — a single snapshot right after load (not per-frame; nothing
+// here animates enough to need it live, and it's not cheap to redo often).
+function fixDiscoBallReflection(root) {
+    let ball = null;
+    root.traverse((obj) => { if (obj.name === 'Sphere' && obj.isMesh) ball = obj; });
+    if (!ball) return;
+
+    ball.material = new THREE.MeshPhysicalMaterial({
+        color: new THREE.Color(0xe8dff0),
+        metalness: 0.92,
+        roughness: 0.14,
+        envMapIntensity: 1.6,
+        clearcoat: 0.2,
+        clearcoatRoughness: 0.08,
+        emissive: new THREE.Color(0x160817),
+        emissiveIntensity: 0.035,
+    });
+
+    const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(256, {
+        generateMipmaps: true,
+        minFilter: THREE.LinearMipmapLinearFilter,
+    });
+    const cubeCamera = new THREE.CubeCamera(0.1, 50, cubeRenderTarget);
+    scene.add(cubeCamera);
+
+    const worldPosition = ball.getWorldPosition(new THREE.Vector3());
+    ball.visible = false;
+    cubeCamera.position.copy(worldPosition);
+    cubeCamera.update(renderer, scene);
+    ball.visible = true;
+
+    ball.material.envMap = cubeRenderTarget.texture;
 }
 
 // glTF export doesn't carry Blender's camera, so the room is authored with a
@@ -315,6 +368,8 @@ function applyCameraMarker(root) {
     baseCentroid.divideScalar(verts.length - 1);
 
     baseCamPos.copy(verts[tipIndex]).applyMatrix4(marker.matrixWorld);
+    baseCamPos.x += RECENTER_OFFSET.x;
+    baseCamPos.y += RECENTER_OFFSET.y;
     lookTarget.copy(baseCentroid).applyMatrix4(marker.matrixWorld);
     camera.position.copy(baseCamPos);
     camera.lookAt(lookTarget);
@@ -435,8 +490,8 @@ function animate() {
     if (!reduceMotion) {
         targetX += (mouseX - targetX) * 0.04;
         targetY += (mouseY - targetY) * 0.04;
-        camera.position.x = baseCamPos.x + targetX * 2.2;
-        camera.position.y = baseCamPos.y - targetY * 1.2;
+        camera.position.x = baseCamPos.x + targetX * PAN_RANGE_X;
+        camera.position.y = baseCamPos.y - targetY * PAN_RANGE_Y;
         camera.position.z = baseCamPos.z;
         camera.lookAt(lookTarget);
 
