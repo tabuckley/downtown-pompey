@@ -1,7 +1,11 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
-let scene, camera, renderer;
+let scene, camera, renderer, composer, bloomPass;
 let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
 // Default framing, overridden by applyCameraMarker() once/if the room
 // model's "Cone" marker object is found — mouse-look parallax in animate()
@@ -56,6 +60,21 @@ export function initRoom(canvasId = 'room-canvas') {
     renderer.toneMappingExposure = 1;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setClearColor(0x0d0d0d);
+
+    // Bloom is most of what makes the fake light beams and hot highlights
+    // actually read as glowing rather than just semi-transparent shapes —
+    // passes run in linear HDR space, OutputPass does tone mapping + color
+    // space conversion on the way to the screen (must be last in the chain).
+    composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        0.35,  // strength
+        0.35,  // radius
+        0.85   // threshold — only genuinely bright pixels (lights, beams) bloom
+    );
+    composer.addPass(bloomPass);
+    composer.addPass(new OutputPass());
 
     // The room: a box viewed from inside. Floor at y=-3.5, ceiling at y=6.5.
     // Stays in place as an immediate-render fallback — swapped out (see
@@ -404,6 +423,8 @@ function onResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
+    bloomPass.setSize(window.innerWidth, window.innerHeight);
 }
 
 function animate() {
@@ -422,5 +443,5 @@ function animate() {
         spinners.forEach(obj => { obj.rotation.y += 0.004; });
     }
 
-    renderer.render(scene, camera);
+    composer.render();
 }
