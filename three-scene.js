@@ -6,6 +6,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 let scene, camera, renderer, composer, bloomPass;
+let discoBall = null;
 let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
 // Default framing, overridden by applyCameraMarker() once/if the room
 // model's "Cone" marker object is found — mouse-look parallax in animate()
@@ -331,6 +332,8 @@ function fixDiscoBallReflection(root) {
     ball.visible = true;
 
     ball.material.envMap = cubeRenderTarget.texture;
+
+    discoBall = ball;
 }
 
 // glTF export doesn't carry Blender's camera, so the room is authored with a
@@ -496,6 +499,10 @@ function animate() {
         camera.lookAt(lookTarget);
 
         spinners.forEach(obj => { obj.rotation.y += 0.004; });
+
+        // Real mirror-ball motors run ~1 RPM — much slower than the
+        // clickable-item spin rate above, so it gets its own increment.
+        if (discoBall) discoBall.rotation.y += 0.0015;
     }
 
     composer.render();
