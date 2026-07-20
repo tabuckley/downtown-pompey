@@ -1494,9 +1494,10 @@ body.landing {
 
 /* ===== ROOM GIF OVERLAY (editorial only) ===== */
 /* Decorative — never intercepts clicks on the 3D room behind it, so the
-   whole overlay and each image stay pointer-events:none. Three fixed slots
-   chosen to sit clear of the other fixed-position UI (room-hint/toggle on
-   the left, Archie bottom-right, info-panel sliding from the right). */
+   whole overlay and each image stay pointer-events:none. Three large,
+   borderless slots clustered near viewport centre (each anchored a few
+   percent off-centre so all three stay visible rather than fully
+   overlapping) — min(..., 60vw) keeps them from overrunning small screens. */
 .room-gif-overlay {
     position: fixed;
     inset: 0;
@@ -1507,22 +1508,15 @@ body.landing {
 .room-gif {
     position: fixed;
     display: block;
-    width: 130px;
-    height: 130px;
+    width: min(520px, 60vw);
+    height: min(520px, 60vw);
     object-fit: cover;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+    transform: translate(-50%, -50%);
 }
 
-.room-gif--top-right { top: 5.6rem; right: 1.6rem; }
-.room-gif--bottom-center { bottom: 1.8rem; left: 50%; transform: translateX(-50%); }
-.room-gif--left-mid { top: 50%; left: 1.6rem; transform: translateY(-50%); }
-
-@media (max-width: 720px) {
-    .room-gif { width: 88px; height: 88px; }
-    .room-gif--left-mid { display: none; } /* avoid crowding narrow viewports */
-}
+.room-gif--a { top: 46%; left: 42%; }
+.room-gif--b { top: 54%; left: 58%; }
+.room-gif--c { top: 50%; left: 50%; }
 
 .info-panel {
     position: fixed;

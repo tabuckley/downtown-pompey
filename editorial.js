@@ -93,7 +93,7 @@ const GIF_FILES = [
     'gdfhdfhd.gif', 'gdgag.gif', 'gdgdfs.gif', 'hmghcv.gif', 'sgsaagg.gif',
     'vdsvssd.gif',
 ];
-const GIF_SLOT_CLASSES = ['room-gif--top-right', 'room-gif--bottom-center', 'room-gif--left-mid'];
+const GIF_SLOT_CLASSES = ['room-gif--a', 'room-gif--b', 'room-gif--c'];
 
 function showRandomGifs() {
     const mount = document.getElementById('roomGifOverlay');
