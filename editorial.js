@@ -93,18 +93,16 @@ const GIF_FILES = [
     'gdfhdfhd.gif', 'gdgag.gif', 'gdgdfs.gif', 'hmghcv.gif', 'sgsaagg.gif',
     'vdsvssd.gif',
 ];
-const GIF_SLOT_CLASSES = ['room-gif--a', 'room-gif--b', 'room-gif--c'];
-
 function showRandomGifs() {
     const mount = document.getElementById('roomGifOverlay');
     if (!mount) return;
     const picks = shuffle([...GIF_FILES]).slice(0, 3);
-    picks.forEach((file, i) => {
+    picks.forEach((file) => {
         const img = document.createElement('img');
         img.src = GIF_BASE + encodeURIComponent(file);
         img.alt = '';
         img.loading = 'lazy';
-        img.className = `room-gif ${GIF_SLOT_CLASSES[i]}`;
+        img.className = 'room-gif';
         mount.appendChild(img);
     });
 }
