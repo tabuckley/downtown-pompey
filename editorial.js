@@ -9,11 +9,14 @@ initCursor();
 initRoom('room-canvas');
 
 // Testing the low-poly-collectible replacement for the floating-gif
-// overlay — one fixed model for now; eventually a pool in R2 to randomly
-// draw 3 from each load, same idea as the old gif rotation.
+// overlay — a couple of fixed models for now; eventually a pool in R2 to
+// randomly draw 3 from each load, same idea as the old gif rotation.
 addLowPolyModel('https://media.downtownpompey.online/_site-assets/low-poly/doll-on-the-beach.glb', {
     title: 'Doll on the Beach',
 });
+addLowPolyModel('https://media.downtownpompey.online/_site-assets/low-poly/recycling-sculpture.glb', {
+    title: 'Recycling Sculpture',
+}, [-0.5, 0.28, -0.4], 0, 0);
 
 // ===== INFO PANEL =====
 const panel = document.getElementById('infoPanel');
