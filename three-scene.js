@@ -29,6 +29,16 @@ const PAN_RANGE_Y = 0.18;
 // scaling — a low native resolution plus bilinear filtering (not sharp
 // pixelation, which is more a PS1 thing) is the actual N64 signature look.
 const RETRO_RENDER_SCALE = 0.45;
+// Low-poly collectibles render on this camera layer, in a second plain
+// renderer.render() pass straight after the main composer.render() — see
+// animate(). That's what actually keeps them clean: MeshBasicMaterial +
+// toneMapped:false already made them ignore per-object lighting/tone
+// mapping, but UnrealBloomPass still operates on the WHOLE composited frame
+// regardless of any single material's settings, so the room's very bright
+// pink bloom was still bleeding onto them from neighbouring pixels. Doing
+// their draw entirely outside the composer/bloom pipeline is the only way
+// to actually exempt them from that bleed rather than just from lighting.
+const MODEL_LAYER = 1;
 const clickables = [];
 const spinners = [];
 // Objects that pivot side-to-side and bob up/down rather than doing a full
@@ -51,6 +61,7 @@ let hoverTarget = null;
 const HOVER_SCALE = 1.08;
 const hoverBaseScale = new WeakMap();
 const raycaster = new THREE.Raycaster();
+raycaster.layers.enableAll(); // independent of camera.layers, which now toggles per-frame between the room and model-layer render passes — see animate()
 const pointer = new THREE.Vector2();
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -623,8 +634,14 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
             const ring = buildSparkleRing(Math.max(size.x, size.z) * scale * 0.75, 14, glowColor);
             ring.position.y = midY;
             group.add(ring);
+            ring.layers.set(MODEL_LAYER);
 
             const outlineMaterials = buildOutline(model, glowColor);
+            // Moves the model (and, since buildOutline already ran, its
+            // outline children too) onto the dedicated render layer — but
+            // NOT `glow`, which stays on the default layer so it keeps
+            // lighting the room's own floor/curtain as before.
+            model.traverse(obj => obj.layers.set(MODEL_LAYER));
 
             // Floats clear of the floor rather than sitting on it.
             group.position.set(...position);
@@ -791,5 +808,32 @@ function animate() {
         obj.scale.lerp(targetScale, 0.15);
     });
 
+    // Two passes: the room through the normal composer (tone mapping +
+    // bloom), then the low-poly models straight to the canvas afterward,
+    // entirely outside that pipeline — see MODEL_LAYER above for why.
+    camera.layers.set(0);
     composer.render();
+
+    camera.layers.set(MODEL_LAYER);
+    // autoClear:false is what keeps this from erasing the room that's
+    // already there. Viewport/scissor are reset because EffectComposer's
+    // internal passes (bloom's downsampled blur mips in particular) leave
+    // both set to their own smaller render-target sizes, which otherwise
+    // silently clips this entire pass to nothing. clearDepth() is
+    // deliberate too, not just defensive: EffectComposer's passes after the
+    // first only carry plain 2D colour textures forward (no depth), so the
+    // canvas's own default-framebuffer depth is never actually written by
+    // any of that pipeline — without clearing it, these models depth-test
+    // against leftover/undefined values and silently lose. A side effect of
+    // starting with a fresh depth buffer is that these always render in
+    // front of the room regardless of actual depth, which is exactly the
+    // "separate layer on top" behaviour that's the point of this whole pass.
+    renderer.autoClear = false;
+    renderer.setRenderTarget(null);
+    renderer.setViewport(0, 0, renderer.domElement.width, renderer.domElement.height);
+    renderer.setScissorTest(false);
+    renderer.clearDepth();
+    renderer.render(scene, camera);
+    renderer.autoClear = true;
+    camera.layers.set(0);
 }
