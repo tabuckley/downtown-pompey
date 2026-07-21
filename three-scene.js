@@ -24,8 +24,18 @@ const lookTarget = new THREE.Vector3(0, 0.2, -2);
 const RECENTER_OFFSET = new THREE.Vector2(-2.2 * 0.6, -1.2 * 0.6);
 const PAN_RANGE_X = 0.33;
 const PAN_RANGE_Y = 0.18;
+// Renders at a reduced internal resolution while the canvas's own CSS
+// 100%-width/height stretches it back up with the browser's normal smooth
+// scaling — a low native resolution plus bilinear filtering (not sharp
+// pixelation, which is more a PS1 thing) is the actual N64 signature look.
+const RETRO_RENDER_SCALE = 0.45;
 const clickables = [];
 const spinners = [];
+// Objects that pivot side-to-side and bob up/down rather than doing a full
+// 360° spin — for models (like the low-poly collectibles) whose back side
+// has no real texture/geometry detail, so a full rotation would eventually
+// show a blank/black back. { obj, baseY, phase }.
+const floaters = [];
 let clickCb = null;
 let hoverCb = null;
 const raycaster = new THREE.Raycaster();
@@ -63,8 +73,12 @@ export function initRoom(canvasId = 'room-canvas') {
     camera.position.copy(baseCamPos);
 
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // setSize's third arg (false) keeps the canvas's CSS size at the full
+    // viewport (see #room-canvas's own 100%-width/height) while its actual
+    // drawing buffer — and so the whole render — is smaller; the browser's
+    // normal smooth upscaling does the rest. See RETRO_RENDER_SCALE above.
+    renderer.setSize(window.innerWidth * RETRO_RENDER_SCALE, window.innerHeight * RETRO_RENDER_SCALE, false);
+    renderer.setPixelRatio(1);
     // The room model's spot lights (KHR_lights_punctual) carry Blender's raw
     // candela values — thousands of units, meant for a tone-mapped renderer.
     // Without this, those lights just clip straight to solid white. Exposure
@@ -84,7 +98,7 @@ export function initRoom(canvasId = 'room-canvas') {
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
     bloomPass = new UnrealBloomPass(
-        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        new THREE.Vector2(window.innerWidth * RETRO_RENDER_SCALE, window.innerHeight * RETRO_RENDER_SCALE),
         0.3,   // strength
         0.4,   // radius
         1.0    // threshold
@@ -479,12 +493,22 @@ export function addLowPolyModel(url, data = {}) {
             // keeps the model's own baked texture/colour, but quantises the
             // lighting response into bands, which reads as "retro game" far
             // more than photoreal PBR shading does on a low-poly mesh.
+            // emissiveMap (the same texture, fed back in as a self-lit term)
+            // keeps the model's own true colours legible regardless of the
+            // room's strongly pink/magenta lighting — without it, the pink
+            // cast was overwhelming the model's actual colours since the lit
+            // diffuse term was the only thing putting colour on screen at
+            // all. The toon-shaded diffuse response still adds real
+            // highlight/shadow from the room's lights on top of that base.
             model.traverse((obj) => {
                 if (!obj.isMesh) return;
                 const old = obj.material;
                 obj.material = new THREE.MeshToonMaterial({
                     map: old.map || null,
                     color: old.color ? old.color.clone() : new THREE.Color(0xffffff),
+                    emissiveMap: old.map || null,
+                    emissive: new THREE.Color(0xffffff),
+                    emissiveIntensity: 0.9,
                 });
             });
 
@@ -526,7 +550,7 @@ export function addLowPolyModel(url, data = {}) {
             };
             scene.add(group);
             clickables.push(group);
-            spinners.push(group);
+            floaters.push({ obj: group, baseY: group.position.y, phase: Math.random() * Math.PI * 2 });
             resolve(group);
         }, undefined, (err) => {
             console.warn('Low-poly model load failed:', url, err);
@@ -605,9 +629,11 @@ function onResize() {
     if (!renderer) return;
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    composer.setSize(window.innerWidth, window.innerHeight);
-    bloomPass.setSize(window.innerWidth, window.innerHeight);
+    const w = window.innerWidth * RETRO_RENDER_SCALE;
+    const h = window.innerHeight * RETRO_RENDER_SCALE;
+    renderer.setSize(w, h, false);
+    composer.setSize(w, h);
+    bloomPass.setSize(w, h);
 }
 
 function animate() {
@@ -628,6 +654,12 @@ function animate() {
         // Real mirror-ball motors run ~1 RPM — much slower than the
         // clickable-item spin rate above, so it gets its own increment.
         if (discoBall) discoBall.rotation.y += 0.0015;
+
+        const t = performance.now() * 0.001;
+        floaters.forEach(f => {
+            f.obj.rotation.y = Math.sin(t * 0.4 + f.phase) * 0.5; // pivot ±~29°, never shows the back
+            f.obj.position.y = f.baseY + Math.sin(t * 0.3 + f.phase) * 0.08; // slow drift up/down
+        });
     }
 
     composer.render();
