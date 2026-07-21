@@ -39,6 +39,12 @@ const RETRO_RENDER_SCALE = 0.45;
 // their draw entirely outside the composer/bloom pipeline is the only way
 // to actually exempt them from that bleed rather than just from lighting.
 const MODEL_LAYER = 1;
+// The site's hot-pink brand colour (matches styles.css's --accent: #d01359,
+// itself sampled from the actual logo — its opaque core pixels are
+// #d4145a, near-identical) — used for the hover outline specifically, kept
+// separate from the low-poly models' own warm-gold ambient glow/sparkle
+// colour, which isn't a hover state and isn't part of this ask.
+const HOVER_OUTLINE_COLOR = 0xd01359;
 const clickables = [];
 const spinners = [];
 // Objects that pivot side-to-side and bob up/down rather than doing a full
@@ -636,7 +642,7 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
             group.add(ring);
             ring.layers.set(MODEL_LAYER);
 
-            const outlineMaterials = buildOutline(model, glowColor);
+            const outlineMaterials = buildOutline(model, HOVER_OUTLINE_COLOR);
             // Moves the model (and, since buildOutline already ran, its
             // outline children too) onto the dedicated render layer — but
             // NOT `glow`, which stays on the default layer so it keeps
