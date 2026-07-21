@@ -34,10 +34,18 @@ const spinners = [];
 // Objects that pivot side-to-side and bob up/down rather than doing a full
 // 360° spin — for models (like the low-poly collectibles) whose back side
 // has no real texture/geometry detail, so a full rotation would eventually
-// show a blank/black back. { obj, baseY, phase }.
+// show a blank/black back. { obj, baseY, baseRotY, phase }.
 const floaters = [];
 let clickCb = null;
 let hoverCb = null;
+// Scales whatever's currently hovered up slightly (see animate()) as a
+// generic "this is clickable" affordance across every clickable in the
+// room — framed photos, archive 3D models, placeholders, low-poly pieces.
+// Base scale is recorded lazily on first encounter rather than at each of
+// the several push sites, so it works for all of them without touching each.
+let hoverTarget = null;
+const HOVER_SCALE = 1.08;
+const hoverBaseScale = new WeakMap();
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -134,7 +142,10 @@ export function initRoom(canvasId = 'room-canvas') {
     window.addEventListener('resize', onResize);
     canvas.addEventListener('click', onClick);
     canvas.addEventListener('pointermove', onPointerMove);
-    canvas.addEventListener('pointerleave', () => { if (hoverCb) hoverCb(false); });
+    canvas.addEventListener('pointerleave', () => {
+        hoverTarget = null;
+        if (hoverCb) hoverCb(false);
+    });
 
     // Touch look-around: drag pans the camera (mousemove never fires on touch)
     let dragging = false, lastPX = 0, lastPY = 0;
@@ -542,6 +553,11 @@ export function addLowPolyModel(url, data = {}) {
 
             // Floats clear of the floor rather than sitting on it.
             group.position.set(0.55, 0.28, 0.55);
+            // The model's default orientation faces away from the camera —
+            // this base rotation is what the pivot in animate() oscillates
+            // around, so it flips the whole thing to face front instead.
+            const baseRotY = Math.PI;
+            group.rotation.y = baseRotY;
             group.userData.itemData = {
                 title: data.title || 'Low-poly test piece',
                 project: data.project || 'Editorial — low-poly',
@@ -550,7 +566,7 @@ export function addLowPolyModel(url, data = {}) {
             };
             scene.add(group);
             clickables.push(group);
-            floaters.push({ obj: group, baseY: group.position.y, phase: Math.random() * Math.PI * 2 });
+            floaters.push({ obj: group, baseY: group.position.y, baseRotY, phase: Math.random() * Math.PI * 2 });
             resolve(group);
         }, undefined, (err) => {
             console.warn('Low-poly model load failed:', url, err);
@@ -592,9 +608,17 @@ function clamp(v, min, max) {
     return Math.min(max, Math.max(min, v));
 }
 
-function findItemData(object) {
+// Walks up to whichever ancestor was actually pushed to `clickables` — that's
+// always the one carrying itemData, regardless of how deep the raycast hit
+// landed inside it.
+function findClickableRoot(object) {
     let o = object;
     while (o && !o.userData.itemData) o = o.parent;
+    return o;
+}
+
+function findItemData(object) {
+    const o = findClickableRoot(object);
     return o ? o.userData.itemData : null;
 }
 
@@ -617,7 +641,10 @@ function onClick(e) {
 
 function onPointerMove(e) {
     setPointerFromEvent(e);
-    if (hoverCb) hoverCb(!!raycastClickables());
+    raycaster.setFromCamera(pointer, camera);
+    const hits = raycaster.intersectObjects(clickables, true);
+    hoverTarget = hits.length ? findClickableRoot(hits[0].object) : null;
+    if (hoverCb) hoverCb(!!hoverTarget);
 }
 
 function onMouseMove(e) {
@@ -657,10 +684,20 @@ function animate() {
 
         const t = performance.now() * 0.001;
         floaters.forEach(f => {
-            f.obj.rotation.y = Math.sin(t * 0.4 + f.phase) * 0.5; // pivot ±~29°, never shows the back
+            f.obj.rotation.y = f.baseRotY + Math.sin(t * 0.4 + f.phase) * 0.5; // pivot ±~29° around its facing direction, never shows the back
             f.obj.position.y = f.baseY + Math.sin(t * 0.3 + f.phase) * 0.08; // slow drift up/down
         });
     }
+
+    // Outside the reduceMotion gate deliberately — this only ever moves in
+    // direct response to the user hovering something, not ambient animation,
+    // so it's the same kind of feedback a native :hover style would give.
+    clickables.forEach(obj => {
+        if (!hoverBaseScale.has(obj)) hoverBaseScale.set(obj, obj.scale.clone());
+        const base = hoverBaseScale.get(obj);
+        const targetScale = base.clone().multiplyScalar(obj === hoverTarget ? HOVER_SCALE : 1);
+        obj.scale.lerp(targetScale, 0.15);
+    });
 
     composer.render();
 }
