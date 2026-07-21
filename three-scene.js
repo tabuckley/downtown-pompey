@@ -550,10 +550,58 @@ function buildOutline(model, color) {
     return materials;
 }
 
+// A flat ring carrying the item's title, spinning continuously around the
+// object — "Press Start 2P" (a pixel arcade font) rather than the site's own
+// Montserrat, since this is specifically meant to read as retro-game UI, not
+// site chrome. RingGeometry's UV mapping is already polar (u = angle around,
+// v = radial fraction) as of modern Three.js, so a plain horizontal text
+// strip texture wraps correctly around the circle with no manual per-
+// character curving needed — the geometry does that part for free.
+// document.fonts.load() is awaited first because a canvas draws with
+// whatever font is ACTUALLY loaded at that exact moment; without waiting,
+// this would often silently fall back to a system default.
+async function buildTitleRing(title, innerRadius, outerRadius, color) {
+    const fontSpec = '48px "Press Start 2P"';
+    try { await document.fonts.load(fontSpec); } catch (err) { /* draws with fallback font if this fails */ }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 96;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#' + new THREE.Color(color).getHexString();
+    ctx.font = fontSpec;
+    ctx.textBaseline = 'middle';
+    // Repeated with a bullet separator so it loops seamlessly all the way
+    // around rather than showing one copy then a blank stretch.
+    const label = `${title.toUpperCase()}   •   `;
+    const oneWidth = ctx.measureText(label).width;
+    const copies = Math.ceil(canvas.width / oneWidth) + 1;
+    for (let i = 0; i < copies; i++) {
+        ctx.fillText(label, i * oneWidth, canvas.height / 2);
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.colorSpace = THREE.SRGBColorSpace;
+
+    const geo = new THREE.RingGeometry(innerRadius, outerRadius, 64, 1);
+    const mat = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        side: THREE.DoubleSide,
+        toneMapped: false,
+        depthWrite: false,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.x = -Math.PI / 2; // lie flat/horizontal rather than standing up facing the camera
+    mesh.raycast = () => {}; // decorative only
+    return mesh;
+}
+
 export function addLowPolyModel(url, data = {}) {
     return new Promise((resolve) => {
         if (!scene) return resolve(null);
-        new GLTFLoader().load(url, (gltf) => {
+        new GLTFLoader().load(url, async (gltf) => {
             const model = gltf.scene;
 
             // Normalise to a "handheld collectible" scale relative to this
@@ -619,6 +667,17 @@ export function addLowPolyModel(url, data = {}) {
             const ring = buildSparkleRing(Math.max(size.x, size.z) * scale * 0.75, 14, glowColor);
             ring.position.y = midY;
             group.add(ring);
+
+            // Sits near the floor, encircling the object's footprint.
+            // Pushed to `spinners` (not `floaters`) so it keeps spinning on
+            // its own even while the model itself pauses on hover — it's a
+            // continuously-legible title card, not part of the "paying
+            // attention to you" hover behaviour.
+            const footprint = Math.max(size.x, size.z) * scale;
+            const titleRing = await buildTitleRing(data.title || 'Low-poly test piece', footprint * 0.82, footprint * 1.05, glowColor);
+            titleRing.position.y = 0.02;
+            group.add(titleRing);
+            spinners.push(titleRing);
 
             const outlineMaterials = buildOutline(model, glowColor);
 
