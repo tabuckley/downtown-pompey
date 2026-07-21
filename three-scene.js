@@ -559,10 +559,12 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
             // Normalise to a "handheld collectible" scale relative to this
             // room, which is itself only ~2-3 units across — NOT the old
             // placeholder box room's ~20-unit scale that addModel()'s own
-            // 2.2-unit target was tuned against.
+            // 2.2-unit target was tuned against. 0.64 rather than a round
+            // 0.8 is a 20% reduction requested once two of these needed to
+            // share the foreground without crowding each other.
             const box = new THREE.Box3().setFromObject(model);
             const size = box.getSize(new THREE.Vector3());
-            const scale = 0.8 / Math.max(size.x, size.y, size.z, 0.001);
+            const scale = 0.64 / Math.max(size.x, size.y, size.z, 0.001);
             model.scale.setScalar(scale);
 
             // The doll model is wider than it is tall (raw bounding box

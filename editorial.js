@@ -16,7 +16,7 @@ addLowPolyModel('https://media.downtownpompey.online/_site-assets/low-poly/doll-
 });
 addLowPolyModel('https://media.downtownpompey.online/_site-assets/low-poly/recycling-sculpture.glb', {
     title: 'Recycling Sculpture',
-}, [-0.5, 0.28, -0.4], 0, 0);
+}, [0.55, 0.28, -0.55], 0, 0);
 
 // ===== INFO PANEL =====
 const panel = document.getElementById('infoPanel');
