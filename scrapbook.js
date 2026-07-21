@@ -245,9 +245,16 @@ function buildMedia(item, large) {
         wrap.appendChild(a);
         return wrap;
     }
-    // photo and 3d (3d shows its thumbnail)
+    // 3d always shows its thumbnail (item.url is the model file, not an
+    // image). Photos show a thumbnail in the grid too when one's set — full
+    // originals are often multiple MB for what's a small pan-canvas tile —
+    // but the lightbox ("large") always gets the real, full-resolution file.
     const img = document.createElement('img');
-    img.src = item.type === '3d' ? (item.thumbnail || item.url) : item.url;
+    if (item.type === '3d') {
+        img.src = item.thumbnail || item.url;
+    } else {
+        img.src = (!large && item.thumbnail) ? item.thumbnail : item.url;
+    }
     img.alt = item.alt || item.title || 'Archive item';
     img.loading = 'lazy';
     img.decoding = 'async';
