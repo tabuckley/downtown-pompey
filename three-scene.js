@@ -529,12 +529,20 @@ function buildSparkleRing(radius, count, color) {
 // together via uOpacity.
 const OUTLINE_INFLATE = 0.018;
 function buildOutline(model, color) {
+    // The exact brand hot-pink (#d01359) is fairly dark by raw luminance —
+    // reads as rich/on-brand for logo text, but muddy as a hover highlight
+    // against a busy, similarly-dark scene. This material isn't tone-mapped
+    // and renders in its own bloom-free pass (see MODEL_LAYER), so there's
+    // no post-process glow to lean on — lightening the colour itself
+    // (blended toward white) is what actually makes it read as "glowing"
+    // rather than just present.
+    const liteColor = new THREE.Color(color).lerp(new THREE.Color(0xffffff), 0.45);
     const materials = [];
     model.traverse((obj) => {
         if (!obj.isMesh) return;
         const mat = new THREE.ShaderMaterial({
             uniforms: {
-                uColor: { value: new THREE.Color(color) },
+                uColor: { value: liteColor },
                 uOpacity: { value: 0 },
                 uInflate: { value: OUTLINE_INFLATE },
             },
