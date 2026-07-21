@@ -34,9 +34,10 @@ const spinners = [];
 // Objects that pivot side-to-side and bob up/down rather than doing a full
 // 360° spin — for models (like the low-poly collectibles) whose back side
 // has no real texture/geometry detail, so a full rotation would eventually
-// show a blank/black back. Pauses and shows `halo` (optional) instead of
-// the generic hover-scale every other clickable gets — see animate() and
-// the hoverTarget exclusion below. { obj, baseY, baseRotY, phase, halo }.
+// show a blank/black back. Pauses and shows an outline (optional) instead
+// of the generic hover-scale every other clickable gets — see animate() and
+// the hoverTarget exclusion below.
+// { obj, baseY, baseRotY, phase, outlineMaterials }.
 const floaters = [];
 const floaterObjects = new Set(); // mirrors floaters' .obj values, for O(1) exclusion lookup in animate()
 let clickCb = null;
@@ -246,13 +247,23 @@ function loadEnvironment(url, fallbackRoom, fallbackGrid) {
 // gets a soft additive cone standing in for its (Blender-only, not
 // glTF-exportable) volumetric beam — see addLightBeam.
 const IMPORTED_LIGHT_SCALE = 1 / 150;
+// Beam cones nearest the camera read as a big translucent pink wash right
+// across the foreground rather than a distant atmospheric light shaft —
+// this room is only ~2-3 units across, so a light that's already close to
+// the camera puts its whole cone in/near the foreground. Skipping the fake
+// beam mesh for those (the real light itself is untouched) clears the
+// foreground without changing the room's actual lighting.
+const FOREGROUND_BEAM_HIDE_DIST = 2.0;
 function rescaleImportedLights(root) {
     root.traverse((obj) => {
         if (obj.isSpotLight || obj.isPointLight) {
             obj.intensity *= IMPORTED_LIGHT_SCALE;
         }
         if (obj.isSpotLight) {
-            scene.add(addLightBeam(obj));
+            const worldPos = obj.getWorldPosition(new THREE.Vector3());
+            if (worldPos.distanceTo(baseCamPos) >= FOREGROUND_BEAM_HIDE_DIST) {
+                scene.add(addLightBeam(obj));
+            }
         }
     });
 }
@@ -490,37 +501,53 @@ function buildSparkleRing(radius, count, color) {
 // acceptable since it's only visible while hovered, which is also when the
 // object's own pivot is paused (see animate()), so it isn't seen rotating
 // out of alignment.
-function buildHalo(radius, color) {
-    const geo = new THREE.CircleGeometry(radius, 32);
-    const mat = new THREE.ShaderMaterial({
-        uniforms: {
-            uColor: { value: new THREE.Color(color) },
-            uOpacity: { value: 0 },
-        },
-        vertexShader: `
-            varying vec2 vUv;
-            void main() {
-                vUv = uv;
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-        `,
-        fragmentShader: `
-            uniform vec3 uColor;
-            uniform float uOpacity;
-            varying vec2 vUv;
-            void main() {
-                float d = distance(vUv, vec2(0.5));
-                float fade = 1.0 - smoothstep(0.15, 0.5, d);
-                gl_FragColor = vec4(uColor, fade * uOpacity);
-            }
-        `,
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
+// The "inverted hull" outline technique: a copy of the model's own geometry,
+// pushed out slightly along each vertex's normal and rendered back-face-only
+// — from outside, only that enlarged back shell peeks out past the real
+// mesh's silhouette edges, tracing its actual shape from whatever angle the
+// camera sees it, rather than a generic circular glow. Each outline mesh is
+// added as a sibling of its source mesh (same parent), which is what makes
+// it inherit that mesh's exact transform for free — no manual matrix work
+// needed. Returns the list of materials so animate() can fade them all
+// together via uOpacity.
+const OUTLINE_INFLATE = 0.018;
+function buildOutline(model, color) {
+    const materials = [];
+    model.traverse((obj) => {
+        if (!obj.isMesh) return;
+        const mat = new THREE.ShaderMaterial({
+            uniforms: {
+                uColor: { value: new THREE.Color(color) },
+                uOpacity: { value: 0 },
+                uInflate: { value: OUTLINE_INFLATE },
+            },
+            vertexShader: `
+                uniform float uInflate;
+                void main() {
+                    vec3 inflated = position + normal * uInflate;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(inflated, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform vec3 uColor;
+                uniform float uOpacity;
+                void main() {
+                    gl_FragColor = vec4(uColor, uOpacity);
+                }
+            `,
+            side: THREE.BackSide,
+            transparent: true,
+            depthWrite: false,
+        });
+        const outlineMesh = new THREE.Mesh(obj.geometry, mat);
+        outlineMesh.position.copy(obj.position);
+        outlineMesh.rotation.copy(obj.rotation);
+        outlineMesh.scale.copy(obj.scale);
+        outlineMesh.raycast = () => {}; // decorative only — hovering it shouldn't count as hovering the outline itself
+        obj.parent.add(outlineMesh);
+        materials.push(mat);
     });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.raycast = () => {}; // decorative only — hovering it shouldn't count as hovering the halo itself
-    return mesh;
+    return materials;
 }
 
 export function addLowPolyModel(url, data = {}) {
@@ -593,9 +620,7 @@ export function addLowPolyModel(url, data = {}) {
             ring.position.y = midY;
             group.add(ring);
 
-            const halo = buildHalo(Math.max(size.x, size.y) * scale * 0.85, glowColor);
-            halo.position.y = midY;
-            group.add(halo);
+            const outlineMaterials = buildOutline(model, glowColor);
 
             // Floats clear of the floor rather than sitting on it.
             group.position.set(0.55, 0.28, 0.55);
@@ -612,7 +637,7 @@ export function addLowPolyModel(url, data = {}) {
             };
             scene.add(group);
             clickables.push(group);
-            floaters.push({ obj: group, baseY: group.position.y, baseRotY, phase: Math.random() * Math.PI * 2, halo });
+            floaters.push({ obj: group, baseY: group.position.y, baseRotY, phase: Math.random() * Math.PI * 2, outlineMaterials });
             floaterObjects.add(group);
             resolve(group);
         }, undefined, (err) => {
@@ -732,7 +757,7 @@ function animate() {
         const t = performance.now() * 0.001;
         floaters.forEach(f => {
             const hovered = f.obj === hoverTarget;
-            // Pause the pivot/bob while hovered — the halo below is the
+            // Pause the pivot/bob while hovered — the outline below is the
             // hover indicator for these instead of the generic scale-up,
             // and freezing in place reads more like "paying attention to
             // you" than a moving target would.
@@ -740,9 +765,11 @@ function animate() {
                 f.obj.rotation.y = f.baseRotY + Math.sin(t * 0.4 + f.phase) * 0.5; // pivot ±~29° around its facing direction, never shows the back
                 f.obj.position.y = f.baseY + Math.sin(t * 0.3 + f.phase) * 0.08; // slow drift up/down
             }
-            if (f.halo) {
-                const targetOpacity = hovered ? 0.7 : 0;
-                f.halo.material.uniforms.uOpacity.value += (targetOpacity - f.halo.material.uniforms.uOpacity.value) * 0.15;
+            if (f.outlineMaterials) {
+                const targetOpacity = hovered ? 0.85 : 0;
+                f.outlineMaterials.forEach(mat => {
+                    mat.uniforms.uOpacity.value += (targetOpacity - mat.uniforms.uOpacity.value) * 0.15;
+                });
             }
         });
     }
@@ -750,7 +777,7 @@ function animate() {
     // Outside the reduceMotion gate deliberately — this only ever moves in
     // direct response to the user hovering something, not ambient animation,
     // so it's the same kind of feedback a native :hover style would give.
-    // Floaters (see above) get a pause + halo instead of this scale-up.
+    // Floaters (see above) get a pause + outline instead of this scale-up.
     clickables.forEach(obj => {
         if (floaterObjects.has(obj)) return;
         if (!hoverBaseScale.has(obj)) hoverBaseScale.set(obj, obj.scale.clone());
