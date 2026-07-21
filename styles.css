@@ -1492,35 +1492,6 @@ body.landing {
     outline: 1px solid var(--accent);
 }
 
-/* ===== ROOM GIF OVERLAY (editorial only) ===== */
-/* Decorative — never intercepts clicks on the 3D room behind it, so the
-   whole overlay and each image stay pointer-events:none. A centred flex
-   row (rather than independently-offset fixed positions, which is what
-   let them overlap before) guarantees the three images never overlap —
-   flex lays them out in normal flow and wraps on narrow viewports instead
-   of overflowing. The drop-shadow filter (follows each image's edges, not
-   just a plain box-shadow) reads as a small shadow cast on the floor. */
-.room-gif-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 90;
-    pointer-events: none;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 1.2rem;
-    padding: 0 2rem;
-}
-
-.room-gif {
-    display: block;
-    width: min(380px, 28vw);
-    height: min(380px, 28vw);
-    object-fit: cover;
-    filter: drop-shadow(0 14px 10px rgba(0, 0, 0, 0.45));
-}
-
 .info-panel {
     position: fixed;
     top: 0;

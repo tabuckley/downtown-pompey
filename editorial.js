@@ -84,48 +84,6 @@ function shuffle(arr) {
     return arr;
 }
 
-// ===== FLOATING GIFS =====
-// Lives here (editorial.js), not on the landing page — the whole point is
-// this is an Editorial-only touch. Filenames as they actually exist in the
-// R2 bucket (checked live via rclone; some are junk-named test uploads left
-// over from compressing these, kept anyway per instruction to use all of
-// them). Picks 3 at random on every load so it's different each visit.
-//
-// Rendered as muted autoplay <video>, not <img src="*.gif"> — profiling
-// showed the animated gifs were blocking the main thread badly enough to
-// stall the 3D room's render loop (avg render() cost 16.48ms with 3 gifs on
-// screen vs 1.09ms without, worst-case stalls up to 330ms). Browsers decode
-// video far more cheaply than gif, so the same clips were re-encoded to
-// silent looping mp4 (same R2 folder, same base filenames, .mp4 instead of
-// .gif) rather than just trimming how many/how large.
-const GIF_BASE = 'https://media.downtownpompey.online/_site-assets/homepage/';
-const GIF_FILES = [
-    '01 (1).mp4', '02.mp4', 'Birdmaks.mp4', 'KitMaks.mp4', 'Newspaper01.mp4',
-    'Photo01.mp4', 'ShipMaks.mp4', 'TreeMaks.mp4', 'Zine01.mp4', 'dfgv.mp4',
-    'dgsgsdfg.mp4', 'dhghdf.mp4', 'download-ezgif.com-speed.mp4',
-    'download1-ezgif.com-speed.mp4', 'download2-ezgif.com-speed.mp4',
-    'dvfbf.mp4', 'fffff.mp4', 'fg.mp4', 'gdfdb.mp4', 'gdfdfh.mp4',
-    'gdfhdfhd.mp4', 'gdgag.mp4', 'gdgdfs.mp4', 'hmghcv.mp4', 'sgsaagg.mp4',
-    'vdsvssd.mp4',
-];
-function showRandomGifs() {
-    const mount = document.getElementById('roomGifOverlay');
-    if (!mount) return;
-    const picks = shuffle([...GIF_FILES]).slice(0, 3);
-    picks.forEach((file) => {
-        const video = document.createElement('video');
-        video.src = GIF_BASE + encodeURIComponent(file);
-        video.className = 'room-gif';
-        video.autoplay = true;
-        video.loop = true;
-        video.muted = true;
-        video.playsInline = true;
-        mount.appendChild(video);
-    });
-}
-
-showRandomGifs();
-
 async function populate() {
     try {
         const index = await fetchSheet('_index');

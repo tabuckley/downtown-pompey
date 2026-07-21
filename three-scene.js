@@ -418,17 +418,13 @@ export function addModel(url, data) {
 // smooth PBR) is what actually reads as "retro game" on a low-poly mesh,
 // while still genuinely responding to the room's real lights rather than
 // being an unlit decal.
-const TOON_BANDS = 3;
-function buildToonGradientMap() {
-    const data = new Uint8Array(TOON_BANDS);
-    for (let i = 0; i < TOON_BANDS; i++) data[i] = Math.round((i / (TOON_BANDS - 1)) * 255);
-    const tex = new THREE.DataTexture(data, TOON_BANDS, 1, THREE.RedFormat);
-    tex.magFilter = THREE.NearestFilter;
-    tex.minFilter = THREE.NearestFilter;
-    tex.needsUpdate = true;
-    return tex;
-}
-
+// A custom DataTexture gradientMap (an early version of this tried a 3-band
+// one built from a THREE.RedFormat DataTexture) rendered the whole model
+// pure black regardless of lighting — confirmed via an isolated side-by-side
+// test against the same material with no gradientMap at all, which renders
+// correctly. Rather than chase that texture-format bug, this just omits
+// gradientMap and uses MeshToonMaterial's own built-in default banding.
+//
 // A ring of small additive-blended sparkle points circling the object —
 // standing in for the "collectible glow" ring iconic to N64-era platformers
 // (Mario 64 stars, Banjo-Kazooie jiggies). It rotates for free by living
@@ -473,18 +469,22 @@ export function addLowPolyModel(url, data = {}) {
             const scale = 0.8 / Math.max(size.x, size.y, size.z, 0.001);
             model.scale.setScalar(scale);
 
+            // This particular model is wider than it is tall (raw bounding
+            // box ~1.9 x 0.65 x 0.95) — rotating 90° around Z stands it up
+            // so its longest dimension reads as height instead, portrait
+            // rather than landscape.
+            model.rotation.z = Math.PI / 2;
+
             // Re-style every material as toon-shaded rather than smooth PBR —
             // keeps the model's own baked texture/colour, but quantises the
             // lighting response into bands, which reads as "retro game" far
             // more than photoreal PBR shading does on a low-poly mesh.
-            const gradientMap = buildToonGradientMap();
             model.traverse((obj) => {
                 if (!obj.isMesh) return;
                 const old = obj.material;
                 obj.material = new THREE.MeshToonMaterial({
                     map: old.map || null,
                     color: old.color ? old.color.clone() : new THREE.Color(0xffffff),
-                    gradientMap,
                 });
             });
 
@@ -496,18 +496,28 @@ export function addLowPolyModel(url, data = {}) {
 
             // Warm point light + sparkle ring at the model's vertical
             // midpoint — the "glow" marking this out as a special, game-like
-            // object rather than just another lit prop.
+            // object rather than just another lit prop. Kept deliberately
+            // subtle: this close to the model, much more intensity just
+            // bleaches its own toon-shaded colour out toward white instead
+            // of reading as an accent glow.
             const midY = (scaledBox.max.y - scaledBox.min.y) / 2;
             const glowColor = 0xffd27a;
-            const glow = new THREE.PointLight(glowColor, 2.2, 2.5, 2);
-            glow.position.set(0, midY, 0);
+            const glow = new THREE.PointLight(glowColor, 6, 3.5, 1.2);
+            // Offset toward the camera side rather than dead-centre — this
+            // model is a fairly flat diorama, and a light buried inside its
+            // own geometry mostly illuminates backfaces we never see. Confirmed
+            // via an isolated test matching the room's real ambient (0.15) and
+            // exposure (0.55): centred lighting stayed dark no matter the
+            // intensity, offset-toward-camera reads clearly at this level.
+            glow.position.set(0.3, midY, -0.15);
             group.add(glow);
 
             const ring = buildSparkleRing(Math.max(size.x, size.z) * scale * 0.75, 14, glowColor);
             ring.position.y = midY;
             group.add(ring);
 
-            group.position.set(0.55, 0.03, 0.55);
+            // Floats clear of the floor rather than sitting on it.
+            group.position.set(0.55, 0.28, 0.55);
             group.userData.itemData = {
                 title: data.title || 'Low-poly test piece',
                 project: data.project || 'Editorial — low-poly',
