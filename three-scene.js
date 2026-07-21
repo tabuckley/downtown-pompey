@@ -410,6 +410,121 @@ export function addModel(url, data) {
     });
 }
 
+// ===== LOW-POLY COLLECTIBLES =====
+// A separate system from addModel()'s archive-photo 3D items — these are
+// decorative, game-collectible-styled pieces (one test model for now;
+// eventually a pool to randomly draw 3 from each load, replacing the
+// floating-gif overlay). MeshToonMaterial (banded lighting rather than
+// smooth PBR) is what actually reads as "retro game" on a low-poly mesh,
+// while still genuinely responding to the room's real lights rather than
+// being an unlit decal.
+const TOON_BANDS = 3;
+function buildToonGradientMap() {
+    const data = new Uint8Array(TOON_BANDS);
+    for (let i = 0; i < TOON_BANDS; i++) data[i] = Math.round((i / (TOON_BANDS - 1)) * 255);
+    const tex = new THREE.DataTexture(data, TOON_BANDS, 1, THREE.RedFormat);
+    tex.magFilter = THREE.NearestFilter;
+    tex.minFilter = THREE.NearestFilter;
+    tex.needsUpdate = true;
+    return tex;
+}
+
+// A ring of small additive-blended sparkle points circling the object —
+// standing in for the "collectible glow" ring iconic to N64-era platformers
+// (Mario 64 stars, Banjo-Kazooie jiggies). It rotates for free by living
+// inside the same group that gets pushed to `spinners`, rather than
+// animating independently.
+function buildSparkleRing(radius, count, color) {
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2;
+        positions[i * 3] = Math.cos(angle) * radius;
+        positions[i * 3 + 1] = Math.sin(angle * 3) * radius * 0.15; // gentle up/down wave around the ring
+        positions[i * 3 + 2] = Math.sin(angle) * radius;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({
+        color,
+        size: 0.035,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+    });
+    const points = new THREE.Points(geo, mat);
+    points.raycast = () => {}; // decorative only
+    return points;
+}
+
+export function addLowPolyModel(url, data = {}) {
+    return new Promise((resolve) => {
+        if (!scene) return resolve(null);
+        new GLTFLoader().load(url, (gltf) => {
+            const model = gltf.scene;
+
+            // Normalise to a "handheld collectible" scale relative to this
+            // room, which is itself only ~2-3 units across — NOT the old
+            // placeholder box room's ~20-unit scale that addModel()'s own
+            // 2.2-unit target was tuned against.
+            const box = new THREE.Box3().setFromObject(model);
+            const size = box.getSize(new THREE.Vector3());
+            const scale = 0.8 / Math.max(size.x, size.y, size.z, 0.001);
+            model.scale.setScalar(scale);
+
+            // Re-style every material as toon-shaded rather than smooth PBR —
+            // keeps the model's own baked texture/colour, but quantises the
+            // lighting response into bands, which reads as "retro game" far
+            // more than photoreal PBR shading does on a low-poly mesh.
+            const gradientMap = buildToonGradientMap();
+            model.traverse((obj) => {
+                if (!obj.isMesh) return;
+                const old = obj.material;
+                obj.material = new THREE.MeshToonMaterial({
+                    map: old.map || null,
+                    color: old.color ? old.color.clone() : new THREE.Color(0xffffff),
+                    gradientMap,
+                });
+            });
+
+            const group = new THREE.Group();
+            group.add(model);
+
+            const scaledBox = new THREE.Box3().setFromObject(model);
+            model.position.y -= scaledBox.min.y; // sit the model on the group's own local floor (y=0)
+
+            // Warm point light + sparkle ring at the model's vertical
+            // midpoint — the "glow" marking this out as a special, game-like
+            // object rather than just another lit prop.
+            const midY = (scaledBox.max.y - scaledBox.min.y) / 2;
+            const glowColor = 0xffd27a;
+            const glow = new THREE.PointLight(glowColor, 2.2, 2.5, 2);
+            glow.position.set(0, midY, 0);
+            group.add(glow);
+
+            const ring = buildSparkleRing(Math.max(size.x, size.z) * scale * 0.75, 14, glowColor);
+            ring.position.y = midY;
+            group.add(ring);
+
+            group.position.set(0.55, 0.03, 0.55);
+            group.userData.itemData = {
+                title: data.title || 'Low-poly test piece',
+                project: data.project || 'Editorial — low-poly',
+                year: data.year || '—',
+                description: data.description || 'A low-poly model — a stand-in for what will eventually be a rotating pool of these instead of the floating gifs.',
+            };
+            scene.add(group);
+            clickables.push(group);
+            spinners.push(group);
+            resolve(group);
+        }, undefined, (err) => {
+            console.warn('Low-poly model load failed:', url, err);
+            resolve(null);
+        });
+    });
+}
+
 export function addPlaceholders() {
     if (!scene) return [];
     const wireMat = new THREE.MeshStandardMaterial({

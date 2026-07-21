@@ -1,5 +1,5 @@
 import { fetchSheet, yearFrom } from './sheet.js';
-import { initRoom, addFramedPhoto, addModel, addPlaceholders, onObjectClick, onObjectHover } from './three-scene.js';
+import { initRoom, addFramedPhoto, addModel, addPlaceholders, addLowPolyModel, onObjectClick, onObjectHover } from './three-scene.js';
 import { initCursor } from './cursor.js';
 
 const MAX_PHOTOS = 6;
@@ -7,6 +7,13 @@ const MAX_MODELS = 2;
 
 initCursor();
 initRoom('room-canvas');
+
+// Testing the low-poly-collectible replacement for the floating-gif
+// overlay — one fixed model for now; eventually a pool in R2 to randomly
+// draw 3 from each load, same idea as the old gif rotation.
+addLowPolyModel('https://media.downtownpompey.online/_site-assets/low-poly/doll-on-the-beach.glb', {
+    title: 'Doll on the Beach',
+});
 
 // ===== INFO PANEL =====
 const panel = document.getElementById('infoPanel');
