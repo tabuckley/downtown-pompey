@@ -7,7 +7,7 @@
 // rather than the previous narrow cluster around square, so the grid reads
 // more like a mixed photo album than a uniform tile wall.
 const RATIOS = [0.5, 0.65, 0.8, 1, 1, 1.25, 1.5, 1.78, 2.0];
-const GAP = 26;
+const GAP = 44;
 const ROW_STAGGER = 0.5; // alternate rows shift sideways by this fraction of a cell, brick-lay style
 const JITTER_FRAC = 0.24; // per-tile position jitter, as a fraction of its own (smaller) dimension
 const POOL_BUFFER = 1.6; // how many extra tile-widths beyond the viewport to keep mounted

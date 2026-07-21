@@ -166,7 +166,14 @@ function matchesTag(item, tag) {
 function applyFilters() {
     filtered = allItems.filter(item => [...activeTags].every(tag => matchesTag(item, tag)));
     clearBtn.classList.toggle('visible', activeTags.size > 0);
-    panCanvas.setItems(filtered);
+    // The canvas pools items in contiguous chunks (one screenful at a time —
+    // see cellItemIndex in pan-canvas.js), and `filtered` is sorted by date,
+    // so same-project items (which mostly share a date) landed in the same
+    // chunk and visibly clumped together while panning. A shuffled copy for
+    // the canvas breaks that up; `filtered` itself stays date-ordered since
+    // the keyboard/screen-reader list and lightbox prev/next both still walk
+    // it in that (more sensible for those) order.
+    panCanvas.setItems(shuffle([...filtered]));
     rebuildKeyboardList();
     updateStatus();
 }
