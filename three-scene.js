@@ -34,8 +34,11 @@ const spinners = [];
 // Objects that pivot side-to-side and bob up/down rather than doing a full
 // 360° spin — for models (like the low-poly collectibles) whose back side
 // has no real texture/geometry detail, so a full rotation would eventually
-// show a blank/black back. { obj, baseY, baseRotY, phase }.
+// show a blank/black back. Pauses and shows `halo` (optional) instead of
+// the generic hover-scale every other clickable gets — see animate() and
+// the hoverTarget exclusion below. { obj, baseY, baseRotY, phase, halo }.
 const floaters = [];
+const floaterObjects = new Set(); // mirrors floaters' .obj values, for O(1) exclusion lookup in animate()
 let clickCb = null;
 let hoverCb = null;
 // Scales whatever's currently hovered up slightly (see animate()) as a
@@ -452,8 +455,8 @@ export function addModel(url, data) {
 //
 // A ring of small additive-blended sparkle points circling the object —
 // standing in for the "collectible glow" ring iconic to N64-era platformers
-// (Mario 64 stars, Banjo-Kazooie jiggies). It rotates for free by living
-// inside the same group that gets pushed to `spinners`, rather than
+// (Mario 64 stars, Banjo-Kazooie jiggies). It pivots for free by living
+// inside the same group that gets pushed to `floaters`, rather than
 // animating independently.
 function buildSparkleRing(radius, count, color) {
     const positions = new Float32Array(count * 3);
@@ -479,6 +482,47 @@ function buildSparkleRing(radius, count, color) {
     return points;
 }
 
+// The hover indicator — a soft radial glow disc centred behind the model,
+// larger than its silhouette so it only actually shows around the edges
+// (the opaque model in front occludes the rest via normal depth testing).
+// Starts fully invisible; animate() lerps its opacity uniform up while
+// hovered. Facing is fixed rather than a true camera-facing billboard —
+// acceptable since it's only visible while hovered, which is also when the
+// object's own pivot is paused (see animate()), so it isn't seen rotating
+// out of alignment.
+function buildHalo(radius, color) {
+    const geo = new THREE.CircleGeometry(radius, 32);
+    const mat = new THREE.ShaderMaterial({
+        uniforms: {
+            uColor: { value: new THREE.Color(color) },
+            uOpacity: { value: 0 },
+        },
+        vertexShader: `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform vec3 uColor;
+            uniform float uOpacity;
+            varying vec2 vUv;
+            void main() {
+                float d = distance(vUv, vec2(0.5));
+                float fade = 1.0 - smoothstep(0.15, 0.5, d);
+                gl_FragColor = vec4(uColor, fade * uOpacity);
+            }
+        `,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.raycast = () => {}; // decorative only — hovering it shouldn't count as hovering the halo itself
+    return mesh;
+}
+
 export function addLowPolyModel(url, data = {}) {
     return new Promise((resolve) => {
         if (!scene) return resolve(null);
@@ -500,26 +544,24 @@ export function addLowPolyModel(url, data = {}) {
             // rather than landscape.
             model.rotation.z = Math.PI / 2;
 
-            // Re-style every material as toon-shaded rather than smooth PBR —
-            // keeps the model's own baked texture/colour, but quantises the
-            // lighting response into bands, which reads as "retro game" far
-            // more than photoreal PBR shading does on a low-poly mesh.
-            // emissiveMap (the same texture, fed back in as a self-lit term)
-            // keeps the model's own true colours legible regardless of the
-            // room's strongly pink/magenta lighting — without it, the pink
-            // cast was overwhelming the model's actual colours since the lit
-            // diffuse term was the only thing putting colour on screen at
-            // all. The toon-shaded diffuse response still adds real
-            // highlight/shadow from the room's lights on top of that base.
+            // Fully unlit rather than toon-shaded — the room's strongly
+            // pink/magenta lights (and, via those, bloom) were dominating
+            // the model's own colours no matter how much the previous toon
+            // + emissive setup tried to compensate. MeshBasicMaterial
+            // ignores every scene light entirely, and toneMapped:false
+            // means it also ignores the room's overall exposure/tone
+            // mapping — this shows the model's raw texture colours exactly,
+            // completely independent of anything else in the scene. That
+            // also happens to stop it tripping bloom's threshold, since
+            // there's no added light pushing its pixel values above 1.0
+            // the way the point light + toon shading previously could.
             model.traverse((obj) => {
                 if (!obj.isMesh) return;
                 const old = obj.material;
-                obj.material = new THREE.MeshToonMaterial({
+                obj.material = new THREE.MeshBasicMaterial({
                     map: old.map || null,
                     color: old.color ? old.color.clone() : new THREE.Color(0xffffff),
-                    emissiveMap: old.map || null,
-                    emissive: new THREE.Color(0xffffff),
-                    emissiveIntensity: 0.9,
+                    toneMapped: false,
                 });
             });
 
@@ -530,11 +572,11 @@ export function addLowPolyModel(url, data = {}) {
             model.position.y -= scaledBox.min.y; // sit the model on the group's own local floor (y=0)
 
             // Warm point light + sparkle ring at the model's vertical
-            // midpoint — the "glow" marking this out as a special, game-like
-            // object rather than just another lit prop. Kept deliberately
-            // subtle: this close to the model, much more intensity just
-            // bleaches its own toon-shaded colour out toward white instead
-            // of reading as an accent glow.
+            // midpoint. Now that the model itself is a fully unlit
+            // MeshBasicMaterial, this light no longer affects the model at
+            // all — it's purely an ambient glow pooling on the nearby floor
+            // and curtain, marking out where the object is without touching
+            // its own colours.
             const midY = (scaledBox.max.y - scaledBox.min.y) / 2;
             const glowColor = 0xffd27a;
             const glow = new THREE.PointLight(glowColor, 6, 3.5, 1.2);
@@ -551,6 +593,10 @@ export function addLowPolyModel(url, data = {}) {
             ring.position.y = midY;
             group.add(ring);
 
+            const halo = buildHalo(Math.max(size.x, size.y) * scale * 0.85, glowColor);
+            halo.position.y = midY;
+            group.add(halo);
+
             // Floats clear of the floor rather than sitting on it.
             group.position.set(0.55, 0.28, 0.55);
             // The model's default orientation faces away from the camera —
@@ -566,7 +612,8 @@ export function addLowPolyModel(url, data = {}) {
             };
             scene.add(group);
             clickables.push(group);
-            floaters.push({ obj: group, baseY: group.position.y, baseRotY, phase: Math.random() * Math.PI * 2 });
+            floaters.push({ obj: group, baseY: group.position.y, baseRotY, phase: Math.random() * Math.PI * 2, halo });
+            floaterObjects.add(group);
             resolve(group);
         }, undefined, (err) => {
             console.warn('Low-poly model load failed:', url, err);
@@ -684,15 +731,28 @@ function animate() {
 
         const t = performance.now() * 0.001;
         floaters.forEach(f => {
-            f.obj.rotation.y = f.baseRotY + Math.sin(t * 0.4 + f.phase) * 0.5; // pivot ±~29° around its facing direction, never shows the back
-            f.obj.position.y = f.baseY + Math.sin(t * 0.3 + f.phase) * 0.08; // slow drift up/down
+            const hovered = f.obj === hoverTarget;
+            // Pause the pivot/bob while hovered — the halo below is the
+            // hover indicator for these instead of the generic scale-up,
+            // and freezing in place reads more like "paying attention to
+            // you" than a moving target would.
+            if (!hovered) {
+                f.obj.rotation.y = f.baseRotY + Math.sin(t * 0.4 + f.phase) * 0.5; // pivot ±~29° around its facing direction, never shows the back
+                f.obj.position.y = f.baseY + Math.sin(t * 0.3 + f.phase) * 0.08; // slow drift up/down
+            }
+            if (f.halo) {
+                const targetOpacity = hovered ? 0.7 : 0;
+                f.halo.material.uniforms.uOpacity.value += (targetOpacity - f.halo.material.uniforms.uOpacity.value) * 0.15;
+            }
         });
     }
 
     // Outside the reduceMotion gate deliberately — this only ever moves in
     // direct response to the user hovering something, not ambient animation,
     // so it's the same kind of feedback a native :hover style would give.
+    // Floaters (see above) get a pause + halo instead of this scale-up.
     clickables.forEach(obj => {
+        if (floaterObjects.has(obj)) return;
         if (!hoverBaseScale.has(obj)) hoverBaseScale.set(obj, obj.scale.clone());
         const base = hoverBaseScale.get(obj);
         const targetScale = base.clone().multiplyScalar(obj === hoverTarget ? HOVER_SCALE : 1);
