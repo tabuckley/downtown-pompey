@@ -575,7 +575,7 @@ function buildOutline(model, color) {
     return materials;
 }
 
-export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], modelRotationZ = Math.PI / 2, baseRotY = Math.PI) {
+export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], modelRotationZ = 0, baseRotY = 0) {
     return new Promise((resolve) => {
         if (!scene) return resolve(null);
         new GLTFLoader().load(url, (gltf) => {
@@ -669,7 +669,7 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
                 title: data.title || 'Low-poly test piece',
                 project: data.project || 'Editorial — low-poly',
                 year: data.year || '—',
-                description: data.description || 'A low-poly model — a stand-in for what will eventually be a rotating pool of these instead of the floating gifs.',
+                description: data.description || 'A low-poly model from the editorial room\'s rotating collectible pool.',
             };
             scene.add(group);
             clickables.push(group);

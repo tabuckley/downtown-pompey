@@ -8,16 +8,6 @@ const MAX_MODELS = 2;
 initCursor();
 initRoom('room-canvas');
 
-// Testing the low-poly-collectible replacement for the floating-gif
-// overlay — a couple of fixed models for now; eventually a pool in R2 to
-// randomly draw 3 from each load, same idea as the old gif rotation.
-addLowPolyModel('https://media.downtownpompey.online/_site-assets/low-poly/doll-on-the-beach.glb', {
-    title: 'Doll on the Beach',
-});
-addLowPolyModel('https://media.downtownpompey.online/_site-assets/low-poly/recycling-sculpture.glb', {
-    title: 'Recycling Sculpture',
-}, [0.55, 0.28, -0.55], 0, 0);
-
 // ===== INFO PANEL =====
 const panel = document.getElementById('infoPanel');
 const roomHint = document.getElementById('roomHint');
@@ -86,6 +76,50 @@ function shuffle(arr) {
     }
     return arr;
 }
+
+// ===== LOW-POLY COLLECTIBLES =====
+// Replaces the old floating-gif overlay. Driven by a "low-poly" tab in the
+// same Sheet (just url,title columns — add a row per uploaded model, no
+// code change needed) rather than by listing the R2 folder directly: R2's
+// public bucket domain serves individual objects but has no directory-
+// listing endpoint, and this project already uses Sheet tabs as its
+// headless-CMS manifest for every other kind of media, so a tab is the
+// consistent way to do this rather than a one-off exception.
+const LOW_POLY_SLOTS = [
+    [0.55, 0.28, 0.55],
+    [0.55, 0.28, -0.55],
+    [0.9, 0.28, 0],
+];
+// Per-model rotation corrections some scans need (a flat diorama that reads
+// sideways by default, a mesh that faces away from camera, etc.) — most
+// models need neither (addLowPolyModel()'s own defaults are 0,0), so this
+// only needs entries for the exceptions, keyed by filename. Extend this if
+// a newly-added model turns out to need one too.
+const LOW_POLY_ROTATION_OVERRIDES = {
+    'doll-on-the-beach.glb': { rotationZ: Math.PI / 2, baseRotY: Math.PI },
+};
+
+async function populateLowPoly() {
+    try {
+        const rows = (await fetchSheet('low-poly')).filter(r => r.url);
+        const picks = shuffle([...rows]).slice(0, LOW_POLY_SLOTS.length);
+        picks.forEach((row, i) => {
+            const filename = decodeURIComponent(row.url.split('/').pop() || '');
+            const override = LOW_POLY_ROTATION_OVERRIDES[filename] || { rotationZ: 0, baseRotY: 0 };
+            addLowPolyModel(
+                row.url,
+                { title: row.title },
+                LOW_POLY_SLOTS[i],
+                override.rotationZ,
+                override.baseRotY
+            );
+        });
+    } catch (err) {
+        console.warn('Low-poly models failed to load:', err.message);
+    }
+}
+
+populateLowPoly();
 
 async function populate() {
     try {
