@@ -105,6 +105,7 @@ const LOW_POLY_SLOTS = [
 // a newly-added model turns out to need one too.
 const LOW_POLY_ROTATION_OVERRIDES = {
     'doll-on-the-beach.glb': { rotationZ: Math.PI / 2, baseRotY: Math.PI },
+    'Discount store.glb': { rotationZ: 0, baseRotY: Math.PI },
 };
 
 async function populateLowPoly() {
