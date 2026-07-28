@@ -79,12 +79,15 @@ function shuffle(arr) {
 
 // ===== LOW-POLY COLLECTIBLES =====
 // Replaces the old floating-gif overlay. Driven by a "low-poly" tab in the
-// same Sheet (just url,title columns — add a row per uploaded model, no
-// code change needed) rather than by listing the R2 folder directly: R2's
-// public bucket domain serves individual objects but has no directory-
+// same Sheet (url,title,description columns — add a row per uploaded model,
+// no code change needed) rather than by listing the R2 folder directly:
+// R2's public bucket domain serves individual objects but has no directory-
 // listing endpoint, and this project already uses Sheet tabs as its
 // headless-CMS manifest for every other kind of media, so a tab is the
-// consistent way to do this rather than a one-off exception.
+// consistent way to do this rather than a one-off exception. Each model is
+// a 3D scan of a real archive item, so description is expected to name/link
+// back to it in prose (e.g. "a scan of the wicker bird sculpture from Photo
+// Walk") — there's no separate structured cross-reference field for that.
 const LOW_POLY_SLOTS = [
     [0.55, 0.28, 0.55],
     [0.55, 0.28, -0.55],
@@ -103,17 +106,22 @@ async function populateLowPoly() {
     try {
         const rows = (await fetchSheet('low-poly')).filter(r => r.url);
         const picks = shuffle([...rows]).slice(0, LOW_POLY_SLOTS.length);
-        picks.forEach((row, i) => {
+        const attempts = picks.map((row, i) => {
             const filename = decodeURIComponent(row.url.split('/').pop() || '');
             const override = LOW_POLY_ROTATION_OVERRIDES[filename] || { rotationZ: 0, baseRotY: 0 };
-            addLowPolyModel(
+            return addLowPolyModel(
                 row.url,
-                { title: row.title },
+                { title: row.title, description: row.description },
                 LOW_POLY_SLOTS[i],
                 override.rotationZ,
                 override.baseRotY
             );
         });
+        // Same pattern as populate() below — only register what actually
+        // succeeded, so a failed load doesn't leave a dead entry in the
+        // keyboard/screen-reader item list.
+        const placed = (await Promise.all(attempts)).filter(Boolean);
+        placed.forEach(addRoomItemButton);
     } catch (err) {
         console.warn('Low-poly models failed to load:', err.message);
     }

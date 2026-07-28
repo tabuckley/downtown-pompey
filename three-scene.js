@@ -675,7 +675,11 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
             clickables.push(group);
             floaters.push({ obj: group, baseY: group.position.y, baseRotY, phase: Math.random() * Math.PI * 2, outlineMaterials });
             floaterObjects.add(group);
-            resolve(group);
+            // Resolves with the item's data (like addFramedPhoto/addModel
+            // do), not the Three.js group itself, so callers can treat every
+            // clickable type the same way — e.g. passing it straight to a
+            // keyboard/screen-reader item list.
+            resolve(group.userData.itemData);
         }, undefined, (err) => {
             console.warn('Low-poly model load failed:', url, err);
             resolve(null);
