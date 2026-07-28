@@ -103,20 +103,30 @@ const LOW_POLY_SLOTS = [
 // models need none of these (addLowPolyModel()'s own defaults are all 0),
 // so this only needs entries for the exceptions, keyed by filename. Extend
 // this if a newly-added model turns out to need one too.
-// rotationX stands up scans that came out lying flat (a scan of a flat
-// photo print, effectively) instead of upright facing the camera — found by
-// comparing render passes at several angles, same as the others. The two
-// below (Fountain Reflections, Millenium Walk) are visible and readable
-// now, a big improvement on being an edge-on sliver, but their up/down
-// orientation isn't fully resolved — further rotation combinations didn't
-// resolve it and it may be a UV-mapping quirk in the raw scan rather than
-// something fixable by rotating the object.
+// baseRotY values below (except the doll, which predates this pass) came
+// from a side-by-side gallery of each model at 0/90/180/270° next to its
+// original archive photo, reviewed and picked by hand rather than guessed.
+// rotationZ stands up the two scans (Fountain Reflections, Millenium Walk)
+// that came out lying flat instead of upright facing the camera — visible
+// and readable now, a big improvement on being an edge-on sliver, but their
+// in-plane orientation still isn't fully resolved: confirmed via direct
+// testing that no baseRotY value fixes it (Y-axis only changes which way a
+// flat plane faces, not its own up/down spin), and it's likely a UV-mapping
+// quirk in the raw scan rather than something fixable by rotating the
+// object at all.
 const LOW_POLY_ROTATION_OVERRIDES = {
-    'doll-on-the-beach.glb': { rotationZ: Math.PI / 2, baseRotY: Math.PI },
-    'Discount store.glb': { rotationZ: 0, baseRotY: Math.PI },
-    'brown mask.glb': { rotationZ: 0, baseRotY: Math.PI },
-    'reflectionphoto.glb': { rotationZ: -Math.PI / 2, baseRotY: 0 },
-    'promonade photo.glb': { rotationZ: -Math.PI / 2, baseRotY: 0 },
+    'doll-on-the-beach.glb': { rotationZ: Math.PI / 2, baseRotY: Math.PI }, // left as-is — the review gallery didn't apply this model's own rotationZ, so its 4 options were all shown lying on its back and weren't a fair comparison
+    'Discount store.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
+    'ferris-wheel.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
+    'recycling-sculpture.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
+    'shop shelf.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
+    'horseshoe.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
+    'brown mask.glb': { rotationZ: 0, baseRotY: (2 * Math.PI) / 3 }, // 120°
+    'seagull m ask.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
+    'pink mask.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
+    'dear creative.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
+    'reflectionphoto.glb': { rotationZ: -Math.PI / 2, baseRotY: 0 }, // still unresolved, see comment above
+    'promonade photo.glb': { rotationZ: -Math.PI / 2, baseRotY: 0 }, // still unresolved, see comment above
 };
 
 async function populateLowPoly() {
