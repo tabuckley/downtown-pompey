@@ -52,7 +52,7 @@ function mod(n, m) {
     return ((n % m) + m) % m;
 }
 
-export function initPanCanvas(container, { renderTile, onActivate, reduceMotion }) {
+export function initPanCanvas(container, { renderTile, onActivate, reduceMotion, renderOverlay }) {
     let items = [];
     let cols = 4, unitW = 260;
     let colX = [], rowY = [], rowH = [];
@@ -208,6 +208,20 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion 
         inner.className = 'pan-tile-inner';
         inner.appendChild(renderTile(item));
         el.appendChild(inner);
+
+        // Appended to `el`, not `inner` — .pan-tile-inner clips to its own
+        // box (overflow:hidden, for the rounded-corner photo crop) and
+        // forces every img inside it to 100%/object-fit:cover, neither of
+        // which a small decorative overlay (tape hanging off the top edge,
+        // a sticker) wants. `el` itself has no such constraints. Slot
+        // coordinates are passed through so the caller can make the choice
+        // deterministic per slot, the same way ratioForSlot/jitterForSlot
+        // are — otherwise a tile's decoration would re-roll every time it's
+        // recycled while panning.
+        if (renderOverlay) {
+            const overlays = renderOverlay(item, row, col, kx, ky);
+            if (overlays) overlays.forEach(node => el.appendChild(node));
+        }
 
         container.appendChild(el);
         requestAnimationFrame(() => inner.classList.add('tile-in'));
