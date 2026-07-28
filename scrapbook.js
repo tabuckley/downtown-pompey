@@ -47,28 +47,63 @@ function slotRandom(row, col, kx, ky, salt) {
     return (slotHash(row, col, kx, ky, salt) % 100000) / 100000;
 }
 
+// Roughly a real die-cut sticker's own width:height, used only to convert a
+// "how much overlaps the tile" fraction into top/left percentages — doesn't
+// need to be exact per image, just close enough that the edge math reads
+// right across the range of sticker files.
+const STICKER_W_PCT = 34;
+const STICKER_H_PCT = 26;
+const CORNER_TAPE_CHANCE = 0.3; // of tiles that get tape, how many get the diagonal-corner style instead of the classic top strip
+
 function renderTileOverlay(item, row, col, kx, ky) {
     if (item._placeholder) return null; // stand-in test content, not worth decorating
     const nodes = [];
 
     if (slotRandom(row, col, kx, ky, 1) < TAPE_CHANCE) {
         const src = TAPE_IMAGES[Math.floor(slotRandom(row, col, kx, ky, 2) * TAPE_IMAGES.length)];
-        const rotate = (slotRandom(row, col, kx, ky, 3) - 0.5) * 16; // -8deg..8deg
-        const shiftX = (slotRandom(row, col, kx, ky, 4) - 0.5) * 30; // -15%..15% of tile width
         const tape = document.createElement('img');
         tape.src = src;
         tape.alt = '';
-        tape.className = 'tile-tape';
-        tape.style.setProperty('--tape-rotate', `${rotate.toFixed(1)}deg`);
-        tape.style.setProperty('--tape-shift', `${shiftX.toFixed(1)}%`);
+
+        const isCorner = slotRandom(row, col, kx, ky, 11) < CORNER_TAPE_CHANCE;
+        if (isCorner) {
+            const corner = ['tl', 'tr', 'bl', 'br'][Math.floor(slotRandom(row, col, kx, ky, 12) * 4)];
+            const jitter = (slotRandom(row, col, kx, ky, 3) - 0.5) * 20; // -10deg..10deg, on top of the corner's own base angle
+            const width = 28 + slotRandom(row, col, kx, ky, 13) * 26; // 28%..54% — smaller than the top strip, a corner only needs to catch the corner
+            tape.className = `tile-tape tile-tape--corner-${corner}`;
+            tape.style.setProperty('--tape-jitter', `${jitter.toFixed(1)}deg`);
+            tape.style.setProperty('--tape-width', `${width.toFixed(1)}%`);
+        } else {
+            const rotate = (slotRandom(row, col, kx, ky, 3) - 0.5) * 16; // -8deg..8deg
+            const shiftX = (slotRandom(row, col, kx, ky, 4) - 0.5) * 30; // -15%..15% of tile width
+            const width = 38 + slotRandom(row, col, kx, ky, 13) * 40; // 38%..78% — was a fixed 58%
+            tape.className = 'tile-tape tile-tape--top';
+            tape.style.setProperty('--tape-rotate', `${rotate.toFixed(1)}deg`);
+            tape.style.setProperty('--tape-shift', `${shiftX.toFixed(1)}%`);
+            tape.style.setProperty('--tape-width', `${width.toFixed(1)}%`);
+        }
         nodes.push(tape);
     }
 
     if (slotRandom(row, col, kx, ky, 5) < STICKER_CHANCE) {
         const src = STICKER_IMAGES[Math.floor(slotRandom(row, col, kx, ky, 6) * STICKER_IMAGES.length)];
         const rotate = (slotRandom(row, col, kx, ky, 7) - 0.5) * 40; // -20deg..20deg
-        const top = 8 + slotRandom(row, col, kx, ky, 8) * 58; // 8%..66%
-        const left = 8 + slotRandom(row, col, kx, ky, 9) * 58;
+
+        // Never just sitting mid-photo — either clear of it entirely (resting
+        // on the page beside it) or barely catching an edge, like a sticker
+        // actually placed near a photo rather than stuck flat in the middle
+        // of it. overlapFrac is the share of the STICKER's own size (not the
+        // photo's) that crosses onto the tile.
+        const overlapFrac = slotRandom(row, col, kx, ky, 8) < 0.5 ? 0 : 0.15 + slotRandom(row, col, kx, ky, 14) * 0.1; // 0, or 15%..25%
+        const edge = ['top', 'bottom', 'left', 'right'][Math.floor(slotRandom(row, col, kx, ky, 9) * 4)];
+        const along = 10 + slotRandom(row, col, kx, ky, 10) * 60; // 10%..70% position along the free axis
+
+        let top, left;
+        if (edge === 'top') { top = -STICKER_H_PCT * (1 - overlapFrac); left = along; }
+        else if (edge === 'bottom') { top = 100 - STICKER_H_PCT * overlapFrac; left = along; }
+        else if (edge === 'left') { left = -STICKER_W_PCT * (1 - overlapFrac); top = along; }
+        else { left = 100 - STICKER_W_PCT * overlapFrac; top = along; }
+
         const sticker = document.createElement('img');
         sticker.src = src;
         sticker.alt = '';
