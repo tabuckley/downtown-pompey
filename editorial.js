@@ -96,7 +96,7 @@ function shuffle(arr) {
 const LOW_POLY_SLOTS = [
     [0.72, 0.28, 0.72],
     [0.72, 0.28, -0.72],
-    [1.15, 0.28, 0],
+    [0.85, 0.28, 0],
 ];
 // Per-model rotation corrections some scans need (a flat diorama that reads
 // sideways by default, a mesh that faces away from camera, etc.) — most
@@ -106,14 +106,16 @@ const LOW_POLY_SLOTS = [
 // baseRotY values below (except the doll, which predates this pass) came
 // from a side-by-side gallery of each model at 0/90/180/270° next to its
 // original archive photo, reviewed and picked by hand rather than guessed.
-// rotationZ stands up the two scans (Fountain Reflections, Millenium Walk)
-// that came out lying flat instead of upright facing the camera — visible
-// and readable now, a big improvement on being an edge-on sliver, but their
-// in-plane orientation still isn't fully resolved: confirmed via direct
-// testing that no baseRotY value fixes it (Y-axis only changes which way a
-// flat plane faces, not its own up/down spin), and it's likely a UV-mapping
-// quirk in the raw scan rather than something fixable by rotating the
-// object at all.
+// rotationZ stands up the two flat-photo scans (Fountain Reflections,
+// Millenium Walk) that came out lying flat instead of upright facing the
+// camera. spinY is a further in-plane turn around the model's own face
+// once it's already standing upright — baseRotY can't do this (it only
+// changes which way a flat plane faces, not its own up/down spin), so a
+// separate rotateOnAxis-based parameter was added for it. Confirmed
+// correct against the original archive photo for Fountain Reflections
+// (fountain at top, reflection below, matching the source image exactly);
+// Millenium Walk needed a different fix (±90° both left it edge-on) and is
+// still unresolved — likely a UV-mapping quirk specific to that scan.
 const LOW_POLY_ROTATION_OVERRIDES = {
     'doll-on-the-beach.glb': { rotationZ: Math.PI / 2, baseRotY: Math.PI }, // left as-is — the review gallery didn't apply this model's own rotationZ, so its 4 options were all shown lying on its back and weren't a fair comparison
     'Discount store.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
@@ -125,7 +127,7 @@ const LOW_POLY_ROTATION_OVERRIDES = {
     'seagull m ask.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
     'pink mask.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
     'dear creative.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
-    'reflectionphoto.glb': { rotationZ: -Math.PI / 2, baseRotY: 0 }, // still unresolved, see comment above
+    'reflectionphoto.glb': { rotationZ: -Math.PI / 2, baseRotY: 0, spinY: Math.PI / 2 },
     'promonade photo.glb': { rotationZ: -Math.PI / 2, baseRotY: 0 }, // still unresolved, see comment above
 };
 
@@ -143,7 +145,8 @@ async function populateLowPoly() {
                 LOW_POLY_SLOTS[i],
                 override.rotationZ,
                 override.baseRotY,
-                override.rotationX
+                override.rotationX,
+                override.spinY
             );
         });
         // Same pattern as populate() below — only register what actually

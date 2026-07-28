@@ -644,7 +644,7 @@ function buildDropShadow(radius) {
     return mesh;
 }
 
-export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], modelRotationZ = 0, baseRotY = 0, modelRotationX = 0) {
+export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], modelRotationZ = 0, baseRotY = 0, modelRotationX = 0, modelSpinY = 0) {
     return new Promise((resolve) => {
         if (!scene) return resolve(null);
         new GLTFLoader().load(url, (gltf) => {
@@ -671,6 +671,14 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
             // instead of standing upright facing the camera.
             model.rotation.z = modelRotationZ;
             model.rotation.x = modelRotationX;
+            // Spins the model around its OWN local Y axis (its face-normal,
+            // once already tilted upright above) — composed on top of the
+            // Euler rotation via rotateOnAxis rather than another Euler
+            // property, since Three.js's default XYZ Euler order applies Y
+            // BEFORE Z, which would spin the model before it's standing up
+            // rather than after. For a flat scan facing the camera, this is
+            // an in-plane clockwise/counter-clockwise turn of the image.
+            if (modelSpinY) model.rotateOnAxis(new THREE.Vector3(0, 1, 0), modelSpinY);
 
             // Fully unlit rather than toon-shaded — the room's strongly
             // pink/magenta lights (and, via those, bloom) were dominating
