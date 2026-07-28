@@ -100,12 +100,23 @@ const LOW_POLY_SLOTS = [
 ];
 // Per-model rotation corrections some scans need (a flat diorama that reads
 // sideways by default, a mesh that faces away from camera, etc.) — most
-// models need neither (addLowPolyModel()'s own defaults are 0,0), so this
-// only needs entries for the exceptions, keyed by filename. Extend this if
-// a newly-added model turns out to need one too.
+// models need none of these (addLowPolyModel()'s own defaults are all 0),
+// so this only needs entries for the exceptions, keyed by filename. Extend
+// this if a newly-added model turns out to need one too.
+// rotationX stands up scans that came out lying flat (a scan of a flat
+// photo print, effectively) instead of upright facing the camera — found by
+// comparing render passes at several angles, same as the others. The two
+// below (Fountain Reflections, Millenium Walk) are visible and readable
+// now, a big improvement on being an edge-on sliver, but their up/down
+// orientation isn't fully resolved — further rotation combinations didn't
+// resolve it and it may be a UV-mapping quirk in the raw scan rather than
+// something fixable by rotating the object.
 const LOW_POLY_ROTATION_OVERRIDES = {
     'doll-on-the-beach.glb': { rotationZ: Math.PI / 2, baseRotY: Math.PI },
     'Discount store.glb': { rotationZ: 0, baseRotY: Math.PI },
+    'brown mask.glb': { rotationZ: 0, baseRotY: Math.PI },
+    'reflectionphoto.glb': { rotationZ: -Math.PI / 2, baseRotY: 0 },
+    'promonade photo.glb': { rotationZ: -Math.PI / 2, baseRotY: 0 },
 };
 
 async function populateLowPoly() {
@@ -121,7 +132,8 @@ async function populateLowPoly() {
                 { title: row.title, description: row.description },
                 LOW_POLY_SLOTS[i],
                 override.rotationZ,
-                override.baseRotY
+                override.baseRotY,
+                override.rotationX
             );
         });
         // Same pattern as populate() below — only register what actually

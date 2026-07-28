@@ -519,15 +519,24 @@ function buildSparkleRing(radius, count, color) {
 // object's own pivot is paused (see animate()), so it isn't seen rotating
 // out of alignment.
 // The "inverted hull" outline technique: a copy of the model's own geometry,
-// pushed out slightly along each vertex's normal and rendered back-face-only
-// — from outside, only that enlarged back shell peeks out past the real
-// mesh's silhouette edges, tracing its actual shape from whatever angle the
-// camera sees it, rather than a generic circular glow. Each outline mesh is
-// added as a sibling of its source mesh (same parent), which is what makes
-// it inherit that mesh's exact transform for free — no manual matrix work
-// needed. Returns the list of materials so animate() can fade them all
-// together via uOpacity.
-const OUTLINE_INFLATE = 0.018;
+// pushed out along each vertex's normal and rendered back-face-only — from
+// outside, only that enlarged back shell peeks out past the real mesh's
+// silhouette edges, tracing its actual shape from whatever angle the camera
+// sees it, rather than a generic circular glow. A single thin shell read as
+// a flat outline rather than a glow, so this now stacks several shells at
+// increasing inflate distances with decreasing opacity — the same idea as
+// the sparkle ring's additive-blended points, but shaped to the model's own
+// silhouette instead of a fixed ring. Each shell is added as a sibling of
+// its source mesh (same parent), which is what makes it inherit that mesh's
+// exact transform for free. Returns the list of materials so animate() can
+// fade them all together via uOpacity — each shell's own uOpacityMul keeps
+// their relative strengths fixed while doing so.
+const OUTLINE_GLOW_LAYERS = [
+    { inflate: 0.012, mul: 1.0 },
+    { inflate: 0.032, mul: 0.6 },
+    { inflate: 0.06, mul: 0.35 },
+    { inflate: 0.1, mul: 0.16 },
+];
 function buildOutline(model, color) {
     // The exact brand hot-pink (#d01359) is fairly dark by raw luminance —
     // reads as rich/on-brand for logo text, but muddy as a hover highlight
@@ -540,42 +549,79 @@ function buildOutline(model, color) {
     const materials = [];
     model.traverse((obj) => {
         if (!obj.isMesh) return;
-        const mat = new THREE.ShaderMaterial({
-            uniforms: {
-                uColor: { value: liteColor },
-                uOpacity: { value: 0 },
-                uInflate: { value: OUTLINE_INFLATE },
-            },
-            vertexShader: `
-                uniform float uInflate;
-                void main() {
-                    vec3 inflated = position + normal * uInflate;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(inflated, 1.0);
-                }
-            `,
-            fragmentShader: `
-                uniform vec3 uColor;
-                uniform float uOpacity;
-                void main() {
-                    gl_FragColor = vec4(uColor, uOpacity);
-                }
-            `,
-            side: THREE.BackSide,
-            transparent: true,
-            depthWrite: false,
+        OUTLINE_GLOW_LAYERS.forEach((layer) => {
+            const mat = new THREE.ShaderMaterial({
+                uniforms: {
+                    uColor: { value: liteColor },
+                    uOpacity: { value: 0 },
+                    uOpacityMul: { value: layer.mul },
+                    uInflate: { value: layer.inflate },
+                },
+                vertexShader: `
+                    uniform float uInflate;
+                    void main() {
+                        vec3 inflated = position + normal * uInflate;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(inflated, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    uniform vec3 uColor;
+                    uniform float uOpacity;
+                    uniform float uOpacityMul;
+                    void main() {
+                        gl_FragColor = vec4(uColor, uOpacity * uOpacityMul);
+                    }
+                `,
+                side: THREE.BackSide,
+                transparent: true,
+                depthWrite: false,
+                // Additive rather than the old plain alpha blend — stacked
+                // shells brighten where they overlap instead of just
+                // layering flat colour, which is what actually reads as a
+                // glow rather than a thicker outline.
+                blending: THREE.AdditiveBlending,
+            });
+            const outlineMesh = new THREE.Mesh(obj.geometry, mat);
+            outlineMesh.position.copy(obj.position);
+            outlineMesh.rotation.copy(obj.rotation);
+            outlineMesh.scale.copy(obj.scale);
+            outlineMesh.raycast = () => {}; // decorative only — hovering it shouldn't count as hovering the outline itself
+            obj.parent.add(outlineMesh);
+            materials.push(mat);
         });
-        const outlineMesh = new THREE.Mesh(obj.geometry, mat);
-        outlineMesh.position.copy(obj.position);
-        outlineMesh.rotation.copy(obj.rotation);
-        outlineMesh.scale.copy(obj.scale);
-        outlineMesh.raycast = () => {}; // decorative only — hovering it shouldn't count as hovering the outline itself
-        obj.parent.add(outlineMesh);
-        materials.push(mat);
     });
     return materials;
 }
 
-export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], modelRotationZ = 0, baseRotY = 0) {
+// A soft radial-gradient disc for the low-poly models' drop shadow —
+// CanvasTexture rather than a lighting-based shadow map, since these models
+// don't cast/receive real shadows at all (unlit material, separate render
+// pass from the room). Cheap, and only needs to exist once per model.
+function buildDropShadow(radius) {
+    const size = 128;
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    gradient.addColorStop(0, 'rgba(0,0,0,0.5)');
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
+    const mesh = new THREE.Mesh(
+        new THREE.CircleGeometry(radius, 24),
+        new THREE.MeshBasicMaterial({
+            map: new THREE.CanvasTexture(canvas),
+            transparent: true,
+            depthWrite: false,
+            toneMapped: false,
+        })
+    );
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.raycast = () => {}; // decorative only
+    return mesh;
+}
+
+export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], modelRotationZ = 0, baseRotY = 0, modelRotationX = 0) {
     return new Promise((resolve) => {
         if (!scene) return resolve(null);
         new GLTFLoader().load(url, (gltf) => {
@@ -597,8 +643,11 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
             // longest dimension reads as height instead, portrait rather
             // than landscape. Not every model needs this, hence it's a
             // parameter rather than hardcoded — pass 0 for anything that's
-            // already reasonably balanced.
+            // already reasonably balanced. modelRotationX is the same idea
+            // for scans that came out lying flat (like a photo on a table)
+            // instead of standing upright facing the camera.
             model.rotation.z = modelRotationZ;
+            model.rotation.x = modelRotationX;
 
             // Fully unlit rather than toon-shaded — the room's strongly
             // pink/magenta lights (and, via those, bloom) were dominating
@@ -627,24 +676,16 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
             const scaledBox = new THREE.Box3().setFromObject(model);
             model.position.y -= scaledBox.min.y; // sit the model on the group's own local floor (y=0)
 
-            // Warm point light + sparkle ring at the model's vertical
-            // midpoint. Now that the model itself is a fully unlit
-            // MeshBasicMaterial, this light no longer affects the model at
-            // all — it's purely an ambient glow pooling on the nearby floor
-            // and curtain, marking out where the object is without touching
-            // its own colours.
+            // Sparkle ring at the model's vertical midpoint, on the model's
+            // own render layer — no point light here any more. A warm
+            // PointLight used to sit alongside it, but since the model itself
+            // is fully unlit MeshBasicMaterial (ignores it entirely), its
+            // only real effect was spilling onto the room's own floor and
+            // curtain, tinting them independently of the actual scene
+            // lighting. Removed rather than layer-restricted, since a light
+            // that can no longer reach anything is dead weight.
             const midY = (scaledBox.max.y - scaledBox.min.y) / 2;
             const glowColor = 0xffd27a;
-            const glow = new THREE.PointLight(glowColor, 6, 3.5, 1.2);
-            // Offset toward the camera side rather than dead-centre — this
-            // model is a fairly flat diorama, and a light buried inside its
-            // own geometry mostly illuminates backfaces we never see. Confirmed
-            // via an isolated test matching the room's real ambient (0.15) and
-            // exposure (0.55): centred lighting stayed dark no matter the
-            // intensity, offset-toward-camera reads clearly at this level.
-            glow.position.set(0.3, midY, -0.15);
-            group.add(glow);
-
             const ring = buildSparkleRing(Math.max(size.x, size.z) * scale * 0.75, 14, glowColor);
             ring.position.y = midY;
             group.add(ring);
@@ -652,13 +693,34 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
 
             const outlineMaterials = buildOutline(model, HOVER_OUTLINE_COLOR);
             // Moves the model (and, since buildOutline already ran, its
-            // outline children too) onto the dedicated render layer — but
-            // NOT `glow`, which stays on the default layer so it keeps
-            // lighting the room's own floor/curtain as before.
+            // outline children too) onto the dedicated render layer.
             model.traverse(obj => obj.layers.set(MODEL_LAYER));
 
             // Floats clear of the floor rather than sitting on it.
             group.position.set(...position);
+
+            // A soft shadow anchored to the real room floor beneath the
+            // model, marking where it'd land if it weren't floating. Found
+            // via a downward raycast rather than a hardcoded floor Y — this
+            // low-poly coordinate space (~0-1 units) doesn't map to any
+            // single floor constant already in this file (the room import
+            // has its own). Added straight to the scene, not as a child of
+            // `group`, so it stays put on the floor while the model bobs
+            // above it, and left on the default layer so it composites with
+            // the room's own lighting/bloom like a real shadow would, rather
+            // than the model's separate bloom-free pass.
+            const shadowRay = new THREE.Raycaster(
+                new THREE.Vector3(position[0], position[1], position[2]),
+                new THREE.Vector3(0, -1, 0)
+            );
+            shadowRay.layers.set(0);
+            const floorHit = shadowRay.intersectObjects(scene.children, true)[0];
+            if (floorHit) {
+                const shadow = buildDropShadow(Math.max(size.x, size.z) * scale * 0.42);
+                shadow.position.set(position[0], floorHit.point.y + 0.005, position[2]);
+                scene.add(shadow);
+            }
+
             // The doll model's default orientation faced away from the
             // camera — baseRotY is what the pivot in animate() oscillates
             // around, so flipping it 180° made it face front instead. Also
@@ -797,16 +859,18 @@ function animate() {
         const t = performance.now() * 0.001;
         floaters.forEach(f => {
             const hovered = f.obj === hoverTarget;
-            // Pause the pivot/bob while hovered — the outline below is the
-            // hover indicator for these instead of the generic scale-up,
-            // and freezing in place reads more like "paying attention to
-            // you" than a moving target would.
-            if (!hovered) {
+            if (hovered) {
+                // Eases back to its canonical front-facing orientation and
+                // holds there, rather than just freezing wherever the pivot
+                // happened to be mid-drift — makes the hover pause always
+                // show the model's actual front instead of a random angle.
+                f.obj.rotation.y += (f.baseRotY - f.obj.rotation.y) * 0.15;
+            } else {
                 f.obj.rotation.y = f.baseRotY + Math.sin(t * 0.4 + f.phase) * 0.5; // pivot ±~29° around its facing direction, never shows the back
                 f.obj.position.y = f.baseY + Math.sin(t * 0.3 + f.phase) * 0.08; // slow drift up/down
             }
             if (f.outlineMaterials) {
-                const targetOpacity = hovered ? 0.85 : 0;
+                const targetOpacity = hovered ? 1 : 0;
                 f.outlineMaterials.forEach(mat => {
                     mat.uniforms.uOpacity.value += (targetOpacity - mat.uniforms.uOpacity.value) * 0.15;
                 });
