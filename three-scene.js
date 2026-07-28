@@ -4,6 +4,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 
 let scene, camera, renderer, composer, bloomPass;
 let discoBall = null;
@@ -518,19 +519,25 @@ function buildSparkleRing(radius, count, color) {
 // acceptable since it's only visible while hovered, which is also when the
 // object's own pivot is paused (see animate()), so it isn't seen rotating
 // out of alignment.
-// The "inverted hull" outline technique: a copy of the model's own geometry,
-// pushed out along each vertex's normal and rendered back-face-only — from
-// outside, only that enlarged back shell peeks out past the real mesh's
-// silhouette edges, tracing its actual shape from whatever angle the camera
-// sees it, rather than a generic circular glow. A single thin shell read as
-// a flat outline rather than a glow, so this now stacks several shells at
-// increasing inflate distances with decreasing opacity — the same idea as
-// the sparkle ring's additive-blended points, but shaped to the model's own
-// silhouette instead of a fixed ring. Each shell is added as a sibling of
-// its source mesh (same parent), which is what makes it inherit that mesh's
-// exact transform for free. Returns the list of materials so animate() can
-// fade them all together via uOpacity — each shell's own uOpacityMul keeps
-// their relative strengths fixed while doing so.
+// The "inverted hull" outline technique: a shape pushed out along each
+// vertex's normal and rendered back-face-only — from outside, only that
+// enlarged back shell peeks out past the real mesh's silhouette edges,
+// tracing its shape from whatever angle the camera sees it, rather than a
+// generic circular glow. A single thin shell read as a flat outline rather
+// than a glow, so this stacks several shells at increasing inflate
+// distances with decreasing opacity — the same idea as the sparkle ring's
+// additive-blended points, but shaped to the model instead of a fixed ring.
+// Built from a convex hull of the WHOLE model, not each mesh's own raw
+// geometry: several of these scans are lattices/sculptures with genuine
+// holes and internal gaps, and outlining each mesh's literal surface traced
+// those too, making the glow read as coming from inside the object rather
+// than wrapping its outer shape. A convex hull has no holes or concavities
+// by definition, so it only ever traces the general silhouette — the
+// trade-off is that a concave model (an L-shaped building, say) gets a
+// glow that bridges its own notch rather than following it exactly, which
+// reads better here than the alternative. Returns the list of materials so
+// animate() can fade them together via uOpacity — each shell's own
+// uOpacityMul keeps their relative strengths fixed while doing so.
 const OUTLINE_GLOW_LAYERS = [
     { inflate: 0.012, mul: 1.0 },
     { inflate: 0.032, mul: 0.6 },
@@ -547,48 +554,64 @@ function buildOutline(model, color) {
     // rather than just present.
     const liteColor = new THREE.Color(color).lerp(new THREE.Color(0xffffff), 0.45);
     const materials = [];
+
+    // Gather every mesh's vertices into model-local space (each mesh can
+    // sit under its own nested transform from the original GLTF hierarchy),
+    // so the resulting hull lines up correctly once added as a plain child
+    // of `model` itself.
+    model.updateMatrixWorld(true);
+    const modelInverse = new THREE.Matrix4().copy(model.matrixWorld).invert();
+    const points = [];
+    const v = new THREE.Vector3();
     model.traverse((obj) => {
         if (!obj.isMesh) return;
-        OUTLINE_GLOW_LAYERS.forEach((layer) => {
-            const mat = new THREE.ShaderMaterial({
-                uniforms: {
-                    uColor: { value: liteColor },
-                    uOpacity: { value: 0 },
-                    uOpacityMul: { value: layer.mul },
-                    uInflate: { value: layer.inflate },
-                },
-                vertexShader: `
-                    uniform float uInflate;
-                    void main() {
-                        vec3 inflated = position + normal * uInflate;
-                        gl_Position = projectionMatrix * modelViewMatrix * vec4(inflated, 1.0);
-                    }
-                `,
-                fragmentShader: `
-                    uniform vec3 uColor;
-                    uniform float uOpacity;
-                    uniform float uOpacityMul;
-                    void main() {
-                        gl_FragColor = vec4(uColor, uOpacity * uOpacityMul);
-                    }
-                `,
-                side: THREE.BackSide,
-                transparent: true,
-                depthWrite: false,
-                // Additive rather than the old plain alpha blend — stacked
-                // shells brighten where they overlap instead of just
-                // layering flat colour, which is what actually reads as a
-                // glow rather than a thicker outline.
-                blending: THREE.AdditiveBlending,
-            });
-            const outlineMesh = new THREE.Mesh(obj.geometry, mat);
-            outlineMesh.position.copy(obj.position);
-            outlineMesh.rotation.copy(obj.rotation);
-            outlineMesh.scale.copy(obj.scale);
-            outlineMesh.raycast = () => {}; // decorative only — hovering it shouldn't count as hovering the outline itself
-            obj.parent.add(outlineMesh);
-            materials.push(mat);
+        const relative = new THREE.Matrix4().multiplyMatrices(modelInverse, obj.matrixWorld);
+        const posAttr = obj.geometry.attributes.position;
+        for (let i = 0; i < posAttr.count; i++) {
+            v.fromBufferAttribute(posAttr, i).applyMatrix4(relative);
+            points.push(v.clone());
+        }
+    });
+    if (points.length < 4) return materials; // too few points for a hull — nothing to outline
+
+    const hullGeometry = new ConvexGeometry(points);
+
+    OUTLINE_GLOW_LAYERS.forEach((layer) => {
+        const mat = new THREE.ShaderMaterial({
+            uniforms: {
+                uColor: { value: liteColor },
+                uOpacity: { value: 0 },
+                uOpacityMul: { value: layer.mul },
+                uInflate: { value: layer.inflate },
+            },
+            vertexShader: `
+                uniform float uInflate;
+                void main() {
+                    vec3 inflated = position + normal * uInflate;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(inflated, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform vec3 uColor;
+                uniform float uOpacity;
+                uniform float uOpacityMul;
+                void main() {
+                    gl_FragColor = vec4(uColor, uOpacity * uOpacityMul);
+                }
+            `,
+            side: THREE.BackSide,
+            transparent: true,
+            depthWrite: false,
+            // Additive rather than plain alpha blend — stacked shells
+            // brighten where they overlap instead of just layering flat
+            // colour, which is what actually reads as a glow rather than a
+            // thicker outline.
+            blending: THREE.AdditiveBlending,
         });
+        const outlineMesh = new THREE.Mesh(hullGeometry, mat);
+        outlineMesh.raycast = () => {}; // decorative only — hovering it shouldn't count as hovering the outline itself
+        model.add(outlineMesh);
+        materials.push(mat);
     });
     return materials;
 }
