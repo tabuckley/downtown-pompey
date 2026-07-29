@@ -31,7 +31,7 @@ function shuffle(arr) {
 // would visibly re-roll mid-session. Salted per decision so presence/pick/
 // rotation/position don't correlate.
 const TAPE_IMAGES = ['images/tape/tape-1.png', 'images/tape/tape-2.png', 'images/tape/tape-3.png', 'images/tape/tape-4.png'];
-const TAPE_CHANCE = 0.24; // was 0.2 — 20% more tape overall
+const TAPE_CHANCE = 0.2;
 
 function slotHash(row, col, kx, ky, salt) {
     let h = (row * 92821 + col * 43711 + kx * 15485867 + ky * 32452867 + salt * 2654435761) | 0;
@@ -45,51 +45,6 @@ function slotRandom(row, col, kx, ky, salt) {
     return (slotHash(row, col, kx, ky, salt) % 100000) / 100000;
 }
 
-// One tape <img>, randomised (image pick / rotation / size / position
-// jitter) off its own salt block so multiple pieces on the same tile
-// (top-bottom, two-corners) don't come out identical.
-function buildTapePiece(className, row, col, kx, ky, salt, { corner } = {}) {
-    const src = TAPE_IMAGES[Math.floor(slotRandom(row, col, kx, ky, salt) * TAPE_IMAGES.length)];
-    const tape = document.createElement('img');
-    tape.src = src;
-    tape.alt = '';
-    tape.className = className;
-    if (corner) {
-        const jitter = (slotRandom(row, col, kx, ky, salt + 1) - 0.5) * 20; // -10deg..10deg on top of the corner's own base angle
-        const width = 28 + slotRandom(row, col, kx, ky, salt + 2) * 26; // 28%..54%
-        tape.style.setProperty('--tape-jitter', `${jitter.toFixed(1)}deg`);
-        tape.style.setProperty('--tape-width', `${width.toFixed(1)}%`);
-    } else {
-        const rotate = (slotRandom(row, col, kx, ky, salt + 1) - 0.5) * 16; // -8deg..8deg
-        const shiftX = (slotRandom(row, col, kx, ky, salt + 2) - 0.5) * 30; // -15%..15% of tile width
-        const width = 38 + slotRandom(row, col, kx, ky, salt + 3) * 40; // 38%..78%
-        tape.style.setProperty('--tape-rotate', `${rotate.toFixed(1)}deg`);
-        tape.style.setProperty('--tape-shift', `${shiftX.toFixed(1)}%`);
-        tape.style.setProperty('--tape-width', `${width.toFixed(1)}%`);
-    }
-    return tape;
-}
-
-// Five styles, weighted, rather than always the same top-hanging strip —
-// real scrapbook tape shows up all sorts of ways: one edge, both ends, one
-// corner, or pinned at two corners like the photo's actually being held down.
-const TAPE_STYLES = [
-    { name: 'top', weight: 0.32 },
-    { name: 'bottom', weight: 0.16 },
-    { name: 'top-bottom', weight: 0.16 },
-    { name: 'corner', weight: 0.18 },
-    { name: 'two-corners', weight: 0.18 },
-];
-function pickTapeStyle(row, col, kx, ky) {
-    const r = slotRandom(row, col, kx, ky, 11);
-    let acc = 0;
-    for (const s of TAPE_STYLES) {
-        acc += s.weight;
-        if (r < acc) return s.name;
-    }
-    return TAPE_STYLES[TAPE_STYLES.length - 1].name;
-}
-
 function renderTileOverlay(item, row, col, kx, ky) {
     if (item._placeholder) return null; // stand-in test content, not worth decorating
     // Tape is positioned against the tile's own rectangular edge, which
@@ -98,36 +53,18 @@ function renderTileOverlay(item, row, col, kx, ky) {
     // ends up floating near the tile's corner instead of touching the
     // circle it's supposedly holding down.
     if (item.type === 'audio') return null;
-    // The masks project photographs the physical mask objects themselves
-    // as museum-style pieces — tape stuck across them reads as damaging
-    // the artefact, not decorating a snapshot.
-    if (item.project === 'Masks') return null;
     if (slotRandom(row, col, kx, ky, 1) >= TAPE_CHANCE) return null;
 
-    const style = pickTapeStyle(row, col, kx, ky);
-    if (style === 'top') {
-        return [buildTapePiece('tile-tape tile-tape--top', row, col, kx, ky, 2)];
-    }
-    if (style === 'bottom') {
-        return [buildTapePiece('tile-tape tile-tape--bottom', row, col, kx, ky, 2)];
-    }
-    if (style === 'top-bottom') {
-        return [
-            buildTapePiece('tile-tape tile-tape--top', row, col, kx, ky, 2),
-            buildTapePiece('tile-tape tile-tape--bottom', row, col, kx, ky, 6),
-        ];
-    }
-    if (style === 'corner') {
-        const corner = ['tl', 'tr', 'bl', 'br'][Math.floor(slotRandom(row, col, kx, ky, 12) * 4)];
-        return [buildTapePiece(`tile-tape tile-tape--corner-${corner}`, row, col, kx, ky, 2, { corner: true })];
-    }
-    // two-corners: one of the two diagonal pairs, like a photo pinned down
-    // at opposite corners rather than along an edge.
-    const pair = slotRandom(row, col, kx, ky, 12) < 0.5 ? ['tl', 'br'] : ['tr', 'bl'];
-    return [
-        buildTapePiece(`tile-tape tile-tape--corner-${pair[0]}`, row, col, kx, ky, 2, { corner: true }),
-        buildTapePiece(`tile-tape tile-tape--corner-${pair[1]}`, row, col, kx, ky, 6, { corner: true }),
-    ];
+    const src = TAPE_IMAGES[Math.floor(slotRandom(row, col, kx, ky, 2) * TAPE_IMAGES.length)];
+    const rotate = (slotRandom(row, col, kx, ky, 3) - 0.5) * 16; // -8deg..8deg
+    const shiftX = (slotRandom(row, col, kx, ky, 4) - 0.5) * 30; // -15%..15% of tile width
+    const tape = document.createElement('img');
+    tape.src = src;
+    tape.alt = '';
+    tape.className = 'tile-tape';
+    tape.style.setProperty('--tape-rotate', `${rotate.toFixed(1)}deg`);
+    tape.style.setProperty('--tape-shift', `${shiftX.toFixed(1)}%`);
+    return [tape];
 }
 
 // Stand-in content for testing the canvas/filters before real media is

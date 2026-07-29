@@ -7,9 +7,7 @@
 // rather than the previous narrow cluster around square, so the grid reads
 // more like a mixed photo album than a uniform tile wall.
 const RATIOS = [0.5, 0.65, 0.8, 1, 1, 1.25, 1.5, 1.78, 2.0];
-const GAP = 35; // 20% less breathing room between tiles than the original 44
-const BIG_SLOT_CHANCE = 0.05; // rare slots render at BIG_SLOT_MULT their normal size, deliberately overlapping a neighbour for a "one photo dominates" scrapbook moment
-const BIG_SLOT_MULT = 2;
+const GAP = 44;
 const ROW_STAGGER = 0.5; // alternate rows shift sideways by this fraction of a cell, brick-lay style
 const JITTER_FRAC = 0.24; // per-tile position jitter, as a fraction of its own (smaller) dimension
 const POOL_BUFFER = 1.6; // how many extra tile-widths beyond the viewport to keep mounted
@@ -112,24 +110,11 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion,
     // the ratio around a roughly constant area, so a portrait slot is
     // narrower AND taller (not just taller), a landscape slot wider AND
     // shorter — genuine footprint variety, not just a crop.
-    // Decorrelated from ratioForSlot/jitterForSlot's own hashes (different
-    // multipliers), same reasoning: fixed per (row,col) regardless of which
-    // wrap-copy or item is showing there.
-    function isBigSlot(row, col) {
-        return (hash(row * 104729 + col * 39119) % 10000) / 10000 < BIG_SLOT_CHANCE;
-    }
-
     function ownSizeForSlot(row, col) {
         const ratio = ratioForSlot(row, col, cols);
         const area = unitW * unitW;
-        let w = Math.max(unitW * 0.55, Math.min(unitW, Math.sqrt(area * ratio)));
-        let h = Math.max(unitW * 0.5, Math.min(unitW * 1.9, Math.sqrt(area / ratio)));
-        // A rare slot renders deliberately oversized — column positions
-        // (colX) don't adapt to content width, so this overlaps a
-        // horizontal neighbour rather than pushing the whole grid apart,
-        // which reads as "one photo dominates/sits on top" rather than a
-        // layout bug, much like real scrapbook pages aren't neatly tiled.
-        if (isBigSlot(row, col)) { w *= BIG_SLOT_MULT; h *= BIG_SLOT_MULT; }
+        const w = Math.max(unitW * 0.55, Math.min(unitW, Math.sqrt(area * ratio)));
+        const h = Math.max(unitW * 0.5, Math.min(unitW * 1.9, Math.sqrt(area / ratio)));
         return { w, h };
     }
 
@@ -233,10 +218,6 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion,
         el.className = 'pan-tile';
         el.__panItem = item;
         el.__panItemIndex = itemIndex;
-        // Deliberately overlaps a neighbour (see ownSizeForSlot) — lifted
-        // above it so that reads as "this one's on top", not arbitrary
-        // z-fighting decided by pool insertion order.
-        if (isBigSlot(row, col)) el.style.zIndex = '1';
 
         const inner = document.createElement('div');
         inner.className = 'pan-tile-inner';
