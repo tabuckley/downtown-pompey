@@ -1234,8 +1234,12 @@ body.landing {
 }
 
 .audio-badge-circle {
-    height: 80%;
-    max-width: 80%;
+    /* Set per-instance in JS (scrapbook.js's audioBadgeCircle) — longer
+       descriptions push this toward the tile's edge, since a bigger circle
+       is what keeps a smaller-relative font (also set per-instance) from
+       reading as physically tiny. */
+    height: var(--audio-circle-size, 70%);
+    max-width: var(--audio-circle-size, 70%);
     aspect-ratio: 1;
 }
 
@@ -1251,7 +1255,6 @@ body.landing {
 .audio-badge-curved-text {
     fill: #fff;
     font-family: var(--font-mono);
-    font-size: 9px;
     letter-spacing: 0.02em;
 }
 
