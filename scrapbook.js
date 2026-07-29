@@ -285,18 +285,20 @@ function documentPlaceholder(item, large) {
 // <textPath href> resolves against the whole document, not just this
 // element — reusing one id across multiple badges on the same page would
 // make every badge but the first point at nothing.
-// The path lives in a fixed 200x200 viewBox, so its length (and the ratio
-// between that length and font-size) never changes no matter how large the
-// circle is actually rendered on screen — scaling the circle up alone
-// doesn't fit a single extra character, it just makes the same fixed
-// character count bigger. Fitting *more* text needs a smaller viewBox-unit
-// font-size; the circle's real on-screen size is the separate knob that
-// keeps that smaller-in-viewBox text from reading as physically tiny.
-const AUDIO_MAX_CHARS = 150; // roughly what AUDIO_FONT_MIN fits around the path
-const AUDIO_FONT_MAX = 10;   // short text: bigger relative font
-const AUDIO_FONT_MIN = 6.5;  // long text: smaller relative font, but more of it fits
-const AUDIO_SIZE_MIN = 58;   // short text: circle stays compact
-const AUDIO_SIZE_MAX = 94;   // long text: circle grows toward the tile's edge
+// The path lives in a fixed 200x200 viewBox, so its length never changes no
+// matter how large the circle is actually rendered on screen — a bigger
+// on-screen circle alone doesn't fit more text, it just makes the same
+// fixed character count bigger. Font-size is what trades against capacity:
+// fits ~65 characters at 15px around this path's ~565-unit circumference,
+// which is the real limit here, not an arbitrary one — going bigger than
+// that font size to read clearly on a small tile means accepting a shorter
+// max length. textLength+lengthAdjust stretches whatever text there is
+// (even a short title) to genuinely fill the whole ring rather than
+// leaving it as a small arc — confirmed working the same whether it's set
+// on <text> or its <textPath> child; kept on <text> to match spec.
+const AUDIO_FONT_SIZE = 15;
+const AUDIO_MAX_CHARS = 65; // what AUDIO_FONT_SIZE actually fits around the path
+const AUDIO_CIRCLE_SIZE = 92; // % of tile — consistently large; font-size no longer varies by length
 
 function truncate(text, max) {
     if (text.length <= max) return text;
@@ -306,21 +308,17 @@ function truncate(text, max) {
 let audioBadgeCounter = 0;
 function audioBadgeCircle(rawText) {
     const text = truncate(rawText, AUDIO_MAX_CHARS);
-    const t = Math.min(1, text.length / AUDIO_MAX_CHARS); // 0 (short) .. 1 (long)
-    const fontSize = AUDIO_FONT_MAX - t * (AUDIO_FONT_MAX - AUDIO_FONT_MIN);
-    const sizePercent = AUDIO_SIZE_MIN + t * (AUDIO_SIZE_MAX - AUDIO_SIZE_MIN);
-
     const id = `audio-badge-path-${audioBadgeCounter++}`;
     const wrap = document.createElement('span');
     wrap.className = 'audio-badge-circle';
-    wrap.style.setProperty('--audio-circle-size', `${sizePercent.toFixed(0)}%`);
+    wrap.style.setProperty('--audio-circle-size', `${AUDIO_CIRCLE_SIZE}%`);
     wrap.innerHTML = `
         <svg viewBox="0 0 200 200" class="audio-badge-svg" aria-hidden="true">
             <defs>
                 <path id="${id}" d="M 100,100 m -90,0 a 90,90 0 1,0 180,0 a 90,90 0 1,0 -180,0" fill="none" />
             </defs>
             <circle cx="100" cy="100" r="90" class="audio-badge-disc" />
-            <text class="audio-badge-curved-text" style="font-size:${fontSize.toFixed(1)}px">
+            <text class="audio-badge-curved-text" style="font-size:${AUDIO_FONT_SIZE}px" textLength="550" lengthAdjust="spacing">
                 <textPath href="#${id}" startOffset="1%">${esc(text)}</textPath>
             </text>
             <text x="100" y="106" text-anchor="middle" class="audio-badge-icon-svg">♫</text>
