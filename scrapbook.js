@@ -22,18 +22,16 @@ function shuffle(arr) {
     return arr;
 }
 
-// ===== TAPE / STICKER DECORATION =====
-// Physical scrapbook touches — washi tape across the top of some tiles, like
-// they've been stuck to a page, and die-cut stickers scattered over others.
-// Deterministic per grid SLOT (row/col/kx/ky) rather than per item, the same
-// reasoning as pan-canvas.js's own ratioForSlot/jitterForSlot: a tile is
-// torn down and rebuilt from scratch every time it's recycled while panning,
-// so anything based on Math.random() would visibly re-roll mid-session.
-// Salted per decision so presence/pick/rotation/position don't correlate.
+// ===== TAPE DECORATION =====
+// Physical scrapbook touch — washi tape across the top of some tiles, like
+// they've been stuck to a page. Deterministic per grid SLOT (row/col/kx/ky)
+// rather than per item, the same reasoning as pan-canvas.js's own
+// ratioForSlot/jitterForSlot: a tile is torn down and rebuilt from scratch
+// every time it's recycled while panning, so anything based on Math.random()
+// would visibly re-roll mid-session. Salted per decision so presence/pick/
+// rotation/position don't correlate.
 const TAPE_IMAGES = ['images/tape/tape-1.png', 'images/tape/tape-2.png', 'images/tape/tape-3.png', 'images/tape/tape-4.png'];
-const STICKER_IMAGES = ['images/stickers/sticker-1.png', 'images/stickers/sticker-2.png', 'images/stickers/sticker-3.png', 'images/stickers/sticker-4.png', 'images/stickers/sticker-5.png'];
 const TAPE_CHANCE = 0.2;
-const STICKER_CHANCE = 0.15;
 
 function slotHash(row, col, kx, ky, salt) {
     let h = (row * 92821 + col * 43711 + kx * 15485867 + ky * 32452867 + salt * 2654435761) | 0;
@@ -49,37 +47,18 @@ function slotRandom(row, col, kx, ky, salt) {
 
 function renderTileOverlay(item, row, col, kx, ky) {
     if (item._placeholder) return null; // stand-in test content, not worth decorating
-    const nodes = [];
+    if (slotRandom(row, col, kx, ky, 1) >= TAPE_CHANCE) return null;
 
-    if (slotRandom(row, col, kx, ky, 1) < TAPE_CHANCE) {
-        const src = TAPE_IMAGES[Math.floor(slotRandom(row, col, kx, ky, 2) * TAPE_IMAGES.length)];
-        const rotate = (slotRandom(row, col, kx, ky, 3) - 0.5) * 16; // -8deg..8deg
-        const shiftX = (slotRandom(row, col, kx, ky, 4) - 0.5) * 30; // -15%..15% of tile width
-        const tape = document.createElement('img');
-        tape.src = src;
-        tape.alt = '';
-        tape.className = 'tile-tape';
-        tape.style.setProperty('--tape-rotate', `${rotate.toFixed(1)}deg`);
-        tape.style.setProperty('--tape-shift', `${shiftX.toFixed(1)}%`);
-        nodes.push(tape);
-    }
-
-    if (slotRandom(row, col, kx, ky, 5) < STICKER_CHANCE) {
-        const src = STICKER_IMAGES[Math.floor(slotRandom(row, col, kx, ky, 6) * STICKER_IMAGES.length)];
-        const rotate = (slotRandom(row, col, kx, ky, 7) - 0.5) * 40; // -20deg..20deg
-        const top = 8 + slotRandom(row, col, kx, ky, 8) * 58; // 8%..66%
-        const left = 8 + slotRandom(row, col, kx, ky, 9) * 58;
-        const sticker = document.createElement('img');
-        sticker.src = src;
-        sticker.alt = '';
-        sticker.className = 'tile-sticker';
-        sticker.style.setProperty('--sticker-rotate', `${rotate.toFixed(1)}deg`);
-        sticker.style.top = `${top.toFixed(1)}%`;
-        sticker.style.left = `${left.toFixed(1)}%`;
-        nodes.push(sticker);
-    }
-
-    return nodes;
+    const src = TAPE_IMAGES[Math.floor(slotRandom(row, col, kx, ky, 2) * TAPE_IMAGES.length)];
+    const rotate = (slotRandom(row, col, kx, ky, 3) - 0.5) * 16; // -8deg..8deg
+    const shiftX = (slotRandom(row, col, kx, ky, 4) - 0.5) * 30; // -15%..15% of tile width
+    const tape = document.createElement('img');
+    tape.src = src;
+    tape.alt = '';
+    tape.className = 'tile-tape';
+    tape.style.setProperty('--tape-rotate', `${rotate.toFixed(1)}deg`);
+    tape.style.setProperty('--tape-shift', `${shiftX.toFixed(1)}%`);
+    return [tape];
 }
 
 // Stand-in content for testing the canvas/filters before real media is

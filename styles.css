@@ -1176,18 +1176,22 @@ body.landing {
 .pan-tile-inner video {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    /* contain, not cover — the tile's own box is still slot-shaped (see
+       pan-canvas.js's ratioForSlot, kept for layout stability across
+       recycling), but the photo itself now shows its real proportions
+       inside that box rather than being cropped to fill it. */
+    object-fit: contain;
     display: block;
     -webkit-user-drag: none;
     pointer-events: none;
 }
 
-/* Scrapbook decoration — siblings of .pan-tile-inner (children of .pan-tile
-   itself, see pan-canvas.js's renderOverlay), specifically so they sit
-   outside .pan-tile-inner's own overflow:hidden crop and aren't caught by
-   the width:100%/object-fit:cover rule above meant for the actual photo.
-   pointer-events:none throughout — decorative only, never blocks the tap
-   that opens the tile underneath. */
+/* Scrapbook decoration — a sibling of .pan-tile-inner (child of .pan-tile
+   itself, see pan-canvas.js's renderOverlay), specifically so it sits
+   outside .pan-tile-inner's own overflow:hidden crop and isn't caught by
+   the width:100%/object-fit rule above meant for the actual photo.
+   pointer-events:none — decorative only, never blocks the tap that opens
+   the tile underneath. */
 .tile-tape {
     position: absolute;
     top: -14px;
@@ -1199,17 +1203,6 @@ body.landing {
     pointer-events: none;
     z-index: 1;
     filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.25));
-}
-
-.tile-sticker {
-    position: absolute;
-    width: 34%;
-    height: auto;
-    transform: rotate(var(--sticker-rotate, 0deg));
-    transform-origin: center;
-    pointer-events: none;
-    z-index: 1;
-    filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.3));
 }
 
 .pan-tile-inner .media-item-audio {
