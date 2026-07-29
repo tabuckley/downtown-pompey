@@ -1,7 +1,14 @@
 export const SHEET_ID = '1INsPP2txSuajj7NYpGTbBhy-6nnTTgtbqhg-veMtgyk';
 
 export function sheetUrl(tabName) {
-    return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
+    // headers=1 tells gviz explicitly that there's exactly one header row.
+    // Without it, gviz auto-detects the header row count from the data
+    // itself — and on at least one tab (drag-files) it guessed 2, silently
+    // merging the header row with the first real data row into one
+    // (`"type download"` instead of separate "type"/"download" cells) and
+    // dropping that first row from the results entirely. Harmless to set
+    // unconditionally: every tab genuinely has exactly one header row.
+    return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}&headers=1`;
 }
 
 export async function fetchSheet(tabName) {
