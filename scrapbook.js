@@ -262,6 +262,18 @@ function hasContentWarning(item) {
     return (item.tags || '').split(',').some(t => t.trim().toLowerCase() === 'content warning');
 }
 
+// Stand-in for a download item whose thumbnail 404s — a real title beats a
+// browser's broken-image icon, at least until PDF thumbnails exist.
+function documentPlaceholder(item, large) {
+    const box = document.createElement('div');
+    box.className = large ? 'media-placeholder-box media-placeholder-box--large' : 'media-placeholder-box';
+    box.innerHTML = `
+        <span class="media-placeholder-type">PDF</span>
+        <span class="media-placeholder-title">${esc(item.title)}</span>
+    `;
+    return box;
+}
+
 function buildMedia(item, large) {
     if (item.type === 'video') {
         const v = document.createElement('video');
@@ -276,12 +288,65 @@ function buildMedia(item, large) {
         return v;
     }
     if (item.type === 'audio') {
+        // In the grid, a real <audio controls> element used to sit directly
+        // in the tile — its own play/seek controls swallow the click, so
+        // there was no way to actually reach the title/description/tags
+        // for an audio item the way every other tile type gets them via
+        // the lightbox. A plain badge here has no controls of its own, so
+        // a tap falls through to the normal tile-activate/open-lightbox
+        // handling instead, same as a photo. The real player only appears
+        // once you're already in the lightbox.
+        if (!large) {
+            const badge = document.createElement('div');
+            badge.className = 'media-item-audio-badge';
+            badge.innerHTML = `
+                <span class="audio-badge-circle">
+                    <span class="audio-badge-icon" aria-hidden="true">♫</span>
+                    <span class="audio-badge-title">${esc(item.title)}</span>
+                </span>
+            `;
+            return badge;
+        }
         const wrap = document.createElement('div');
         wrap.className = 'media-item-audio';
         const a = document.createElement('audio');
         a.src = item.url;
         a.controls = true;
         wrap.appendChild(a);
+        return wrap;
+    }
+    // download items are PDFs/documents — item.url is the file itself, not
+    // an image, so it can never go in an <img src>  (that's what was
+    // producing a broken-image icon in the lightbox). Same idea as 3d:
+    // always show the thumbnail as the visual, and in the lightbox add an
+    // actual link to open the real file, since the whole point of a
+    // "download" item is reaching that file.
+    if (item.type === 'download') {
+        const img = document.createElement('img');
+        img.src = item.thumbnail || '';
+        img.alt = item.alt || item.title || 'Archive document';
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        // None of the download items currently have a real thumbnail
+        // uploaded (every one 404s — a PDF page-render step that hasn't
+        // been done yet, not something fixable from the site's own code).
+        // Falls back to a plain document placeholder instead of a broken-
+        // image icon so it's at least legible in the meantime.
+        img.addEventListener('error', () => {
+            img.replaceWith(documentPlaceholder(item, large));
+        }, { once: true });
+        if (!large) return img;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'media-item-download';
+        wrap.appendChild(img);
+        const link = document.createElement('a');
+        link.href = item.url;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.className = 'media-download-link';
+        link.textContent = 'Open original PDF ↗';
+        wrap.appendChild(link);
         return wrap;
     }
     // 3d always shows its thumbnail (item.url is the model file, not an
