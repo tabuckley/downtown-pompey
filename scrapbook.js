@@ -262,14 +262,29 @@ function hasContentWarning(item) {
     return (item.tags || '').split(',').some(t => t.trim().toLowerCase() === 'content warning');
 }
 
+// Simple deterministic string hash — used so the same PDF always gets the
+// same little tilt/shade rather than it changing every time the tile is
+// recycled while panning (see pan-canvas.js's own hash() for the same
+// reasoning applied to tile shape/jitter).
+function strHash(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+    return Math.abs(h);
+}
+
 // Stand-in for a download item whose thumbnail 404s — a real title beats a
-// browser's broken-image icon, at least until PDF thumbnails exist.
+// browser's broken-image icon, at least until PDF thumbnails exist. Styled
+// as a pink post-it rather than a plain grey box, fitting the scrapbook
+// page's own tape/sticker physical-page look.
 function documentPlaceholder(item, large) {
     const box = document.createElement('div');
-    box.className = large ? 'media-placeholder-box media-placeholder-box--large' : 'media-placeholder-box';
+    box.className = large ? 'postit-note postit-note--large' : 'postit-note';
+    const h = strHash(item.title || item.url || '');
+    const rotate = ((h % 1000) / 1000 - 0.5) * 8; // -4deg..4deg, deterministic per item
+    box.style.setProperty('--postit-rotate', `${rotate.toFixed(1)}deg`);
     box.innerHTML = `
-        <span class="media-placeholder-type">PDF</span>
-        <span class="media-placeholder-title">${esc(item.title)}</span>
+        <span class="postit-type">PDF</span>
+        <span class="postit-title">${esc(item.title)}</span>
     `;
     return box;
 }
