@@ -1471,7 +1471,15 @@ body.landing {
     display: block;
 }
 
-.lightbox-media audio { width: min(420px, 80%); }
+/* .media-item-audio (the wrapper div) has no width of its own here — as a
+   flex child of .lightbox-media with no explicit size, it never gets a
+   definite width for its own content to lay out against, so the audio
+   element's percentage width below couldn't resolve against anything and
+   collapsed to 0 (confirmed: the wrapper rendered at exactly its own
+   horizontal padding, with zero width left for actual content). Giving the
+   wrapper an explicit size first fixes that. */
+.lightbox-media .media-item-audio { width: min(420px, 80vw); }
+.lightbox-media audio { width: 100%; }
 
 /* download-type items (PDFs) — the thumbnail is the visual, this is the
    actual way to reach the real file, since item.url is a PDF/document and
