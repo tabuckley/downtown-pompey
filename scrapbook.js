@@ -336,6 +336,14 @@ function mediaElement(item, { large = false } = {}) {
 }
 
 // ===== PAN CANVAS =====
+// Pending fade/open timeouts from the most recent onActivate() — with 50+
+// tiles pooled, the staggered i*20ms fade-outs below can still be queued up
+// well past when the lightbox actually opens (300ms), so closing it quickly
+// otherwise leaves some of these to fire late and re-fade a tile that
+// closeLightbox() already cleaned up. Tracked here so close can cancel
+// whatever's still pending, not just undo what already ran.
+let activateTimeouts = [];
+
 const panCanvas = initPanCanvas(canvasEl, {
     renderTile: (item) => mediaElement(item, { large: false }),
     renderOverlay: renderTileOverlay,
@@ -345,10 +353,12 @@ const panCanvas = initPanCanvas(canvasEl, {
             [...canvasEl.querySelectorAll('.pan-tile')].filter(el => el !== tileEl)
         );
         others.forEach((el, i) => {
-            setTimeout(() => el.querySelector('.pan-tile-inner')?.classList.add('tile-fading'), i * 20);
+            activateTimeouts.push(
+                setTimeout(() => el.querySelector('.pan-tile-inner')?.classList.add('tile-fading'), i * 20)
+            );
         });
         tileEl.querySelector('.pan-tile-inner')?.classList.add('tile-active');
-        setTimeout(() => openLightbox(filtered.indexOf(item)), 300);
+        activateTimeouts.push(setTimeout(() => openLightbox(filtered.indexOf(item)), 300));
     },
 });
 
@@ -387,6 +397,18 @@ function closeLightbox() {
     lightboxMedia.innerHTML = '';
     lightboxIndex = -1;
     document.body.style.overflow = '';
+    // onActivate() fades every other tile out and scales the clicked one up
+    // right before the lightbox opens (see the pan canvas setup below) —
+    // undone here, or closing left a permanent blank patch where those
+    // tiles never got their opacity back. Cancels whatever staggered
+    // fade-out timeouts are still pending too, not just the classes already
+    // applied — otherwise a late one can still fire and re-fade a tile after
+    // this cleanup already ran (see activateTimeouts above).
+    activateTimeouts.forEach(id => clearTimeout(id));
+    activateTimeouts = [];
+    canvasEl.querySelectorAll('.tile-fading, .tile-active').forEach(el => {
+        el.classList.remove('tile-fading', 'tile-active');
+    });
     if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
     lastFocused = null;
 }

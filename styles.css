@@ -1146,20 +1146,25 @@ body.landing {
 
 /* Outer: raw JS transform every frame — no transition here, or per-frame
    writes fight the transition system and rubber-band instead of tracking
-   smoothly. */
+   smoothly. width/height are the exception: pan-canvas.js only changes
+   those once per tile (the instant a photo/video's real aspect ratio
+   becomes known — see makeTile), not every frame, so a transition here has
+   nothing to fight and just smooths that one resize instead of a hard pop. */
 .pan-tile {
     position: absolute;
     top: 0;
     left: 0;
     will-change: transform;
+    transition: width 0.3s ease, height 0.3s ease;
 }
 
 /* Inner: CSS-transitioned scale/opacity, fully decoupled from the outer
-   element's raw positioning. */
+   element's raw positioning. No background — the tile's own box now
+   matches its media's real aspect ratio (see pan-canvas.js), so there's no
+   letterbox gap left for a fill colour to show through. */
 .pan-tile-inner {
     width: 100%;
     height: 100%;
-    background: var(--card-bg);
     border-radius: var(--radius);
     overflow: hidden;
     opacity: 0;

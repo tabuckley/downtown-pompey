@@ -164,8 +164,23 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion,
     // row/column baseline. Jitter is capped relative to GAP, not to the
     // slack, so it can never push a tile far enough to overlap its neighbour
     // regardless of how little slack that particular slot has.
-    function slotRect(row, col) {
-        const { w, h } = ownSizeForSlot(row, col);
+    // aspect (width/height), when known, replaces the slot's own hash-picked
+    // ratio with the actual media's real one — same "fit inside the
+    // reserved footprint" idea as ownSizeForSlot, just driven by the real
+    // image/video instead of a random shape. Until it's known (see
+    // makeTile: images/video report their natural size asynchronously),
+    // callers fall back to the slot's own placeholder shape so a tile has
+    // *some* reasonable size the instant it's created rather than popping
+    // in at 0×0.
+    function fitToAspect(aspect, maxW, maxH) {
+        let w = maxW, h = maxW / aspect;
+        if (h > maxH) { h = maxH; w = maxH * aspect; }
+        return { w, h };
+    }
+
+    function slotRect(row, col, aspect) {
+        const own = ownSizeForSlot(row, col);
+        const { w, h } = aspect ? fitToAspect(aspect, own.w, own.h) : own;
         const { jx, jy } = jitterForSlot(row, col);
         const stagger = (row % 2 === 1) ? (unitW + GAP) * ROW_STAGGER : 0;
         const jitterAmp = Math.min(GAP * 0.8, Math.min(w, h) * JITTER_FRAC);
@@ -209,6 +224,32 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion,
         inner.appendChild(renderTile(item));
         el.appendChild(inner);
 
+        const tile = { el, inner, row, col, kx, ky, aspect: null };
+
+        // Real media (photos, video — not the audio control or a synthetic
+        // placeholder box, neither of which has a meaningful visual aspect
+        // ratio) gets its tile's actual box shaped to its own true
+        // proportions once that's known, rather than a generic slot shape
+        // with the image merely letterboxed inside it. Natural size isn't
+        // available synchronously for an image that hasn't finished
+        // decoding yet, so this fills in whenever it resolves — positionTiles()
+        // reads tile.aspect fresh every frame, so nothing else needs to
+        // explicitly react to it arriving.
+        const media = inner.querySelector('img, video');
+        if (media && media.tagName === 'IMG') {
+            const setAspect = () => {
+                if (media.naturalWidth && media.naturalHeight) tile.aspect = media.naturalWidth / media.naturalHeight;
+            };
+            if (media.complete) setAspect();
+            else media.addEventListener('load', setAspect, { once: true });
+        } else if (media && media.tagName === 'VIDEO') {
+            const setAspect = () => {
+                if (media.videoWidth && media.videoHeight) tile.aspect = media.videoWidth / media.videoHeight;
+            };
+            if (media.readyState >= 1) setAspect();
+            else media.addEventListener('loadedmetadata', setAspect, { once: true });
+        }
+
         // Appended to `el`, not `inner` — .pan-tile-inner clips to its own
         // box (overflow:hidden, for the rounded-corner photo crop) and
         // forces every img inside it to 100%/object-fit:cover, neither of
@@ -226,7 +267,7 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion,
         container.appendChild(el);
         requestAnimationFrame(() => inner.classList.add('tile-in'));
 
-        return { el, inner, row, col, kx, ky };
+        return tile;
     }
 
     function recull() {
@@ -300,7 +341,7 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion,
     function positionTiles() {
         // Raw renderPanX/Y, same as recull() — see the comment there.
         pool.forEach(tile => {
-            const rect = slotRect(tile.row, tile.col);
+            const rect = slotRect(tile.row, tile.col, tile.aspect);
             const x = rect.x + tile.kx * pitchX + renderPanX;
             const y = rect.y + tile.ky * pitchY + renderPanY;
             tile.el.style.width = rect.w + 'px';
