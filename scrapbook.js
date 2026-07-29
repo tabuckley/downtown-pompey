@@ -297,7 +297,8 @@ function documentPlaceholder(item, large) {
 // leaving it as a small arc — confirmed working the same whether it's set
 // on <text> or its <textPath> child; kept on <text> to match spec.
 const AUDIO_FONT_SIZE = 15;
-const AUDIO_MAX_CHARS = 65; // what AUDIO_FONT_SIZE actually fits around the path
+const AUDIO_TEXT_RADIUS = 78; // inset from the disc's own r=90 edge, so text doesn't sit flush against the rim
+const AUDIO_MAX_CHARS = 56; // what AUDIO_FONT_SIZE actually fits around the (smaller, inset) path
 const AUDIO_CIRCLE_SIZE = 92; // % of tile — consistently large; font-size no longer varies by length
 
 function truncate(text, max) {
@@ -315,10 +316,10 @@ function audioBadgeCircle(rawText) {
     wrap.innerHTML = `
         <svg viewBox="0 0 200 200" class="audio-badge-svg" aria-hidden="true">
             <defs>
-                <path id="${id}" d="M 100,100 m -90,0 a 90,90 0 1,0 180,0 a 90,90 0 1,0 -180,0" fill="none" />
+                <path id="${id}" d="M 100,100 m -${AUDIO_TEXT_RADIUS},0 a ${AUDIO_TEXT_RADIUS},${AUDIO_TEXT_RADIUS} 0 1,0 ${AUDIO_TEXT_RADIUS * 2},0 a ${AUDIO_TEXT_RADIUS},${AUDIO_TEXT_RADIUS} 0 1,0 -${AUDIO_TEXT_RADIUS * 2},0" fill="none" />
             </defs>
             <circle cx="100" cy="100" r="90" class="audio-badge-disc" />
-            <text class="audio-badge-curved-text" style="font-size:${AUDIO_FONT_SIZE}px" textLength="550" lengthAdjust="spacing">
+            <text class="audio-badge-curved-text" style="font-size:${AUDIO_FONT_SIZE}px" textLength="${(AUDIO_TEXT_RADIUS * 2 * Math.PI * 0.97).toFixed(0)}" lengthAdjust="spacing">
                 <textPath href="#${id}" startOffset="1%">${esc(text)}</textPath>
             </text>
             <text x="100" y="106" text-anchor="middle" class="audio-badge-icon-svg">♫</text>
