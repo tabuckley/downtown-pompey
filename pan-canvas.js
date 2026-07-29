@@ -348,6 +348,10 @@ export function initPanCanvas(container, { renderTile, onActivate, reduceMotion,
             tile.el.style.height = rect.h + 'px';
             tile.el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
         });
+        // Whatever CSS background-image the caller puts on the container
+        // (a page texture, say) tracks the same pan as the tiles rather
+        // than sitting fixed behind them — harmless no-op if none is set.
+        container.style.backgroundPosition = `${renderPanX.toFixed(1)}px ${renderPanY.toFixed(1)}px`;
     }
 
     // ===== Physics loop =====

@@ -1140,6 +1140,12 @@ body.landing {
     touch-action: none;
     user-select: none;
     cursor: grab;
+    /* The "page" the tiles sit on — repeats infinitely and pans in lockstep
+       with them (pan-canvas.js writes background-position every frame from
+       the same renderPanX/Y the tiles use), rather than sitting fixed
+       behind a moving foreground. */
+    background-image: url('textures/paper-white.jpg');
+    background-repeat: repeat;
 }
 
 .pan-canvas.is-dragging { cursor: grabbing; }

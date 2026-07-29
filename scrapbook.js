@@ -47,6 +47,12 @@ function slotRandom(row, col, kx, ky, salt) {
 
 function renderTileOverlay(item, row, col, kx, ky) {
     if (item._placeholder) return null; // stand-in test content, not worth decorating
+    // Tape is positioned against the tile's own rectangular edge, which
+    // matches a photo (fills the tile edge-to-edge) but not the audio
+    // badge — a smaller circle inset within the tile — where the strip
+    // ends up floating near the tile's corner instead of touching the
+    // circle it's supposedly holding down.
+    if (item.type === 'audio') return null;
     if (slotRandom(row, col, kx, ky, 1) >= TAPE_CHANCE) return null;
 
     const src = TAPE_IMAGES[Math.floor(slotRandom(row, col, kx, ky, 2) * TAPE_IMAGES.length)];
