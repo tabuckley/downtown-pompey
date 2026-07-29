@@ -1205,12 +1205,8 @@ body.landing {
    the tile underneath. */
 .tile-tape {
     position: absolute;
-    top: -14px;
-    left: calc(50% + var(--tape-shift, 0%));
-    width: 58%;
+    width: var(--tape-width, 58%);
     height: auto;
-    transform: translateX(-50%) rotate(var(--tape-rotate, 0deg));
-    transform-origin: center;
     pointer-events: none;
     z-index: 1;
     /* Tight and barely-offset — tape sits flush against the photo/page, not
@@ -1218,6 +1214,31 @@ body.landing {
        real decal) rather than a soft ambient one. */
     filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
 }
+
+/* Classic style — a strip hanging off the top edge, mostly straight. */
+.tile-tape--top {
+    top: -14px;
+    left: calc(50% + var(--tape-shift, 0%));
+    transform: translateX(-50%) rotate(var(--tape-rotate, 0deg));
+    transform-origin: center;
+}
+
+/* Mirror of --top, hanging off the bottom edge instead. */
+.tile-tape--bottom {
+    bottom: -14px;
+    left: calc(50% + var(--tape-shift, 0%));
+    transform: translateX(-50%) rotate(var(--tape-rotate, 0deg));
+    transform-origin: center;
+}
+
+/* Corner style — centred exactly on one corner of the tile and rotated to
+   ~45°, like a piece stuck down diagonally to pin that corner to the page.
+   tl/br share one diagonal, tr/bl the other, matching which way an actual
+   corner-to-corner strip would sit. */
+.tile-tape--corner-tl { top: 0; left: 0; transform: translate(-50%, -50%) rotate(calc(-45deg + var(--tape-jitter, 0deg))); }
+.tile-tape--corner-tr { top: 0; left: 100%; transform: translate(-50%, -50%) rotate(calc(45deg + var(--tape-jitter, 0deg))); }
+.tile-tape--corner-bl { top: 100%; left: 0; transform: translate(-50%, -50%) rotate(calc(45deg + var(--tape-jitter, 0deg))); }
+.tile-tape--corner-br { top: 100%; left: 100%; transform: translate(-50%, -50%) rotate(calc(-45deg + var(--tape-jitter, 0deg))); }
 
 .pan-tile-inner .media-item-audio {
     height: 100%;
