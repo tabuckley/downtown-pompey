@@ -274,6 +274,37 @@ function documentPlaceholder(item, large) {
     return box;
 }
 
+// A genuinely curved circular label — CSS alone can't bend text along a
+// path, so this is real SVG: a <textPath> following a full circle built
+// from two semicircle arcs (left-to-right over the top, then right-to-left
+// under the bottom — a single arc command can't express exactly 360° since
+// its start/end points would coincide, and using two points a hair apart
+// instead, as a single near-360° arc, renders correctly by getTotalLength()
+// but leaves most of the actual text invisible in practice — confirmed by
+// testing both side by side). Each call needs its own unique path id since
+// <textPath href> resolves against the whole document, not just this
+// element — reusing one id across multiple badges on the same page would
+// make every badge but the first point at nothing.
+let audioBadgeCounter = 0;
+function audioBadgeCircle(text) {
+    const id = `audio-badge-path-${audioBadgeCounter++}`;
+    const wrap = document.createElement('span');
+    wrap.className = 'audio-badge-circle';
+    wrap.innerHTML = `
+        <svg viewBox="0 0 200 200" class="audio-badge-svg" aria-hidden="true">
+            <defs>
+                <path id="${id}" d="M 100,100 m -90,0 a 90,90 0 1,0 180,0 a 90,90 0 1,0 -180,0" fill="none" />
+            </defs>
+            <circle cx="100" cy="100" r="90" class="audio-badge-disc" />
+            <text class="audio-badge-curved-text">
+                <textPath href="#${id}" startOffset="1%">${esc(text)}</textPath>
+            </text>
+            <text x="100" y="106" text-anchor="middle" class="audio-badge-icon-svg">♫</text>
+        </svg>
+    `;
+    return wrap;
+}
+
 function buildMedia(item, large) {
     if (item.type === 'video') {
         const v = document.createElement('video');
@@ -299,12 +330,7 @@ function buildMedia(item, large) {
         if (!large) {
             const badge = document.createElement('div');
             badge.className = 'media-item-audio-badge';
-            badge.innerHTML = `
-                <span class="audio-badge-circle">
-                    <span class="audio-badge-icon" aria-hidden="true">♫</span>
-                    <span class="audio-badge-title">${esc(item.title)}</span>
-                </span>
-            `;
+            badge.appendChild(audioBadgeCircle(item.description || item.title));
             return badge;
         }
         const wrap = document.createElement('div');
