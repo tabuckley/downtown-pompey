@@ -954,6 +954,36 @@ body.landing {
     transform: rotate(45deg);
 }
 
+/* Scrapbook mode — a real photographed/rendered torn-paper speech bubble
+   (images/torn-paper-bubble.png: genuine soft fibrous tear, real alpha
+   transparency around it, its own tail already baked in) instead of the
+   plain rounded bubble used elsewhere. Deliberately NOT aspect-ratio:1
+   (matching the source image's own proportions) — tip text varies in
+   length, and a fixed square height meant longer tips overflowed past the
+   visible paper entirely. Height instead grows with content as normal,
+   and background-size:100% 100% stretches the image to match — short tips
+   stay close to the image's natural square proportions, longer ones
+   elongate the oval/tail a bit rather than spilling text outside it. */
+[data-mode="scrapbook"] .helper-bubble {
+    width: min(300px, calc(100vw - 2.8rem));
+    min-height: 300px;
+    background-color: transparent;
+    background-image: url('images/torn-paper-bubble.png');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    padding: 19% 17% 36%;
+    box-sizing: border-box;
+}
+
+[data-mode="scrapbook"] .helper-bubble::after {
+    display: none;
+}
+
 .helper-bubble-name {
     font-size: 0.6rem;
     letter-spacing: 0.25em;
@@ -986,6 +1016,22 @@ body.landing {
 .helper-chip:hover {
     color: var(--text);
     border-color: var(--text);
+}
+
+/* On narrow screens Archie's full-height figure sits over interactive
+   content underneath (e.g. filter chips) whenever the bubble is open —
+   shrink the figure so the widget takes less of the viewport. */
+@media (max-width: 480px) {
+    .helper-figure-img {
+        height: 14vh;
+        min-height: 110px;
+        max-height: 160px;
+    }
+    .helper-bubble {
+        width: min(180px, calc(100vw - 5.5rem));
+        padding: 0.75rem 0.85rem;
+        font-size: 0.7rem;
+    }
 }
 
 /* ===== SCRAPBOOK ARCHIVE PAGE ===== */
@@ -1807,6 +1853,316 @@ body.is-hovering .cursor {
 
     .info-panel { width: 100vw; }
     .shell-main { padding: 9rem 8vw 6rem; }
+}
+
+/* ===== ACCESSIBLE ARCHIVE ===== */
+.acc-main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 8rem 6vw 6rem;
+}
+
+.acc-intro { margin-bottom: 2rem; }
+
+.acc-search-form { margin-bottom: 1.8rem; }
+
+.acc-search-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.acc-search-row {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.acc-search-input {
+    flex: 1 1 320px;
+    font-size: 1.1rem;
+    font-family: var(--font-body);
+    padding: 0.8rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    background: #ffffff;
+    color: var(--text);
+}
+
+.acc-search-input:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.acc-search-btn {
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0.8rem 1.6rem;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--accent);
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.acc-search-btn:hover { opacity: 0.9; }
+
+.acc-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.6rem;
+    margin-bottom: 1.2rem;
+}
+
+.acc-filter-group { min-width: 0; }
+
+.acc-tag-group { margin-bottom: 1.8rem; }
+
+.acc-filter-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+}
+
+.acc-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.acc-chip {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.4rem 0.9rem;
+    color: var(--text);
+    cursor: pointer;
+}
+
+.acc-chip:hover { border-color: var(--accent); }
+
+.acc-chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+}
+
+.acc-select {
+    font-size: 0.95rem;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: #ffffff;
+    color: var(--text);
+    max-width: 100%;
+}
+
+.acc-status {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 1.2rem;
+    min-height: 1.2em;
+}
+
+.acc-results {
+    list-style: none;
+    display: grid;
+    gap: 0.9rem;
+}
+
+.acc-result-link {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.7rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.acc-result-link:hover,
+.acc-result-link:focus-visible {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(208, 19, 89, 0.15);
+}
+
+.acc-result-thumb {
+    flex: 0 0 auto;
+    width: 88px;
+    height: 88px;
+    object-fit: cover;
+    border-radius: calc(var(--radius) * 0.7);
+    background: #e8e8e8;
+}
+
+.acc-result-thumb--none {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    padding: 0.4rem;
+    box-sizing: border-box;
+}
+
+.acc-result-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.acc-result-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.acc-result-sub {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+}
+
+.acc-result-reason {
+    font-size: 0.85rem;
+    color: var(--accent);
+    margin-top: 0.15rem;
+}
+
+/* ----- item detail ----- */
+.acc-back-link {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--accent);
+    text-decoration: none;
+    margin-bottom: 1.6rem;
+}
+
+.acc-back-link:hover { text-decoration: underline; }
+
+.acc-detail-media {
+    display: block;
+    width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    margin-bottom: 1.6rem;
+}
+
+.acc-detail-media--audio { max-height: none; }
+
+.acc-detail-download { margin-bottom: 1.6rem; }
+
+.acc-open-link {
+    display: inline-block;
+    margin-top: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.acc-detail-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+    margin: 0.3rem 0 1rem;
+    line-height: 1.15;
+}
+
+.acc-detail-desc {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    max-width: 65ch;
+    margin-bottom: 1.2rem;
+}
+
+.acc-tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 2rem;
+}
+
+.acc-tag-pill {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.25rem 0.7rem;
+    color: var(--muted);
+}
+
+.acc-share,
+.acc-refine {
+    border-top: 1px solid var(--border);
+    padding-top: 1.4rem;
+    margin-top: 1.4rem;
+}
+
+.acc-share-heading {
+    font-size: 1rem;
+    margin-bottom: 0.8rem;
+}
+
+.acc-share-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-bottom: 0.8rem;
+}
+
+.acc-btn {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.55rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: #ffffff;
+    color: var(--text);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.acc-btn:hover { border-color: var(--accent); color: var(--accent); }
+.acc-btn:disabled { opacity: 0.6; cursor: default; }
+
+.acc-share-url {
+    width: 100%;
+    max-width: 480px;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card-bg);
+    color: var(--muted);
+}
+
+.acc-refine-msg {
+    font-size: 0.9rem;
+    color: var(--accent);
+    margin-top: 0.6rem;
+}
+
+@media (max-width: 640px) {
+    .acc-main { padding: 7.5rem 5vw 4rem; }
+    .acc-result-link { flex-wrap: wrap; }
 }
 
 /* ===== REDUCED MOTION ===== */

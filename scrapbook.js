@@ -1,15 +1,7 @@
-import { fetchSheet, yearFrom, dateStamp } from './sheet.js';
+import { yearFrom, dateStamp } from './sheet.js';
 import { initPanCanvas } from './pan-canvas.js';
-
-const TAGS = [
-    'Event', 'Drag', 'Capture', 'Landmarks', 'Medium', 'Identity', 'Haunted',
-    'Seaside', 'Non-Gendered', 'View', 'Island', 'Journey', 'Bubbles',
-    'Wandering', 'Personal', 'Closeup', 'Change', 'Found', 'Leisure',
-    'Message', 'Trade', 'Going Out-Out', 'Movements', 'Uniform',
-    'Reflections', 'Town', 'Overcast', 'Dream', 'Structures', 'Impermanence',
-    'Histories', 'Restrictions', 'Symbols', 'Signs', 'Slogan', 'Homey',
-    'Digestion', 'Communal', 'Rubbish', 'Gendered', 'Lost',
-];
+import { loadArchive } from './archive.js';
+import { TAGS, itemTags, matchesTag } from './tags.js';
 
 const PLACEHOLDER_COUNT = 140;
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -182,32 +174,6 @@ clearBtn.addEventListener('click', () => {
 });
 
 // ===== FILTERING =====
-// Expand each comma-separated tag into the full value plus its slash parts,
-// so "Coastal/Edge" on an item matches the "Seaside/Coastal/Edge" pill and
-// vice versa.
-function itemTags(item) {
-    const parts = [];
-    (item.tags || '').toLowerCase().split(',').forEach(raw => {
-        const full = raw.trim();
-        if (!full) return;
-        parts.push(full);
-        if (full.includes('/')) {
-            full.split('/').forEach(p => {
-                const s = p.trim();
-                if (s) parts.push(s);
-            });
-        }
-    });
-    return parts;
-}
-
-function matchesTag(item, tag) {
-    const tags = itemTags(item);
-    const wanted = tag.toLowerCase();
-    if (tags.includes(wanted)) return true;
-    return wanted.split('/').some(part => tags.includes(part.trim()));
-}
-
 function applyFilters() {
     filtered = allItems.filter(item => [...activeTags].every(tag => matchesTag(item, tag)));
     clearBtn.classList.toggle('visible', activeTags.size > 0);
@@ -579,18 +545,7 @@ document.addEventListener('keydown', (e) => {
 // ===== DATA LOAD =====
 async function init() {
     try {
-        const index = await fetchSheet('_index');
-        const published = index.filter(p => p.status === 'published' && p.tab);
-
-        const results = await Promise.allSettled(published.map(p => fetchSheet(p.tab)));
-        results.forEach((res, i) => {
-            if (res.status !== 'fulfilled') return;
-            const project = published[i];
-            res.value.forEach(row => {
-                if (!row.url && !row.thumbnail) return;
-                allItems.push({ ...row, project: project.title, projectYear: project.year });
-            });
-        });
+        allItems = await loadArchive();
 
         if (!allItems.length) {
             allItems = makePlaceholderItems();

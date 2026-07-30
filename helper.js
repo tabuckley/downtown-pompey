@@ -54,7 +54,9 @@ const DEFAULT_SCRIPTS = {
     accessible: {
         intro: "This is the accessible view — designed to be clear, fast, and easy to navigate for everyone.",
         tips: [
-            "This page is being built. Everything from the archive will be here in plain, readable form.",
+            "Search in plain language — you don't need the exact title, and small typos are fine.",
+            "Use the type, project, and tag filters to narrow things down further.",
+            "Every item has its own link, so you can share, bookmark, or come straight back to it.",
             "You can switch views at any time with the buttons at the top.",
         ],
     },

@@ -22,17 +22,60 @@
         </nav>
     </header>
 
-    <main class="shell-main">
-        <p class="shell-kicker">Downtown Pompey</p>
-        <h1 class="shell-title">Accessible Archive</h1>
-        <p class="shell-text">
-            This view is being built. It will present everything in the archive in a
-            clear, fast, screen-reader-friendly format designed for researchers and
-            for anyone who finds the other views hard to use.
-        </p>
+    <main class="acc-main">
+
+        <!-- ===== SEARCH VIEW ===== -->
+        <section id="accSearchView" class="acc-view">
+            <p class="shell-kicker">Downtown Pompey</p>
+            <h1 class="shell-title">Accessible Archive</h1>
+            <p class="shell-text acc-intro">
+                Search the whole archive in plain text. Describe what you remember —
+                exact titles aren't needed, and small typos are fine.
+            </p>
+
+            <form id="accSearchForm" class="acc-search-form" role="search">
+                <label for="accSearchInput" class="acc-search-label">Search the archive</label>
+                <div class="acc-search-row">
+                    <input type="search" id="accSearchInput" class="acc-search-input"
+                        placeholder="e.g. &quot;a collage about gender&quot; or &quot;pink writing on faces&quot;"
+                        autocomplete="off">
+                    <button type="submit" class="acc-search-btn">Search</button>
+                </div>
+            </form>
+
+            <div class="acc-filters">
+                <div class="acc-filter-group">
+                    <span class="acc-filter-label">Type</span>
+                    <div id="accTypeFilters" class="acc-chip-row"></div>
+                </div>
+                <div class="acc-filter-group">
+                    <label for="accProjectFilter" class="acc-filter-label">Project / workshop</label>
+                    <select id="accProjectFilter" class="acc-select">
+                        <option value="">All projects</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="acc-filter-group acc-tag-group">
+                <span class="acc-filter-label">Narrow by tag</span>
+                <div id="accTagFilters" class="acc-chip-row"></div>
+            </div>
+
+            <p id="accStatus" class="acc-status" role="status" aria-live="polite"></p>
+
+            <ul id="accResults" class="acc-results" aria-label="Search results"></ul>
+        </section>
+
+        <!-- ===== ITEM DETAIL VIEW ===== -->
+        <section id="accDetailView" class="acc-view" hidden>
+            <a href="accessible.html" id="accBackLink" class="acc-back-link">&larr; Back to search</a>
+            <article id="accDetailContent" class="acc-detail"></article>
+        </section>
+
     </main>
 
     <div id="site-helper"></div>
     <script type="module" src="helper.js"></script>
+    <script type="module" src="accessible.js"></script>
 </body>
 </html>
