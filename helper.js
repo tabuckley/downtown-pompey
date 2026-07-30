@@ -123,7 +123,23 @@ function buildHelper() {
 
     const textEl = bubble.querySelector('.helper-bubble-text');
 
+    // Scrapbook's torn-paper bubble is a photo, not a plain box — it can't
+    // just grow to fit content without stretching, so instead it jumps
+    // between a few fixed sizes (see styles.css [data-size]) based on how
+    // much text there is. Thresholds are picked from this page's real tip
+    // lengths, with headroom for longer ones later.
+    function sizeBubbleFor(text) {
+        const len = text.length;
+        let tier = null; // null = base/smallest size
+        if (len > 140) tier = 'xl';
+        else if (len > 90) tier = 'lg';
+        else if (len > 45) tier = 'md';
+        if (tier) bubble.dataset.size = tier;
+        else delete bubble.dataset.size;
+    }
+
     function say(text) {
+        sizeBubbleFor(text);
         textEl.textContent = text;
         bubble.classList.add('open');
         btn.setAttribute('aria-expanded', 'true');

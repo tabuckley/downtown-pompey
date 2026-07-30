@@ -959,15 +959,22 @@ body.landing {
    its tail already baked in, plenty of transparent margin for the drop
    shadow) instead of the plain rounded bubble used elsewhere.
    aspect-ratio:1 locks the box to the image's own canvas proportions so
-   background-size:contain NEVER stretches it — short or long tips, the
-   paper always renders undistorted. Padding is hand-measured against the
-   source art to land inside the oval's safe white interior (never the
-   jagged torn edge or the tail below it), not a generic percentage guess.
-   That safe interior is short relative to the box (long tips reflow to
-   many lines), so .helper-bubble-text is the flexible, scrollable middle
-   of a column layout — the ARCHIE label and the tip/close buttons stay
-   pinned in place and only the tip text itself scrolls if it runs long,
-   rather than the box growing and stretching the art to fit. */
+   background-size:contain NEVER stretches it — at any size, the paper
+   always renders undistorted. Padding is hand-measured against the
+   source art to land text inside the oval's safe white interior (never
+   the jagged torn edge or the tail below it), not a generic percentage
+   guess.
+   Font size stays fixed — growing the whole bubble uniformly (image,
+   padding, type, all together) wouldn't help long tips fit, since the
+   text's own space needs would grow at exactly the same rate. What
+   actually buys room is growing the box while the type stays put, so
+   helper.js measures each tip and picks a size tier (data-size) from how
+   much text there is: short tips get a compact bubble, long ones get a
+   bigger (still perfectly undistorted, since it's the same image just
+   shown larger) one. .helper-bubble-text still keeps overflow-y:auto
+   with no visible scrollbar styling — an invisible safety net in case
+   someone eventually pastes something the xl tier still can't fit,
+   rather than a normal, expected part of reading a tip. */
 [data-mode="scrapbook"] .helper-bubble {
     aspect-ratio: 1 / 1;
     width: min(300px, calc(100vw - 2.8rem));
@@ -989,9 +996,15 @@ body.landing {
        which would grow the box past 1:1 and force the browser to stretch
        the background image to keep covering it. Clipping here instead
        makes the square genuinely fixed, so the text flex child (below)
-       is what absorbs overflow via its own scrollbar, never the image. */
+       is what absorbs any rare overflow via its own scroll, never the
+       image. */
     overflow: hidden;
+    transition: width 0.2s ease;
 }
+
+[data-mode="scrapbook"] .helper-bubble[data-size="md"] { width: min(380px, calc(100vw - 2.8rem)); }
+[data-mode="scrapbook"] .helper-bubble[data-size="lg"] { width: min(460px, calc(100vw - 2.8rem)); }
+[data-mode="scrapbook"] .helper-bubble[data-size="xl"] { width: min(540px, calc(100vw - 2.8rem)); }
 
 [data-mode="scrapbook"] .helper-bubble-name {
     flex: 0 0 auto;
@@ -1002,25 +1015,6 @@ body.landing {
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: var(--accent) transparent;
-    /* Fades the last ~14px so cut-off text reads as "more below", not a
-       hard clip — harmless no-op when a short tip doesn't overflow. */
-    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 14px), transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 calc(100% - 14px), transparent 100%);
-}
-
-[data-mode="scrapbook"] .helper-bubble-text::-webkit-scrollbar {
-    width: 5px;
-}
-
-[data-mode="scrapbook"] .helper-bubble-text::-webkit-scrollbar-thumb {
-    background: var(--accent);
-    border-radius: 3px;
-}
-
-[data-mode="scrapbook"] .helper-bubble-text::-webkit-scrollbar-track {
-    background: transparent;
 }
 
 [data-mode="scrapbook"] .helper-bubble-actions {
