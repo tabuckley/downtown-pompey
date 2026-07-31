@@ -92,7 +92,7 @@ const MODEL_SLOTS = [
 ];
 let modelSlot = 0;
 
-export function initRoom(canvasId = 'room-canvas') {
+export function initRoom(canvasId = 'room-canvas', onEnvironmentReady = () => {}) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
 
@@ -151,7 +151,7 @@ export function initRoom(canvasId = 'room-canvas') {
     grid.position.y = -3.49;
     scene.add(grid);
 
-    loadEnvironment('models/dtpAAG.glb', room, grid);
+    loadEnvironment('models/dtpAAG.glb', room, grid, onEnvironmentReady);
 
     // Low-level fill only — the room model's own 10 spot lights (see
     // rescaleImportedLights) are the actual designed lighting once loaded.
@@ -240,7 +240,7 @@ export function addFramedPhoto(url, data) {
 // it's loaded — the pop-up placeholder geometry / archive photos & models
 // are added separately (see populate() in editorial.js) and sit in front of
 // whatever room mesh is current at that point, placeholder or real.
-function loadEnvironment(url, fallbackRoom, fallbackGrid) {
+function loadEnvironment(url, fallbackRoom, fallbackGrid, onReady = () => {}) {
     new GLTFLoader().load(url, (gltf) => {
         if (!scene) return;
         scene.remove(fallbackRoom, fallbackGrid);
@@ -249,8 +249,10 @@ function loadEnvironment(url, fallbackRoom, fallbackGrid) {
         rescaleImportedLights(gltf.scene);
         removeScatterVolumeCube(gltf.scene);
         fixDiscoBallReflection(gltf.scene);
+        onReady();
     }, undefined, (err) => {
         console.warn('Room environment load failed, keeping placeholder room:', url, err);
+        onReady();
     });
 }
 

@@ -1079,6 +1079,20 @@ body.landing {
     }
 }
 
+/* Short viewports (landscape phones) — Archie's normal 195px min-height
+   figure eats over half of a ~375px-tall screen regardless of width, which
+   no reasonable amount of page-content padding can reliably out-pad (see
+   process.html's .shell-main below, which needs both this AND its own
+   padding bump). Keyed on height, not width, so this also covers portrait
+   phones with an unusually short viewport (address bar expanded, etc). */
+@media (max-height: 480px) {
+    .helper-figure-img {
+        height: 20vh;
+        min-height: 90px;
+        max-height: 140px;
+    }
+}
+
 /* ===== SCRAPBOOK ARCHIVE PAGE ===== */
 /* ===== FILTER BAR =====
    Always visible (no click needed to reveal filters) — but solid/opaque
@@ -1553,6 +1567,11 @@ body.landing {
     justify-content: center;
     padding: 3rem;
     min-width: 0;
+    /* Swipe-to-advance (scrapbook.js) needs to preventDefault() on a
+       horizontal drag — pan-y still allows normal vertical page scroll
+       and stops the browser's native edge-swipe-back gesture from
+       competing with it. */
+    touch-action: pan-y;
 }
 
 .lightbox-media img,
@@ -1652,8 +1671,8 @@ body.landing {
     color: #f0ece4;
     font-family: var(--font-mono);
     font-size: 1rem;
-    width: 42px;
-    height: 42px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
     cursor: pointer;
     z-index: 610;
@@ -1868,7 +1887,16 @@ body.is-hovering .cursor {
 
     .page-topbar { padding: 0.6rem 0.7rem; flex-wrap: wrap; row-gap: 0.4rem; }
     .page-topbar .home-logo { height: 60px; }
-    .page-topbar .mode-btn { padding: 0.4rem 0.6rem; font-size: 0.52rem; }
+    /* ~43px tall (line-height 1.4 on 0.62rem font + generous vertical
+       padding) — was ~24px, well under the ~44px touch-target guideline.
+       Horizontal padding stays tighter than vertical on purpose: at a
+       true 320px viewport the 3-button pill barely fits its own row
+       (.mode-switcher's overflow:hidden was silently clipping ~17px off
+       it before this was tightened — verified via scrollWidth vs
+       clientWidth at 320px). Height is the dimension that actually
+       matters for a horizontal row of thumb targets. */
+    .page-topbar .mode-btn { padding: 0.85rem 0.6rem; font-size: 0.62rem; }
+    .page-topbar .mode-switcher { flex-shrink: 0; }
 
     /* All 46 tags wrapped at mobile width need ~16 rows — the bar would
        grow taller than the viewport itself and (being fixed) extend off
@@ -1895,9 +1923,38 @@ body.is-hovering .cursor {
         max-height: 40vh;
     }
     .lightbox-next { right: 1.2rem; }
+    /* Desktop centers both on the full viewport height (top:50%), but the
+       mobile column layout puts a scrollable up-to-40vh info panel below
+       the media — the real media region is only the top ~60vh, so 50%
+       sits too low. */
+    .lightbox-prev,
+    .lightbox-next { top: 30vh; }
 
-    .info-panel { width: 100vw; }
-    .shell-main { padding: 9rem 8vw 6rem; }
+    /* .page-topbar wraps to 2 rows on mobile (measured ~128.7px tall) but
+       sits above .info-panel (z-index 300 vs 250) — padding-top clears the
+       flow content (kicker/title/etc), but .info-close is position:absolute
+       relative to the panel's own top:0 box, so it needs its own explicit
+       override; padding alone doesn't move it. */
+    .info-panel { width: 100vw; padding-top: 9.2rem; }
+    .info-close { top: 8.8rem; }
+    /* Desktop centers content vertically in a min-height:100vh box — on
+       mobile that box can render taller than the viewport (a long title
+       + paragraph + top padding for the topbar easily exceeds ~640px),
+       and once it does, centering silently pushes part of the content
+       off-screen with NO way to scroll to it, while Archie's fixed-
+       position bubble (which auto-opens and can be ~170px tall) sits on
+       top of whatever ends up in the bottom portion of the viewport —
+       no amount of bottom padding fixes this, since extra padding on an
+       already-overflowing centered box just grows the invisible part.
+       Switching to top-aligned flow sidesteps the problem entirely: the
+       box can still be exactly 100vh tall when content is short, but
+       when content is tall it just grows and the page scrolls normally,
+       like everywhere else on the web. Verified clear (100px+ of margin)
+       on every common modern phone size (390px+ wide); a genuinely short
+       viewport — old iPhone SE-class devices (~568-667px tall) or
+       landscape phones — can still see Archie's bubble brush the last
+       line of the paragraph. Known, accepted residual, not a full fix. */
+    .shell-main { justify-content: flex-start; padding: 9rem 8vw 4rem; }
 }
 
 /* ===== ACCESSIBLE ARCHIVE ===== */

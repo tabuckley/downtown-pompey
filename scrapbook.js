@@ -521,6 +521,37 @@ lightbox.addEventListener('click', (e) => {
     if (e.target === lightbox || e.target === lightboxMedia) closeLightbox();
 });
 
+// Swipe-to-advance — scoped to the media area only (not .lightbox-info),
+// so a scroll of the description text never reaches this listener at all;
+// no gesture-disambiguation against scrolling is needed.
+const SWIPE_THRESHOLD = 50;
+let swipeStartX = 0, swipeStartY = 0, swiping = false;
+
+lightboxMedia.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse') return;
+    swipeStartX = e.clientX;
+    swipeStartY = e.clientY;
+    swiping = false;
+    lightboxMedia.setPointerCapture(e.pointerId);
+});
+
+lightboxMedia.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'mouse') return;
+    const dx = e.clientX - swipeStartX, dy = e.clientY - swipeStartY;
+    if (!swiping && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) swiping = true;
+    if (swiping) e.preventDefault(); // stops this from also becoming the click that closes the lightbox
+});
+
+lightboxMedia.addEventListener('pointerup', (e) => {
+    if (e.pointerType === 'mouse' || !swiping) { swiping = false; return; }
+    const dx = e.clientX - swipeStartX;
+    if (Math.abs(dx) >= SWIPE_THRESHOLD) {
+        e.preventDefault();
+        openLightbox(lightboxIndex + (dx < 0 ? 1 : -1));
+    }
+    swiping = false;
+});
+
 document.addEventListener('keydown', (e) => {
     if (!lightbox.classList.contains('open')) return;
     if (e.key === 'Escape') closeLightbox();

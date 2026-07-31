@@ -6,16 +6,30 @@ const MAX_PHOTOS = 6;
 const MAX_MODELS = 2;
 
 initCursor();
-initRoom('room-canvas');
 
 // ===== INFO PANEL =====
 const panel = document.getElementById('infoPanel');
 const roomHint = document.getElementById('roomHint');
 const roomItems = document.getElementById('roomItems');
 
-if (window.matchMedia('(pointer: coarse)').matches) {
-    roomHint.textContent = 'Drag to look around · tap an object to learn its story';
+const LOADING_HINT = 'Loading room…';
+function normalHint() {
+    return window.matchMedia('(pointer: coarse)').matches
+        ? 'Drag to look around · tap an object to learn its story'
+        : 'Move to look around · click an object to learn its story';
 }
+
+// The 3D room model loads async — the placeholder box room renders
+// immediately as a fallback so the page is never blank, but nothing
+// signalled that richer content was still on its way in. Reuses this one
+// hint slot rather than adding new UI; the equality guard stops the
+// room-load callback from clobbering whatever fallBackToPlaceholders()/
+// populate() (below) may have already written on their own, independent
+// async path (the archive Sheet fetch, not the room model fetch).
+roomHint.textContent = LOADING_HINT;
+initRoom('room-canvas', () => {
+    if (roomHint.textContent === LOADING_HINT) roomHint.textContent = normalHint();
+});
 
 function showPanel(data) {
     document.getElementById('infoKicker').textContent = data.project || '';
