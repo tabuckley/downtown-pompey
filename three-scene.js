@@ -33,8 +33,8 @@ const PAN_RANGE_Y = 0.18;
 let focusedObject = null;
 let focusBlend = 0;
 const FOCUS_BLEND_SPEED = 0.07;
-const FOCUS_DISTANCE = 1.6; // how close the camera ends up to the focused object
-const FOCUS_LOOK_OFFSET = 0.9; // how far past the object (toward camera-right) to aim, which is what pushes the object itself toward screen-LEFT
+const FOCUS_MOVE_FRACTION = 0.32; // how far from the roam position toward the object to move — partial/soft, not a close-up dolly-in
+const FOCUS_LOOK_OFFSET = 0.5; // how far past the object (toward camera-right) to aim, which is what pushes the object itself toward screen-LEFT
 // Renders at a reduced internal resolution while the canvas's own CSS
 // 100%-width/height stretches it back up with the browser's normal smooth
 // scaling — a low native resolution plus bilinear filtering (not sharp
@@ -900,24 +900,33 @@ function animate() {
         const roamX = baseCamPos.x + targetX * PAN_RANGE_X;
         const roamY = baseCamPos.y - targetY * PAN_RANGE_Y;
 
+        const roamPos = new THREE.Vector3(roamX, roamY, baseCamPos.z);
+
         if (focusBlend > 0.001 && focusedObject) {
             const objPos = new THREE.Vector3();
             focusedObject.getWorldPosition(objPos);
 
-            // Approach from the same general direction the ambient camera
-            // already views the room from, just much closer.
-            const approachDir = new THREE.Vector3().subVectors(baseCamPos, lookTarget).normalize();
-            const focusPos = objPos.clone().addScaledVector(approachDir, FOCUS_DISTANCE);
+            // A fixed close distance from the object clipped the camera
+            // below the floor for anything sitting low/at floor height,
+            // since the approach direction is mostly +Z with barely any Y
+            // component — the camera ended up matching the OBJECT's height
+            // instead of staying near the room's normal eye level. Moving
+            // only partway from the current roam position toward the
+            // object (not all the way to some close fixed distance) keeps
+            // most of that eye-level height intact — a soft nudge toward
+            // the object rather than a dolly-in.
+            const focusPos = roamPos.clone().lerp(objPos, FOCUS_MOVE_FRACTION);
             // Looking at a point offset toward camera-right of the object
             // is what pushes the object itself toward screen-LEFT — where
             // the info panel (docked on the right) leaves room for it.
+            const approachDir = new THREE.Vector3().subVectors(baseCamPos, lookTarget).normalize();
             const rightDir = new THREE.Vector3().crossVectors(camera.up, approachDir).normalize();
             const focusLook = objPos.clone().addScaledVector(rightDir, FOCUS_LOOK_OFFSET);
 
-            camera.position.set(roamX, roamY, baseCamPos.z).lerp(focusPos, focusBlend);
+            camera.position.copy(roamPos).lerp(focusPos, focusBlend);
             camera.lookAt(lookTarget.clone().lerp(focusLook, focusBlend));
         } else {
-            camera.position.set(roamX, roamY, baseCamPos.z);
+            camera.position.copy(roamPos);
             camera.lookAt(lookTarget);
         }
 
