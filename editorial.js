@@ -1,5 +1,5 @@
 import { fetchSheet, yearFrom } from './sheet.js';
-import { initRoom, addFramedPhoto, addModel, addPlaceholders, addLowPolyModel, onObjectClick, onObjectHover } from './three-scene.js';
+import { initRoom, addFramedPhoto, addModel, addPlaceholders, addLowPolyModel, onObjectClick, onObjectHover, focusOnObject, clearFocus } from './three-scene.js';
 import { initCursor } from './cursor.js';
 
 const MAX_PHOTOS = 6;
@@ -31,7 +31,26 @@ initRoom('room-canvas', () => {
     if (roomHint.textContent === LOADING_HINT) roomHint.textContent = normalHint();
 });
 
-function showPanel(data) {
+function showPanel(data, object) {
+    // object is only set for a real 3D click (see onObjectClick below) —
+    // the keyboard/screen-reader room-items list (addRoomItemButton) opens
+    // the same panel without a click, so there's nothing to zoom the
+    // camera to in that path.
+    if (object) focusOnObject(object);
+
+    const img = document.getElementById('infoImage');
+    const imgSrc = data.thumbnail || data.url;
+    // 3d/download/model items point at a non-image file (a .glb, a PDF) —
+    // only ever show this for an item that actually has a real photo.
+    if (imgSrc && data.type !== '3d' && data.type !== 'download') {
+        img.src = imgSrc;
+        img.alt = data.title || '';
+        img.hidden = false;
+    } else {
+        img.hidden = true;
+        img.removeAttribute('src');
+    }
+
     document.getElementById('infoKicker').textContent = data.project || '';
     document.getElementById('infoTitle').textContent = data.title || 'Untitled';
     document.getElementById('infoMeta').textContent =
@@ -56,6 +75,7 @@ function showPanel(data) {
 
 function closePanel() {
     panel.classList.remove('open');
+    clearFocus();
 }
 
 document.getElementById('infoClose').addEventListener('click', closePanel);
@@ -155,7 +175,13 @@ async function populateLowPoly() {
             const override = LOW_POLY_ROTATION_OVERRIDES[filename] || { rotationZ: 0, baseRotY: 0 };
             return addLowPolyModel(
                 modelUrl,
-                { title: row.title, description: row.description },
+                // This tab has two columns both literally named "link" (see
+                // comment above) — row.link resolves to the second one,
+                // which is the thumbnail-resolution image. The full-res
+                // first "link" column has no way to survive the CSV
+                // parser's duplicate-header collision, but a thumbnail is
+                // plenty for the info panel display.
+                { title: row.title, description: row.description, type: row.type, thumbnail: row.link, credit: row.credit, tags: row.tags },
                 LOW_POLY_SLOTS[i],
                 override.rotationZ,
                 override.baseRotY,

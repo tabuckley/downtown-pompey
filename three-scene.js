@@ -25,6 +25,16 @@ const lookTarget = new THREE.Vector3(0, 0.2, -2);
 const RECENTER_OFFSET = new THREE.Vector2(-2.2 * 0.6, -1.2 * 0.6);
 const PAN_RANGE_X = 0.33;
 const PAN_RANGE_Y = 0.18;
+// "Zoom to object" camera focus, triggered on click alongside the info
+// panel opening (see focusOnObject/clearFocus below, and editorial.js's
+// showPanel/closePanel) — eased in/out via focusBlend in animate() rather
+// than snapped, and skipped entirely once it settles back near 0 so the
+// normal ambient roam stays exactly as cheap as before this existed.
+let focusedObject = null;
+let focusBlend = 0;
+const FOCUS_BLEND_SPEED = 0.07;
+const FOCUS_DISTANCE = 1.6; // how close the camera ends up to the focused object
+const FOCUS_LOOK_OFFSET = 0.9; // how far past the object (toward camera-right) to aim, which is what pushes the object itself toward screen-LEFT
 // Renders at a reduced internal resolution while the canvas's own CSS
 // 100%-width/height stretches it back up with the browser's normal smooth
 // scaling — a low native resolution plus bilinear filtering (not sharp
@@ -192,6 +202,14 @@ export function initRoom(canvasId = 'room-canvas', onEnvironmentReady = () => {}
 
 export function onObjectClick(cb) { clickCb = cb; }
 export function onObjectHover(cb) { hoverCb = cb; }
+
+// Smoothly moves the camera in close to `object`, framing it toward the
+// left of the screen — called alongside opening the info panel (which
+// docks on the right), so the object stays visible next to its own info
+// rather than getting covered by the panel. clearFocus() eases back out
+// to the normal ambient parallax view when the panel closes.
+export function focusOnObject(object) { focusedObject = object; }
+export function clearFocus() { focusedObject = null; }
 
 // Resolves with the item's data on success, null on failure — callers can
 // count what actually made it into the scene. Slots are only consumed on
@@ -765,6 +783,11 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
                 project: data.project || 'Editorial — low-poly',
                 year: data.year || '—',
                 description: data.description || 'A low-poly model from the editorial room\'s rotating collectible pool.',
+                type: data.type,
+                url: data.url,
+                thumbnail: data.thumbnail,
+                credit: data.credit,
+                tags: data.tags,
             };
             scene.add(group);
             clickables.push(group);
@@ -824,26 +847,18 @@ function findClickableRoot(object) {
     return o;
 }
 
-function findItemData(object) {
-    const o = findClickableRoot(object);
-    return o ? o.userData.itemData : null;
-}
-
 function setPointerFromEvent(e) {
     pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
     pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
 }
 
-function raycastClickables() {
-    raycaster.setFromCamera(pointer, camera);
-    const hits = raycaster.intersectObjects(clickables, true);
-    return hits.length ? findItemData(hits[0].object) : null;
-}
-
 function onClick(e) {
     setPointerFromEvent(e);
-    const data = raycastClickables();
-    if (data && clickCb) clickCb(data);
+    raycaster.setFromCamera(pointer, camera);
+    const hits = raycaster.intersectObjects(clickables, true);
+    if (!hits.length) return;
+    const root = findClickableRoot(hits[0].object);
+    if (root && root.userData.itemData && clickCb) clickCb(root.userData.itemData, root);
 }
 
 function onPointerMove(e) {
@@ -878,10 +893,33 @@ function animate() {
     if (!reduceMotion) {
         targetX += (mouseX - targetX) * 0.04;
         targetY += (mouseY - targetY) * 0.04;
-        camera.position.x = baseCamPos.x + targetX * PAN_RANGE_X;
-        camera.position.y = baseCamPos.y - targetY * PAN_RANGE_Y;
-        camera.position.z = baseCamPos.z;
-        camera.lookAt(lookTarget);
+
+        const focusGoal = focusedObject ? 1 : 0;
+        focusBlend += (focusGoal - focusBlend) * FOCUS_BLEND_SPEED;
+
+        const roamX = baseCamPos.x + targetX * PAN_RANGE_X;
+        const roamY = baseCamPos.y - targetY * PAN_RANGE_Y;
+
+        if (focusBlend > 0.001 && focusedObject) {
+            const objPos = new THREE.Vector3();
+            focusedObject.getWorldPosition(objPos);
+
+            // Approach from the same general direction the ambient camera
+            // already views the room from, just much closer.
+            const approachDir = new THREE.Vector3().subVectors(baseCamPos, lookTarget).normalize();
+            const focusPos = objPos.clone().addScaledVector(approachDir, FOCUS_DISTANCE);
+            // Looking at a point offset toward camera-right of the object
+            // is what pushes the object itself toward screen-LEFT — where
+            // the info panel (docked on the right) leaves room for it.
+            const rightDir = new THREE.Vector3().crossVectors(camera.up, approachDir).normalize();
+            const focusLook = objPos.clone().addScaledVector(rightDir, FOCUS_LOOK_OFFSET);
+
+            camera.position.set(roamX, roamY, baseCamPos.z).lerp(focusPos, focusBlend);
+            camera.lookAt(lookTarget.clone().lerp(focusLook, focusBlend));
+        } else {
+            camera.position.set(roamX, roamY, baseCamPos.z);
+            camera.lookAt(lookTarget);
+        }
 
         spinners.forEach(obj => { obj.rotation.y += 0.004; });
 
