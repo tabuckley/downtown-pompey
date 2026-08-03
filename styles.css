@@ -1961,19 +1961,42 @@ body.is-hovering .cursor {
     -webkit-backdrop-filter: blur(8px);
 }
 
-/* ===== PROCESS PAGE CONTENT ===== */
+/* ===== PROCESS PAGE CONTENT =====
+   Editorial-essay layout: each numbered section is a two-column grid (a
+   large outlined numeral rail, then the reading column) rather than one
+   narrow centred column with a wide dead void beside it — this is a
+   genuine chronological process account (talked first, then built,
+   etc.), so numbering it is a real structural device, not decoration.
+   Pull-quotes (verbatim sentences from each section's own body text,
+   never paraphrased) break up what would otherwise be four
+   identically-shaped heading+paragraph blocks in a row. */
 .process-content {
-    max-width: 780px;
+    max-width: 1100px;
     margin: 0 auto;
-    padding: 2rem 8vw 8rem;
+    padding: 2rem 6vw 8rem;
 }
 
 .process-section {
-    padding-top: 4.5rem;
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 1rem 2.5rem;
+    padding-top: 5rem;
     border-top: 1px solid var(--border);
 }
 
 .process-section:first-child { border-top: none; }
+
+.process-section-number {
+    font-family: var(--font-display);
+    font-size: 3.75rem;
+    font-weight: 800;
+    line-height: 1;
+    color: rgba(208, 19, 89, 0.35);
+}
+
+.process-section-body--full {
+    grid-column: 1 / -1;
+}
 
 .process-heading {
     font-family: var(--font-display);
@@ -1984,14 +2007,26 @@ body.is-hovering .cursor {
     color: var(--text);
 }
 
-.process-section p {
+.process-section-body p {
     color: var(--muted);
     line-height: 1.75;
     font-size: 1.02rem;
     max-width: 65ch;
 }
 
-.process-section p + p { margin-top: 1.1rem; }
+.process-section-body p + p { margin-top: 1.1rem; }
+
+.process-quote {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--accent);
+    max-width: 55ch;
+    margin: 1.8rem 0;
+    padding-left: 1.4rem;
+    border-left: 3px solid var(--accent);
+}
 
 .video-placeholder {
     aspect-ratio: 16 / 9;
@@ -2001,6 +2036,7 @@ body.is-hovering .cursor {
     justify-content: center;
     background: var(--card-bg);
     border: 1px dashed var(--border);
+    margin-top: 1rem;
 }
 
 .video-placeholder-text {
@@ -2025,7 +2061,10 @@ body.is-hovering .cursor {
     align-items: center;
     gap: 4rem;
     margin-top: 2rem;
-    flex-wrap: wrap;
+    /* Never wraps — the photo stack stays beside the bios at every
+       viewport width; both shrink together on narrow screens instead
+       (see the mobile override below) rather than stacking vertically. */
+    flex-wrap: nowrap;
 }
 
 .team-stack {
@@ -2185,9 +2224,19 @@ body.is-hovering .cursor {
     .shell-main { justify-content: flex-start; padding: 9rem 8vw 4rem; }
 
     .process-content { padding: 1rem 6vw 6rem; }
-    .process-section { padding-top: 3rem; }
-    .team-layout { gap: 2.5rem; }
-    .team-stack { width: 220px; height: 290px; margin: 0 auto; }
+    .process-section {
+        grid-template-columns: 1fr;
+        gap: 0.3rem;
+        padding-top: 3rem;
+    }
+    .process-section-number { font-size: 2.2rem; }
+    .process-quote { font-size: 1.3rem; padding-left: 1rem; }
+    /* Stack + bios still never wrap to separate rows on mobile (see
+       .team-layout's flex-wrap:nowrap) — both just get smaller instead. */
+    .team-layout { gap: 1.1rem; align-items: flex-start; }
+    .team-stack { width: 108px; height: 142px; flex-shrink: 0; }
+    .team-bio { font-size: 0.82rem; }
+    .team-pronouns { font-size: 0.56rem; }
 }
 
 /* ===== ACCESSIBLE ARCHIVE ===== */
