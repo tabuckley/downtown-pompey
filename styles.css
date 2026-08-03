@@ -1846,12 +1846,13 @@ body.landing {
 .info-panel.open { transform: none; }
 
 .info-image {
+    /* Natural aspect ratio at the panel's full width — no fixed height/
+       object-fit/background, which was letterboxing most images into a
+       visible black box whenever their own ratio didn't exactly match a
+       45vh crop. */
     display: block;
     width: 100%;
-    max-height: 45vh;
-    object-fit: contain;
-    background: #000;
-    border: 1px solid #222;
+    height: auto;
     margin-top: 1.5rem;
 }
 

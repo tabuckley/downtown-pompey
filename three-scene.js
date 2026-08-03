@@ -911,11 +911,15 @@ function animate() {
             // since the approach direction is mostly +Z with barely any Y
             // component — the camera ended up matching the OBJECT's height
             // instead of staying near the room's normal eye level. Moving
-            // only partway from the current roam position toward the
-            // object (not all the way to some close fixed distance) keeps
-            // most of that eye-level height intact — a soft nudge toward
-            // the object rather than a dolly-in.
-            const focusPos = roamPos.clone().lerp(objPos, FOCUS_MOVE_FRACTION);
+            // only partway from the room's base position toward the object
+            // (not all the way to some close fixed distance) keeps most of
+            // that eye-level height intact — a soft nudge toward the object
+            // rather than a dolly-in. Anchored to baseCamPos specifically
+            // (not the live mouse-parallax roamPos) — once focused, the
+            // camera should hold completely still regardless of where the
+            // mouse goes; blending from a value that itself depended on
+            // live mouse position meant it never actually stopped moving.
+            const focusPos = new THREE.Vector3(baseCamPos.x, baseCamPos.y, baseCamPos.z).lerp(objPos, FOCUS_MOVE_FRACTION);
             // Looking at a point offset toward camera-right of the object
             // is what pushes the object itself toward screen-LEFT — where
             // the info panel (docked on the right) leaves room for it.
