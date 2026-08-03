@@ -559,10 +559,10 @@ function buildSparkleRing(radius, count, color) {
 // animate() can fade them together via uOpacity — each shell's own
 // uOpacityMul keeps their relative strengths fixed while doing so.
 const OUTLINE_GLOW_LAYERS = [
-    { inflate: 0.012, mul: 1.0 },
-    { inflate: 0.032, mul: 0.6 },
-    { inflate: 0.06, mul: 0.35 },
-    { inflate: 0.1, mul: 0.16 },
+    { inflate: 0.008, mul: 0.7 },
+    { inflate: 0.018, mul: 0.38 },
+    { inflate: 0.032, mul: 0.2 },
+    { inflate: 0.05, mul: 0.08 },
 ];
 function buildOutline(model, color) {
     // The exact brand hot-pink (#d01359) is fairly dark by raw luminance —
