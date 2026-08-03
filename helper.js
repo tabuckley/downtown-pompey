@@ -106,7 +106,7 @@ function buildHelper() {
         <div class="helper-bubble-name">Flo</div>
         <div class="helper-bubble-text"></div>
         <div class="helper-bubble-actions">
-            <button class="helper-chip" data-action="tip">Tell me more, babe</button>
+            <button class="helper-chip" data-action="tip">Next</button>
             <button class="helper-chip" data-action="close">close ×</button>
         </div>
     `;

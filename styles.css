@@ -111,16 +111,20 @@ body.has-custom-cursor * {
     cursor: none;
 }
 
-/* An 8-bit arrow built from a grid of 3px squares via box-shadow, rather
+/* An 8-bit arrow built from a grid of 4px squares via box-shadow, rather
    than an image — stays crisp at any pixel density with no asset to load.
    The element itself is 0x0; every square is a shadow positioned at a
-   multiple of the 3px grid, with spread:1.5px turning that 0x0 point into
-   a 3x3 square. The tip of the arrow sits at the element's own (0,0), so
-   it tracks the mouse with no centering transform — same as a real cursor
-   hotspot. filter:drop-shadow (not box-shadow) gives the whole sprite one
-   hard-edged offset duplicate as a retro pop shadow, matching the
-   editorial room's other pixel-art chrome (see .helper-bubble above),
-   without hand-doubling all 24 squares a second time. */
+   multiple of the 4px grid, with spread:2px turning that 0x0 point into a
+   4x4 square. The tip of the arrow sits at the element's own (0,0), so it
+   tracks the mouse with no centering transform — same as a real cursor
+   hotspot. The left spine of the arrow is lightened a touch (a manually
+   mixed tint of --accent, not color-mix(), so it stays a fixed pixel-art
+   highlight rather than drifting if --accent ever changes) — flat single-
+   tone silhouettes read as a sticker, a lit edge reads as a sprite.
+   filter:drop-shadow (not box-shadow) gives the whole sprite one hard-
+   edged offset duplicate as a retro pop shadow, matching the editorial
+   room's other pixel-art chrome (see .helper-bubble above), without hand-
+   doubling all 24 squares a second time. */
 .pixel-cursor {
     position: fixed;
     top: 0;
@@ -131,16 +135,46 @@ body.has-custom-cursor * {
     z-index: 9999;
     opacity: 0;
     transition: opacity 0.3s, transform 0.1s steps(2);
-    filter: drop-shadow(2px 2px 0 var(--bg));
+    filter: drop-shadow(3px 3px 0 var(--bg));
     box-shadow:
-        0px 0px 0 1.5px var(--accent),
-        0px 3px 0 1.5px var(--accent), 3px 3px 0 1.5px var(--accent),
-        0px 6px 0 1.5px var(--accent), 3px 6px 0 1.5px var(--accent), 6px 6px 0 1.5px var(--accent),
-        0px 9px 0 1.5px var(--accent), 3px 9px 0 1.5px var(--accent), 6px 9px 0 1.5px var(--accent), 9px 9px 0 1.5px var(--accent),
-        0px 12px 0 1.5px var(--accent), 3px 12px 0 1.5px var(--accent), 6px 12px 0 1.5px var(--accent), 9px 12px 0 1.5px var(--accent), 12px 12px 0 1.5px var(--accent),
-        0px 15px 0 1.5px var(--accent), 3px 15px 0 1.5px var(--accent), 9px 15px 0 1.5px var(--accent), 12px 15px 0 1.5px var(--accent),
-        0px 18px 0 1.5px var(--accent), 12px 18px 0 1.5px var(--accent), 15px 18px 0 1.5px var(--accent),
-        15px 21px 0 1.5px var(--accent), 18px 21px 0 1.5px var(--accent);
+        0px 0px 0 2px #e05a93,
+        0px 4px 0 2px #e05a93, 4px 4px 0 2px var(--accent),
+        0px 8px 0 2px #e05a93, 4px 8px 0 2px var(--accent), 8px 8px 0 2px var(--accent),
+        0px 12px 0 2px #e05a93, 4px 12px 0 2px var(--accent), 8px 12px 0 2px var(--accent), 12px 12px 0 2px var(--accent),
+        0px 16px 0 2px #e05a93, 4px 16px 0 2px var(--accent), 8px 16px 0 2px var(--accent), 12px 16px 0 2px var(--accent), 16px 16px 0 2px var(--accent),
+        0px 20px 0 2px #e05a93, 4px 20px 0 2px var(--accent), 12px 20px 0 2px var(--accent), 16px 20px 0 2px var(--accent),
+        0px 24px 0 2px #e05a93, 16px 24px 0 2px var(--accent), 20px 24px 0 2px var(--accent),
+        20px 28px 0 2px var(--accent), 24px 28px 0 2px var(--accent);
+}
+
+/* Retro sparkle trail — small pixel squares spawned by cursor.js as the
+   mouse moves, alternating the cursor's own pink with the low-poly
+   sparkle ring's warm gold (three-scene.js's glowColor) so the 2D cursor
+   trail and the 3D room's own sparkle effect read as the same idea.
+   Each particle is spawned already showing (JS sets left/top + this base
+   state on insert, then forces a reflow before adding .fade so the
+   transition has an actual "before" to animate from). 6px rather than a
+   truer single "pixel" — small enough to read as a sparkle, not so small
+   it disappears against the room's own busy pink/magenta backdrop. */
+.cursor-particle {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 6px;
+    margin: -3px 0 0 -3px;
+    background: var(--accent);
+    pointer-events: none;
+    z-index: 9998;
+    opacity: 0.9;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.cursor-particle--gold { background: #ffd27a; }
+
+.cursor-particle.fade {
+    opacity: 0;
+    transform: scale(0.2) translateY(8px);
 }
 
 body.has-custom-cursor .pixel-cursor { opacity: 1; }
