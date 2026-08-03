@@ -1,4 +1,4 @@
-// Archie — the site helper. Scripted, page-aware, Clippy-spirited.
+// Flo — the site helper. Scripted, page-aware, Clippy-spirited.
 //
 // Dialogue is editable from the Google Sheet without touching code: add
 // rows to the _copy tab using the keys
@@ -26,7 +26,7 @@ const MAX_TIPS = 8;
 
 const DEFAULT_SCRIPTS = {
     landing: {
-        intro: "Hello! I'm Archie, the archive helper. Pick one of the buttons above — each shows the archive in a different way.",
+        intro: "Hello! I'm Flo, the archive helper. Pick one of the buttons above — each shows the archive in a different way.",
         tips: [
             "Editorial is the full art experience — a 3D room you can look around.",
             "Scrapbook is the fun one: scroll forever, filter by tags.",
@@ -103,17 +103,17 @@ function buildHelper() {
     bubble.className = 'helper-bubble';
     bubble.setAttribute('role', 'status');
     bubble.innerHTML = `
-        <div class="helper-bubble-name">Archie</div>
+        <div class="helper-bubble-name">Flo</div>
         <div class="helper-bubble-text"></div>
         <div class="helper-bubble-actions">
-            <button class="helper-chip" data-action="tip">another tip ?</button>
+            <button class="helper-chip" data-action="tip">Tell me more, babe</button>
             <button class="helper-chip" data-action="close">close ×</button>
         </div>
     `;
 
     const btn = document.createElement('button');
     btn.className = 'helper-figure-btn';
-    btn.setAttribute('aria-label', 'Site helper — Archie');
+    btn.setAttribute('aria-label', 'Site helper — Flo');
     btn.setAttribute('aria-expanded', 'false');
     btn.innerHTML = `<img class="helper-figure-img" src="${ARCHIE_IMAGE_URL}" alt="">`;
 

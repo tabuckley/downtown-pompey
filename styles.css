@@ -111,33 +111,39 @@ body.has-custom-cursor * {
     cursor: none;
 }
 
-.cursor,
-.cursor-dot {
+/* An 8-bit arrow built from a grid of 3px squares via box-shadow, rather
+   than an image — stays crisp at any pixel density with no asset to load.
+   The element itself is 0x0; every square is a shadow positioned at a
+   multiple of the 3px grid, with spread:1.5px turning that 0x0 point into
+   a 3x3 square. The tip of the arrow sits at the element's own (0,0), so
+   it tracks the mouse with no centering transform — same as a real cursor
+   hotspot. filter:drop-shadow (not box-shadow) gives the whole sprite one
+   hard-edged offset duplicate as a retro pop shadow, matching the
+   editorial room's other pixel-art chrome (see .helper-bubble above),
+   without hand-doubling all 24 squares a second time. */
+.pixel-cursor {
     position: fixed;
-    border-radius: 50%;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
     pointer-events: none;
     z-index: 9999;
     opacity: 0;
-    transition: opacity 0.3s;
+    transition: opacity 0.3s, transform 0.1s steps(2);
+    filter: drop-shadow(2px 2px 0 var(--bg));
+    box-shadow:
+        0px 0px 0 1.5px var(--accent),
+        0px 3px 0 1.5px var(--accent), 3px 3px 0 1.5px var(--accent),
+        0px 6px 0 1.5px var(--accent), 3px 6px 0 1.5px var(--accent), 6px 6px 0 1.5px var(--accent),
+        0px 9px 0 1.5px var(--accent), 3px 9px 0 1.5px var(--accent), 6px 9px 0 1.5px var(--accent), 9px 9px 0 1.5px var(--accent),
+        0px 12px 0 1.5px var(--accent), 3px 12px 0 1.5px var(--accent), 6px 12px 0 1.5px var(--accent), 9px 12px 0 1.5px var(--accent), 12px 12px 0 1.5px var(--accent),
+        0px 15px 0 1.5px var(--accent), 3px 15px 0 1.5px var(--accent), 9px 15px 0 1.5px var(--accent), 12px 15px 0 1.5px var(--accent),
+        0px 18px 0 1.5px var(--accent), 12px 18px 0 1.5px var(--accent), 15px 18px 0 1.5px var(--accent),
+        15px 21px 0 1.5px var(--accent), 18px 21px 0 1.5px var(--accent);
 }
 
-body.has-custom-cursor .cursor,
-body.has-custom-cursor .cursor-dot { opacity: 1; }
-
-.cursor {
-    width: 36px;
-    height: 36px;
-    border: 1px solid rgba(240, 236, 228, 0.5);
-    transform: translate(-50%, -50%);
-    transition: transform 0.12s ease, border-color 0.2s;
-}
-
-.cursor-dot {
-    width: 5px;
-    height: 5px;
-    background: var(--accent);
-    transform: translate(-50%, -50%);
-}
+body.has-custom-cursor .pixel-cursor { opacity: 1; }
 
 /* ===== HERO ===== */
 .hero {
@@ -873,7 +879,7 @@ body.landing {
 }
 
 /* ===== SITE HELPER ===== */
-/* Archie sits in the bottom-right corner at ~1/6 of the viewport height —
+/* Flo sits in the bottom-right corner at ~1/6 of the viewport height —
    a torso-up figure (placeholder SVG until the final PNG is supplied, see
    ARCHIE_IMAGE_URL in helper.js). The bubble stacks above it in the same
    fixed-position flex column, so it repositions itself automatically if
@@ -940,7 +946,7 @@ body.landing {
     pointer-events: auto;
 }
 
-/* Speech-bubble tail, pointing down toward Archie's head */
+/* Speech-bubble tail, pointing down toward Flo's head */
 .helper-bubble::after {
     content: '';
     position: absolute;
@@ -972,7 +978,7 @@ body.landing {
         text area was flex-grow:1, stretching to fill the tier's full
         height regardless of how little text there was), and the largest
         tiers (up to 540px) could cover most of a phone screen when
-        Archie auto-opened with a long tip.
+        Flo auto-opened with a long tip.
 
    This version: ONE fixed size, always — aspect-ratio:1 + background-
    size:contain shows the complete, undistorted, un-cropped photo at
@@ -1116,7 +1122,7 @@ body.landing {
     border-color: var(--text);
 }
 
-/* On narrow screens Archie's full-height figure sits over interactive
+/* On narrow screens Flo's full-height figure sits over interactive
    content underneath (e.g. filter chips) whenever the bubble is open —
    shrink the figure so the widget takes less of the viewport. */
 @media (max-width: 480px) {
@@ -1132,7 +1138,7 @@ body.landing {
     }
 }
 
-/* Short viewports (landscape phones) — Archie's normal 195px min-height
+/* Short viewports (landscape phones) — Flo's normal 195px min-height
    figure eats over half of a ~375px-tall screen regardless of width, which
    no reasonable amount of page-content padding can reliably out-pad (see
    process.html's .shell-main below, which needs both this AND its own
@@ -1166,7 +1172,7 @@ body.landing {
    screen instead of the top — the top edge is already busy with the site's
    own logo/nav, but the bottom was empty, and a bottom bar needs none of
    the ~8rem clearance padding a top bar needed to duck under that nav, so
-   it can stay genuinely thin. Right edge stops short of Archie's corner
+   it can stay genuinely thin. Right edge stops short of Flo's corner
    widget rather than running full-bleed underneath it. */
 /* Same pink paper texture the whole page used to have — now confined to
    just this strip, since the page background itself is plain white. */
@@ -1834,7 +1840,7 @@ body.landing {
     padding: 4.5rem 2.4rem 2rem;
     transform: translateX(100%);
     transition: transform 0.32s ease;
-    /* Above .helper-widget (z-index 500) so the panel covers Archie when
+    /* Above .helper-widget (z-index 500) so the panel covers Flo when
        open, rather than his fixed-position figure floating on top of it —
        harmless while closed (translateX(100%) is fully off-screen
        regardless of stacking order). */
@@ -1903,9 +1909,8 @@ body.landing {
     margin-bottom: 1.2rem;
 }
 
-body.is-hovering .cursor {
-    transform: translate(-50%, -50%) scale(1.6);
-    border-color: var(--accent);
+body.is-hovering .pixel-cursor {
+    transform: scale(1.4);
 }
 
 /* ===== SHELL PAGES ===== */
@@ -2238,7 +2243,7 @@ body.is-hovering .cursor {
        to a single horizontally-scrolling row here only; desktop keeps the
        full wrapped grid with no scroll. */
     .tag-bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
-    /* Archie's figure doesn't shrink on mobile (min-height:195px, ~150px
+    /* Flo's figure doesn't shrink on mobile (min-height:195px, ~150px
        wide), and his speech bubble (220px, right-aligned) reaches further
        left still when open. Fully clearing the bubble every time would cost
        more width than a mobile bar can spare, so this is a middle ground —
@@ -2275,7 +2280,7 @@ body.is-hovering .cursor {
        mobile that box can render taller than the viewport (a long title
        + paragraph + top padding for the topbar easily exceeds ~640px),
        and once it does, centering silently pushes part of the content
-       off-screen with NO way to scroll to it, while Archie's fixed-
+       off-screen with NO way to scroll to it, while Flo's fixed-
        position bubble (which auto-opens and can be ~170px tall) sits on
        top of whatever ends up in the bottom portion of the viewport —
        no amount of bottom padding fixes this, since extra padding on an
@@ -2286,7 +2291,7 @@ body.is-hovering .cursor {
        like everywhere else on the web. Verified clear (100px+ of margin)
        on every common modern phone size (390px+ wide); a genuinely short
        viewport — old iPhone SE-class devices (~568-667px tall) or
-       landscape phones — can still see Archie's bubble brush the last
+       landscape phones — can still see Flo's bubble brush the last
        line of the paragraph. Known, accepted residual, not a full fix. */
     .shell-main { justify-content: flex-start; padding: 9rem 8vw 4rem; }
 

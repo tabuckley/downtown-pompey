@@ -148,8 +148,10 @@ const LOW_POLY_SLOTS = [
 // separate rotateOnAxis-based parameter was added for it. Confirmed
 // correct against the original archive photo for Fountain Reflections
 // (fountain at top, reflection below, matching the source image exactly);
-// Millenium Walk needed a different fix (±90° both left it edge-on) and is
-// still unresolved — likely a UV-mapping quirk specific to that scan.
+// Millenium Walk previously needed a different fix (±90° both left it
+// edge-on) and was left unresolved. Now given a spinY value per a direct
+// "needs 90° counter-clockwise" call after visually checking the live
+// page — sign chosen to match; flip it if it turns out backwards.
 const LOW_POLY_ROTATION_OVERRIDES = {
     'doll-on-the-beach.glb': { rotationZ: Math.PI / 2, baseRotY: Math.PI }, // left as-is — the review gallery didn't apply this model's own rotationZ, so its 4 options were all shown lying on its back and weren't a fair comparison
     'Discount store.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
@@ -162,7 +164,7 @@ const LOW_POLY_ROTATION_OVERRIDES = {
     'pink mask.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
     'dear creative.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
     'reflectionphoto.glb': { rotationZ: -Math.PI / 2, baseRotY: 0, spinY: -Math.PI / 2 }, // was Math.PI/2 — confirmed upside down at that value, this is +180deg from it
-    'promonade photo.glb': { rotationZ: -Math.PI / 2, baseRotY: 0 }, // still unresolved, see comment above
+    'promonade photo.glb': { rotationZ: -Math.PI / 2, baseRotY: 0, spinY: Math.PI / 2 }, // 90° counter-clockwise per direct request
 };
 
 async function populateLowPoly() {

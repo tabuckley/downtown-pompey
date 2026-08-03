@@ -6,40 +6,27 @@
 export function initCursor() {
     if (!window.matchMedia('(pointer: fine)').matches) return;
 
-    const ring = document.getElementById('cursor');
-    const dot = document.getElementById('cursorDot');
-    if (!ring || !dot) return;
+    const sprite = document.getElementById('cursor');
+    if (!sprite) return;
 
     document.body.classList.add('has-custom-cursor');
 
-    // Start off-screen so nothing shows until the first mousemove
-    let curX = -100, curY = -100, ringX = -100, ringY = -100;
-    ring.style.left = ringX + 'px';
-    ring.style.top = ringY + 'px';
-    dot.style.left = curX + 'px';
-    dot.style.top = curY + 'px';
+    // Start off-screen so nothing shows until the first mousemove. A
+    // pixel-art cursor tracks 1:1 with no lag/easing — smooth trailing
+    // reads as "modern UI," not the snap of a real pointer sprite.
+    sprite.style.left = '-100px';
+    sprite.style.top = '-100px';
 
     document.addEventListener('mousemove', (e) => {
-        curX = e.clientX;
-        curY = e.clientY;
-        dot.style.left = curX + 'px';
-        dot.style.top = curY + 'px';
+        sprite.style.left = e.clientX + 'px';
+        sprite.style.top = e.clientY + 'px';
     });
 
-    // Grow the ring over interactive elements
+    // Grow the sprite over interactive elements
     document.addEventListener('mouseover', (e) => {
         if (e.target.closest('a, button')) document.body.classList.add('is-hovering');
     });
     document.addEventListener('mouseout', (e) => {
         if (e.target.closest('a, button')) document.body.classList.remove('is-hovering');
     });
-
-    function frame() {
-        ringX += (curX - ringX) * 0.12;
-        ringY += (curY - ringY) * 0.12;
-        ring.style.left = ringX + 'px';
-        ring.style.top = ringY + 'px';
-        requestAnimationFrame(frame);
-    }
-    frame();
 }

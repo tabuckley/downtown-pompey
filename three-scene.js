@@ -5,6 +5,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 
 let scene, camera, renderer, composer, bloomPass;
 let discoBall = null;
@@ -32,8 +33,8 @@ const PAN_RANGE_Y = 0.18;
 // normal ambient roam stays exactly as cheap as before this existed.
 let focusedObject = null;
 let focusBlend = 0;
-const FOCUS_BLEND_SPEED = 0.07;
-const FOCUS_MOVE_FRACTION = 0.32; // how far from the roam position toward the object to move — partial/soft, not a close-up dolly-in
+const FOCUS_BLEND_SPEED = 0.045;
+const FOCUS_MOVE_FRACTION = 0.22; // how far from the roam position toward the object to move — partial/soft, not a close-up dolly-in
 const FOCUS_LOOK_OFFSET = 0.5; // how far past the object (toward camera-right) to aim, which is what pushes the object itself toward screen-LEFT
 // Renders at a reduced internal resolution while the canvas's own CSS
 // 100%-width/height stretches it back up with the browser's normal smooth
@@ -594,7 +595,18 @@ function buildOutline(model, color) {
     });
     if (points.length < 4) return materials; // too few points for a hull — nothing to outline
 
+    // ConvexGeometry emits flat per-face normals (each hull triangle its own
+    // normal, unshared with its neighbours), so inflating along them pushes
+    // each flat facet straight outward — the outline reads as the hull's
+    // own angular facets rather than a line that curves smoothly around the
+    // model's actual silhouette. Dropping the flat normals and welding
+    // coincident hull vertices by position alone, then recomputing smooth
+    // (averaged) normals, rounds the inflation over the seams between
+    // facets instead of stepping between them.
     const hullGeometry = new ConvexGeometry(points);
+    hullGeometry.deleteAttribute('normal');
+    const smoothHull = mergeVertices(hullGeometry);
+    smoothHull.computeVertexNormals();
 
     OUTLINE_GLOW_LAYERS.forEach((layer) => {
         const mat = new THREE.ShaderMaterial({
@@ -628,7 +640,7 @@ function buildOutline(model, color) {
             // thicker outline.
             blending: THREE.AdditiveBlending,
         });
-        const outlineMesh = new THREE.Mesh(hullGeometry, mat);
+        const outlineMesh = new THREE.Mesh(smoothHull, mat);
         outlineMesh.raycast = () => {}; // decorative only — hovering it shouldn't count as hovering the outline itself
         model.add(outlineMesh);
         materials.push(mat);
@@ -736,6 +748,13 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
             // lighting. Removed rather than layer-restricted, since a light
             // that can no longer reach anything is dead weight.
             const midY = (scaledBox.max.y - scaledBox.min.y) / 2;
+            // The group's own origin sits at the model's FEET (see the
+            // floor-anchoring line above), not its middle. The camera-focus
+            // logic in animate() needs the vertical centre instead — aiming
+            // at the feet meant zooming in cropped the top off anything
+            // reasonably tall, since more of the object's height ended up
+            // above the look point the closer the camera got.
+            group.userData.focusCenterY = midY;
             const glowColor = 0xffd27a;
             const ring = buildSparkleRing(Math.max(size.x, size.z) * scale * 0.75, 14, glowColor);
             ring.position.y = midY;
@@ -905,6 +924,13 @@ function animate() {
         if (focusBlend > 0.001 && focusedObject) {
             const objPos = new THREE.Vector3();
             focusedObject.getWorldPosition(objPos);
+            // Low-poly models are anchored at their feet, not their middle
+            // (see addLowPolyModel) — without this offset the camera moves
+            // toward and looks at the object's base, cropping the top off
+            // anything tall as it gets closer. Framed photos/other
+            // clickables have no such offset stored, so this is a no-op
+            // for them (already centred on their own local origin).
+            objPos.y += focusedObject.userData.focusCenterY || 0;
 
             // A fixed close distance from the object clipped the camera
             // below the floor for anything sitting low/at floor height,
