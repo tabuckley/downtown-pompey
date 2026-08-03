@@ -1973,9 +1973,14 @@ body.is-hovering .cursor {
    so this page reads as part of the same site instead of a separate,
    more serious "editorial" page bolted on. */
 .process-content {
-    max-width: 1040px;
+    /* Matches .shell-main's own padding formula (10vw, no real max-width
+       cap) exactly, so the cards line up with "OUR PROCESS" above them
+       instead of sitting in a narrower, separately-centred column — the
+       previous 1040px cap plus its own 6vw padding was compounding into
+       ~250px narrower than the hero text at a typical desktop width. */
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 2rem 6vw 8rem;
+    padding: 2rem 10vw 8rem;
 }
 
 /* The 4 numbered process cards sit two-up so they actually use the
