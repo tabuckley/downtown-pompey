@@ -15,10 +15,27 @@ export async function loadArchive() {
         const project = published[i];
         res.value.forEach(row => {
             if (!row.url && !row.thumbnail) return;
-            items.push({ ...row, project: project.title, projectYear: project.year, id: itemId(project.tab, row) });
+            items.push({
+                ...row,
+                thumbnail: sanitizeUrl(row.thumbnail),
+                project: project.title,
+                projectYear: project.year,
+                id: itemId(project.tab, row),
+            });
         });
     });
     return items;
+}
+
+// A broken formula in the sheet (e.g. a helper =IMAGE(...) cell someone was
+// using to preview thumbnails while tagging, see scripts/list-media.js)
+// evaluates to a literal error string like "#REF!" in the CSV export —
+// truthy, so every `item.thumbnail || item.url` fallback across the site
+// would use it as-is as an <img src> instead of ever falling back to the
+// real photo. Every real value in this column is an absolute media URL, so
+// anything that isn't gets treated as if the cell were blank.
+function sanitizeUrl(value) {
+    return /^https?:\/\//i.test(value || '') ? value : '';
 }
 
 // A stable-enough identifier for deep-linking to one item — there's no id

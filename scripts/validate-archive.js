@@ -240,7 +240,7 @@ async function main() {
 
     const issues = {
         missingId: [], duplicateId: [], noMedia: [], weakTitle: [],
-        missingDescription: [], missingTags: [], oversizedImage: [], unrecoverable: [],
+        missingDescription: [], missingTags: [], brokenUrl: [], oversizedImage: [], unrecoverable: [],
     };
 
     const idCounts = new Map();
@@ -255,6 +255,15 @@ async function main() {
         else if (WEAK_TITLE_RE.test(item.title.trim())) issues.weakTitle.push(`${label} — looks like a raw filename ("${item.title}"), not a real title/alt text`);
         if (!item.description || item.description.trim().length < 8) issues.missingDescription.push(label);
         if (!item.tags || !item.tags.trim()) issues.missingTags.push(label);
+        // A broken sheet formula (e.g. a helper =IMAGE(...) cell) evaluates
+        // to a literal error string like "#REF!" in the CSV export — truthy,
+        // so the site's own `thumbnail || url` fallbacks never catch it.
+        ['url', 'thumbnail'].forEach(field => {
+            const value = item[field];
+            if (value && !/^https?:\/\//i.test(value)) {
+                issues.brokenUrl.push(`${label} — ${field} = "${value}" (not a real URL, likely a broken sheet formula)`);
+            }
+        });
     });
 
     if (!fast) {
@@ -305,6 +314,8 @@ async function main() {
         'Description is empty or under 8 characters.');
     printSection('Missing tags/keywords', issues.missingTags,
         "Tags field is empty — item won't surface via tag filters or benefit from the search engine's tag-weighted matching.");
+    printSection('Broken url/thumbnail value', issues.brokenUrl,
+        'Value is not a real URL — usually a leftover broken formula (e.g. "#REF!") in that cell. The site treats these as blank rather than a usable image, but the sheet cell itself still needs fixing.');
     if (!fast) {
         printSection('Oversized images', issues.oversizedImage,
             `Image over ${(OVERSIZED_BYTES / 1024 / 1024).toFixed(0)}MB — slow to load, worth compressing.`);

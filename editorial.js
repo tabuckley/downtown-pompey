@@ -141,7 +141,7 @@ const LOW_POLY_ROTATION_OVERRIDES = {
     'seagull m ask.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
     'pink mask.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
     'dear creative.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
-    'reflectionphoto.glb': { rotationZ: -Math.PI / 2, baseRotY: 0, spinY: Math.PI / 2 },
+    'reflectionphoto.glb': { rotationZ: -Math.PI / 2, baseRotY: 0, spinY: -Math.PI / 2 }, // was Math.PI/2 — confirmed upside down at that value, this is +180deg from it
     'promonade photo.glb': { rotationZ: -Math.PI / 2, baseRotY: 0 }, // still unresolved, see comment above
 };
 

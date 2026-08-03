@@ -1071,6 +1071,51 @@ body.landing {
     border-color: var(--text);
 }
 
+/* Editorial — pixel/retro treatment matching the 3D room's own low-poly,
+   N64-style render (three-scene.js's RETRO_RENDER_SCALE). Press Start 2P
+   is a real 8-bit bitmap font, so it needs real headroom vs Montserrat —
+   it reads much wider and taller per character at the same rem value. */
+[data-mode="editorial"] .helper-bubble {
+    border-radius: 0;
+    border: 3px solid var(--text);
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.7);
+}
+
+[data-mode="editorial"] .helper-bubble::after {
+    border-right-width: 3px;
+    border-bottom-width: 3px;
+}
+
+[data-mode="editorial"] .helper-bubble-name,
+[data-mode="editorial"] .helper-bubble-text,
+[data-mode="editorial"] .helper-chip {
+    font-family: 'Press Start 2P', var(--font-mono);
+}
+
+[data-mode="editorial"] .helper-bubble-name {
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
+}
+
+[data-mode="editorial"] .helper-bubble-text {
+    font-size: 0.62rem;
+    line-height: 1.8;
+}
+
+[data-mode="editorial"] .helper-chip {
+    font-size: 0.5rem;
+    border-radius: 0;
+    border: 2px solid var(--border);
+    padding: 0.5rem 0.6rem;
+    letter-spacing: 0.03em;
+}
+
+[data-mode="editorial"] .helper-chip:hover {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+}
+
 /* On narrow screens Archie's full-height figure sits over interactive
    content underneath (e.g. filter chips) whenever the bubble is open —
    shrink the figure so the widget takes less of the viewport. */
@@ -1882,6 +1927,166 @@ body.is-hovering .cursor {
     font-size: 1.05rem;
 }
 
+.process-transition {
+    margin-top: 1.2rem;
+    color: var(--text);
+    font-style: italic;
+}
+
+/* .page-topbar has no background anywhere else on the site (transparent,
+   pointer-events:none on its own padding area) — harmless on every other
+   page since none scroll far enough to reveal it, but this page is
+   genuinely long-form, so scrolled paragraph text was showing straight
+   through the fixed header instead of disappearing behind it. Scoped to
+   this page only, rather than changing the shared rule everyone else
+   already looks fine without. */
+[data-page="process"] .page-topbar {
+    background: rgba(13, 13, 13, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* ===== PROCESS PAGE CONTENT ===== */
+.process-content {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 2rem 8vw 8rem;
+}
+
+.process-section {
+    padding-top: 4.5rem;
+    border-top: 1px solid var(--border);
+}
+
+.process-section:first-child { border-top: none; }
+
+.process-heading {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3vw, 2.1rem);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 1.3rem;
+    color: var(--text);
+}
+
+.process-section p {
+    color: var(--muted);
+    line-height: 1.75;
+    font-size: 1.02rem;
+    max-width: 65ch;
+}
+
+.process-section p + p { margin-top: 1.1rem; }
+
+.video-placeholder {
+    aspect-ratio: 16 / 9;
+    max-width: 640px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--card-bg);
+    border: 1px dashed var(--border);
+}
+
+.video-placeholder-text {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+/* ===== TEAM SECTION ===== */
+.team-logo {
+    display: block;
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+    margin-bottom: 1.2rem;
+}
+
+.team-layout {
+    display: flex;
+    align-items: center;
+    gap: 4rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.team-stack {
+    position: relative;
+    width: 260px;
+    height: 340px;
+    flex-shrink: 0;
+}
+
+.team-photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: var(--card-bg);
+    border: 7px solid #f0ece4;
+    box-sizing: border-box;
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease;
+}
+
+/* A curated scatter, not random jitter — each photo has its own resting
+   tilt/offset so the pile reads as deliberately messy, like a handful of
+   instant photos dropped on a table. */
+.team-photo:nth-child(1) { transform: rotate(-7deg) translate(-14px, 8px); z-index: 1; }
+.team-photo:nth-child(2) { transform: rotate(5deg) translate(10px, -6px); z-index: 2; }
+.team-photo:nth-child(3) { transform: rotate(-3deg) translate(6px, 12px); z-index: 3; }
+.team-photo:nth-child(4) { transform: rotate(8deg) translate(-8px, -10px); z-index: 4; }
+.team-photo:nth-child(5) { transform: rotate(-9deg) translate(12px, 4px); z-index: 5; }
+
+.team-photo.is-active {
+    transform: rotate(0deg) translate(0, -6px) scale(1.06);
+    box-shadow: 0 18px 34px rgba(0, 0, 0, 0.55);
+    z-index: 50;
+}
+
+.team-bios {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+.team-bio {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
+    cursor: pointer;
+}
+
+.team-bio a {
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.team-bio a:hover { color: var(--accent); }
+
+.team-bio.is-active { border-bottom-color: var(--accent); }
+
+.team-bio.is-active a { color: var(--accent); }
+
+.team-pronouns {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 0.2rem;
+}
+
 /* ===== REDESIGN RESPONSIVE ===== */
 @media (max-width: 768px) {
     body.landing { padding: 0.9rem; }
@@ -1963,6 +2168,11 @@ body.is-hovering .cursor {
        landscape phones — can still see Archie's bubble brush the last
        line of the paragraph. Known, accepted residual, not a full fix. */
     .shell-main { justify-content: flex-start; padding: 9rem 8vw 4rem; }
+
+    .process-content { padding: 1rem 6vw 6rem; }
+    .process-section { padding-top: 3rem; }
+    .team-layout { gap: 2.5rem; }
+    .team-stack { width: 220px; height: 290px; margin: 0 auto; }
 }
 
 /* ===== ACCESSIBLE ARCHIVE ===== */
