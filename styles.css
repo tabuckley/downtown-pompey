@@ -1973,9 +1973,26 @@ body.is-hovering .cursor {
    so this page reads as part of the same site instead of a separate,
    more serious "editorial" page bolted on. */
 .process-content {
-    max-width: 820px;
+    max-width: 1040px;
     margin: 0 auto;
     padding: 2rem 6vw 8rem;
+}
+
+/* The 4 numbered process cards sit two-up so they actually use the
+   page's width, rather than one long single-file column of cards —
+   read in the usual left-to-right, top-to-bottom order (01/02 top row,
+   03/04 bottom row), which still matches their real chronological
+   sequence. */
+.process-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    margin-bottom: 3rem;
+    /* Grid rows stretch every cell to match the tallest by default — the
+       4 cards hold very different amounts of text, so that left a big
+       dead gap inside whichever card was shorter. align-items:start lets
+       each card just be its own natural height instead. */
+    align-items: start;
 }
 
 .process-card {
@@ -1984,9 +2001,10 @@ body.is-hovering .cursor {
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 2.6rem 2.4rem;
-    margin-bottom: 3rem;
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
 }
+
+.process-card--video { margin-bottom: 3rem; }
 
 /* A tiny, deliberately imperfect tilt per card — alternating left/right
    so consecutive cards don't lean the same way — for a "handmade,
@@ -2268,7 +2286,12 @@ body.is-hovering .cursor {
     .shell-main { justify-content: flex-start; padding: 9rem 8vw 4rem; }
 
     .process-content { padding: 1rem 6vw 6rem; }
-    .process-card { padding: 2.2rem 1.5rem 1.8rem; margin-bottom: 2.2rem; }
+    /* Two-up cards only make sense with real width to share — back to a
+       single column on narrow screens, matching the site's other
+       nowrap/reflow patterns (never a squeezed half-width card). */
+    .process-cards-grid { grid-template-columns: 1fr; gap: 2.2rem; margin-bottom: 2.2rem; }
+    .process-card { padding: 2.2rem 1.5rem 1.8rem; }
+    .process-card--video { margin-bottom: 2.2rem; }
     .process-card-badge { width: 2.4rem; height: 2.4rem; font-size: 0.95rem; top: -0.9rem; left: -0.7rem; }
     .process-note { font-size: 0.85rem; max-width: 100%; }
     /* Stack + bios still never wrap to separate rows on mobile (see
