@@ -958,34 +958,41 @@ body.landing {
    (images/torn-paper-bubble.png, a 600x600 canvas: a wide torn oval with
    its tail already baked in, plenty of transparent margin for the drop
    shadow) instead of the plain rounded bubble used elsewhere.
-   The source photo is a wide oval, but a narrower silhouette reads
-   better here — so the box is 3:4 (narrower than the source) with
-   background-size:cover instead of contain, letting the browser scale
-   the (still perfectly undistorted, never stretched) image up and crop
-   its left/right edges to fill the narrower shape. Padding percentages
-   are re-derived for that crop, not reused from the old 1:1/contain
-   version: cropping to the center 75% of the image's width means the
-   same safe interior now sits at 10%-90% instead of 20%-80%. Net
-   effect: the visible paper silhouette is narrower, but the actual
-   safe text area is unchanged in absolute pixels, so text-fit behavior
-   (and the size-tier thresholds below) carries over exactly.
-   Font size stays fixed — growing the whole bubble uniformly (image,
-   padding, type, all together) wouldn't help long tips fit, since the
-   text's own space needs would grow at exactly the same rate. What
-   actually buys room is growing the box while the type stays put, so
-   helper.js measures each tip and picks a size tier (data-size) from how
-   much text there is: short tips get a compact bubble, long ones get a
-   bigger (still perfectly undistorted) one. .helper-bubble-text keeps
-   overflow-y:auto with no visible scrollbar styling — an invisible
-   safety net in case someone eventually pastes something the xl tier
-   still can't fit, rather than a normal, expected part of reading a tip. */
+
+   Third attempt at getting this right, after two approaches that each
+   traded one problem for another:
+     1. Box grew with content, image stretched via background-size:100%
+        100% — long tips elongated the tail until text spilled off the
+        visible paper entirely.
+     2. Box locked to a size tier picked from tip length (bigger tiers for
+        longer tips), narrowed to 3:4 via background-size:cover — fixed
+        the spilling, but introduced three new problems: the crop read as
+        a visibly flat-cut edge against the otherwise organic tear, short
+        tips left a large dead gap between the text and the buttons (the
+        text area was flex-grow:1, stretching to fill the tier's full
+        height regardless of how little text there was), and the largest
+        tiers (up to 540px) could cover most of a phone screen when
+        Archie auto-opened with a long tip.
+
+   This version: ONE fixed size, always — aspect-ratio:1 + background-
+   size:contain shows the complete, undistorted, un-cropped photo at
+   every viewport (no more flat-cut edges). justify-content:center on the
+   safe-text-zone column means the name+text+buttons group centers as a
+   compact block when text is short (no dead gap — the whole block just
+   takes up less room and sits centered), and gracefully falls back to
+   top-aligned-with-internal-scroll if a tip is ever long enough to fill
+   the available space (.helper-bubble-text is flex-shrink:1, not
+   flex-grow — it only shrinks to make room, never stretches to fill it).
+   A single fixed size, capped by the same viewport-relative formula as
+   before, also means it can never balloon to dominate a phone screen the
+   way the old size-tier system could. */
 [data-mode="scrapbook"] .helper-bubble {
-    aspect-ratio: 3 / 4;
-    width: min(225px, calc(100vw - 2.8rem));
+    aspect-ratio: 1 / 1;
+    width: min(300px, calc(100vw - 2.8rem));
     height: auto;
     background-color: transparent;
     background-image: url('images/torn-paper-bubble.png');
-    background-size: cover;
+    background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
     border: none;
@@ -993,29 +1000,29 @@ body.landing {
     box-shadow: none;
     display: flex;
     flex-direction: column;
-    padding: 24% 10% 42%;
+    justify-content: center;
+    padding: 24% 20% 42%;
     box-sizing: border-box;
     /* Without this, a flex column's content can force the box taller than
        its aspect-ratio (the ratio is only a preferred size, not a cap) —
-       which would grow the box past 3:4 and force the browser to zoom
-       the background image further to keep covering it. Clipping here
-       instead makes the ratio genuinely fixed, so the text flex child
-       (below) is what absorbs any rare overflow via its own scroll,
-       never the image. */
+       which would grow the box past 1:1 and force the browser to stretch
+       the background image to keep covering it. Clipping here instead
+       makes the square genuinely fixed, so the text flex child (below)
+       is what absorbs any rare overflow via its own scroll, never the
+       image. */
     overflow: hidden;
-    transition: width 0.2s ease;
 }
-
-[data-mode="scrapbook"] .helper-bubble[data-size="md"] { width: min(285px, calc(100vw - 2.8rem)); }
-[data-mode="scrapbook"] .helper-bubble[data-size="lg"] { width: min(345px, calc(100vw - 2.8rem)); }
-[data-mode="scrapbook"] .helper-bubble[data-size="xl"] { width: min(405px, calc(100vw - 2.8rem)); }
 
 [data-mode="scrapbook"] .helper-bubble-name {
     flex: 0 0 auto;
 }
 
 [data-mode="scrapbook"] .helper-bubble-text {
-    flex: 1 1 auto;
+    /* flex-shrink (not flex-grow) — a short tip stays its natural compact
+       size and the block above centers as a whole; a tip long enough to
+       fill the safe zone shrinks to fit instead of pushing the block
+       taller than its container, with overflow-y as the rare fallback. */
+    flex: 0 1 auto;
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -1023,6 +1030,7 @@ body.landing {
 
 [data-mode="scrapbook"] .helper-bubble-actions {
     flex: 0 0 auto;
+    margin-top: 0.9rem;
 }
 
 [data-mode="scrapbook"] .helper-bubble::after {

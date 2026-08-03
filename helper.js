@@ -123,24 +123,25 @@ function buildHelper() {
 
     const textEl = bubble.querySelector('.helper-bubble-text');
 
-    // Scrapbook's torn-paper bubble is a photo, not a plain box — it can't
-    // just grow to fit content without stretching, so instead it jumps
-    // between a few fixed sizes (see styles.css [data-size]) based on how
-    // much text there is. Thresholds are picked from this page's real tip
-    // lengths, with headroom for longer ones later.
-    function sizeBubbleFor(text) {
-        const len = text.length;
-        let tier = null; // null = base/smallest size
-        if (len > 140) tier = 'xl';
-        else if (len > 90) tier = 'lg';
-        else if (len > 45) tier = 'md';
-        if (tier) bubble.dataset.size = tier;
-        else delete bubble.dataset.size;
+    // Scrapbook's bubble is a fixed-size photo, not a box that grows with
+    // content (see styles.css) — so a tip too long for its safe area at
+    // normal size shrinks the type instead, in steps, until it fits or
+    // hits the floor. Short tips exit the loop on the first check and stay
+    // at full size; overflow-y:auto (already set) is the rare fallback if
+    // even the floor size doesn't fit. Other pages' bubble just grows with
+    // content and don't need this.
+    const SCRAPBOOK_FONT_STEPS = [0.78, 0.72, 0.66, 0.6, 0.56];
+    function fitTextToBubble() {
+        if (page !== 'scrapbook') return;
+        for (const size of SCRAPBOOK_FONT_STEPS) {
+            textEl.style.fontSize = size + 'rem';
+            if (textEl.scrollHeight <= textEl.clientHeight + 1) return;
+        }
     }
 
     function say(text) {
-        sizeBubbleFor(text);
         textEl.textContent = text;
+        fitTextToBubble();
         bubble.classList.add('open');
         btn.setAttribute('aria-expanded', 'true');
     }
