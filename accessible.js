@@ -4,7 +4,7 @@
 // approach and its known limits (lexical + typo-tolerant, no semantic
 // embeddings yet).
 import { loadArchive } from './archive.js';
-import { TAGS, itemTags } from './tags.js';
+import { itemTags } from './tags.js';
 import { buildSearchIndex, search, likeQueryFor } from './search.js';
 import { yearFrom } from './sheet.js';
 
@@ -15,7 +15,6 @@ const detailView = document.getElementById('accDetailView');
 const form = document.getElementById('accSearchForm');
 const input = document.getElementById('accSearchInput');
 const typeFiltersEl = document.getElementById('accTypeFilters');
-const tagFiltersEl = document.getElementById('accTagFilters');
 const projectFilterEl = document.getElementById('accProjectFilter');
 const statusEl = document.getElementById('accStatus');
 const resultsEl = document.getElementById('accResults');
@@ -26,7 +25,6 @@ let allItems = [];
 let searchIndex = [];
 let itemsById = new Map();
 const activeTypes = new Set();
-const activeTags = new Set();
 let lastSearchUrl = 'accessible.html';
 // Session-only — "not this one" hides a result from THIS visitor's current
 // browsing without recording anything server-side or requiring an account.
@@ -57,21 +55,6 @@ function buildFilterChips() {
         typeFiltersEl.appendChild(btn);
     });
 
-    TAGS.forEach(tag => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'acc-chip';
-        btn.textContent = tag;
-        btn.setAttribute('aria-pressed', 'false');
-        btn.addEventListener('click', () => {
-            if (activeTags.has(tag)) activeTags.delete(tag); else activeTags.add(tag);
-            btn.classList.toggle('active', activeTags.has(tag));
-            btn.setAttribute('aria-pressed', String(activeTags.has(tag)));
-            runSearch();
-        });
-        tagFiltersEl.appendChild(btn);
-    });
-
     const projects = [...new Set(allItems.map(i => i.project).filter(Boolean))].sort();
     projects.forEach(p => {
         const opt = document.createElement('option');
@@ -88,7 +71,6 @@ function applyFilters(items) {
         if (dismissed.has(item.id)) return false;
         if (activeTypes.size && !activeTypes.has(item.type)) return false;
         if (projectFilterEl.value && item.project !== projectFilterEl.value) return false;
-        if (activeTags.size && ![...activeTags].every(tag => itemTags(item).some(t => t === tag.toLowerCase() || t.split('/').includes(tag.toLowerCase())))) return false;
         return true;
     });
 }
@@ -172,7 +154,6 @@ function updateSearchUrl(query) {
     const params = new URLSearchParams();
     if (query) params.set('q', query);
     if (activeTypes.size) params.set('type', [...activeTypes].join(','));
-    if (activeTags.size) params.set('tags', [...activeTags].join(','));
     if (projectFilterEl.value) params.set('project', projectFilterEl.value);
     const url = 'accessible.html' + (params.toString() ? `?${params}` : '');
     history.pushState({ view: 'search' }, '', url);
@@ -182,17 +163,11 @@ function restoreSearchStateFromUrl() {
     const params = new URLSearchParams(location.search);
     input.value = params.get('q') || '';
     (params.get('type') || '').split(',').filter(Boolean).forEach(t => activeTypes.add(t));
-    (params.get('tags') || '').split(',').filter(Boolean).forEach(t => activeTags.add(t));
     if (params.get('project')) projectFilterEl.value = params.get('project');
 
     [...typeFiltersEl.children].forEach(btn => {
         const type = Object.keys(TYPE_LABELS).find(k => (TYPE_LABELS[k] || k) === btn.textContent) || btn.textContent.toLowerCase();
         const active = activeTypes.has(type);
-        btn.classList.toggle('active', active);
-        btn.setAttribute('aria-pressed', String(active));
-    });
-    [...tagFiltersEl.children].forEach(btn => {
-        const active = activeTags.has(btn.textContent);
         btn.classList.toggle('active', active);
         btn.setAttribute('aria-pressed', String(active));
     });

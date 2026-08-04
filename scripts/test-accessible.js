@@ -65,11 +65,9 @@ async function main() {
         const state = await page.evaluate(() => ({
             resultCount: document.querySelectorAll('#accResults .acc-result-link').length,
             hasTypeChips: document.querySelectorAll('#accTypeFilters .acc-chip').length > 0,
-            hasTagChips: document.querySelectorAll('#accTagFilters .acc-chip').length > 0,
         }));
         check('renders results with no query (browse-all)', state.resultCount > 0, `got ${state.resultCount}`);
         check('type filter chips built from real data', state.hasTypeChips);
-        check('tag filter chips built from real data', state.hasTagChips);
         check('no console/page errors', errors.length === 0, errors.join('; '));
     });
 

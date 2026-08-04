@@ -56,49 +56,41 @@ body {
     transition: background var(--transition), color var(--transition);
 }
 
-/* ===== MODE SWITCHER ===== */
+/* ===== MODE SWITCHER =====
+   Styled to match Flo's own speech-bubble chips (.helper-chip /
+   .helper-bubble-actions below) instead of its own separate joined pill
+   bar — a plain row of independently-bordered pill buttons, so it reads
+   as the same kind of control as the helper widget elsewhere on the
+   page. Built on the same custom properties .helper-chip uses, so
+   scrapbook/accessible fall out correctly with no per-mode overrides
+   here — only editorial needs one, mirroring .helper-chip's own pixel
+   treatment below. */
 .mode-switcher {
-    position: fixed;
-    top: 1.2rem;
-    left: 50%;
-    transform: translateX(-50%);
     display: flex;
+    gap: 0.4rem;
     z-index: 300;
-    border: 1px solid var(--border);
-    border-radius: 99px;
-    overflow: hidden;
-    background: var(--bg);
-    transition: background var(--transition), border-color var(--transition);
 }
 
 .mode-btn {
     background: none;
-    border: none;
-    border-right: 1px solid var(--border);
+    border: 1px solid var(--border);
     color: var(--muted);
     font-family: var(--font-mono);
     font-size: 0.6rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    padding: 0.45rem 1.1rem;
+    letter-spacing: 0.05em;
+    padding: 0.3rem 0.6rem;
+    border-radius: 99px;
     cursor: pointer;
-    transition: background var(--transition), color var(--transition);
+    transition: color var(--transition), border-color var(--transition), background var(--transition);
     white-space: nowrap;
 }
 
-.mode-btn:last-child { border-right: none; }
-
-.mode-btn:hover { color: var(--text); }
+.mode-btn:hover { color: var(--text); border-color: var(--text); }
 
 .mode-btn.active {
     background: var(--text);
     color: var(--bg);
-}
-
-/* Scrapbook switcher feel */
-[data-mode="scrapbook"] .mode-switcher {
-    border-radius: 0;
-    transform: translateX(-50%) rotate(-0.5deg);
+    border-color: var(--text);
 }
 
 /* ===== HERO ===== */
@@ -652,13 +644,14 @@ a.mode-btn {
 
 .page-topbar > * { pointer-events: auto; }
 
+/* Centred on the topbar independently of the logo — .page-topbar's own
+   fixed positioning already gives this an absolute containing block, so
+   this doesn't need a position:relative wrapper of its own. */
 .page-topbar .mode-switcher {
-    position: static;
-    transform: none;
-}
-
-[data-mode="scrapbook"] .page-topbar .mode-switcher {
-    transform: rotate(-0.5deg);
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .home-link {
@@ -1073,6 +1066,23 @@ body.landing {
 }
 
 [data-mode="editorial"] .helper-chip:hover {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+}
+
+/* Mode switcher gets the exact same pixel-chip treatment as .helper-chip
+   above, so it reads as the same control in this room. */
+[data-mode="editorial"] .mode-btn {
+    font-family: 'Press Start 2P', var(--font-mono);
+    font-size: 0.5rem;
+    border-radius: 0;
+    border: 2px solid var(--border);
+    padding: 0.5rem 0.6rem;
+    letter-spacing: 0.03em;
+}
+
+[data-mode="editorial"] .mode-btn:hover {
     background: var(--text);
     color: var(--bg);
     border-color: var(--text);
@@ -2180,14 +2190,29 @@ body.landing {
     .page-topbar .home-logo { height: 60px; }
     /* ~43px tall (line-height 1.4 on 0.62rem font + generous vertical
        padding) — was ~24px, well under the ~44px touch-target guideline.
-       Horizontal padding stays tighter than vertical on purpose: at a
-       true 320px viewport the 3-button pill barely fits its own row
-       (.mode-switcher's overflow:hidden was silently clipping ~17px off
-       it before this was tightened — verified via scrollWidth vs
-       clientWidth at 320px). Height is the dimension that actually
-       matters for a horizontal row of thumb targets. */
-    .page-topbar .mode-btn { padding: 0.85rem 0.6rem; font-size: 0.62rem; }
-    .page-topbar .mode-switcher { flex-shrink: 0; }
+       Height is the dimension that actually matters for a horizontal row
+       of thumb targets. */
+    /* Horizontal padding/gap trimmed from desktop's — three individually
+       bordered chips (vs. the old single joined pill bar) need real
+       width savings to fit a 320px screen at all; vertical padding is
+       untouched since that's what keeps the ~43px touch-target height. */
+    .page-topbar .mode-btn { padding: 0.85rem 0.25rem; font-size: 0.54rem; letter-spacing: 0.02em; }
+    /* Desktop centres the switcher with position:absolute over the whole
+       topbar, which works there because there's room either side of the
+       logo — at mobile widths the three (now individually bordered,
+       touch-sized) buttons are wider than the viewport itself and would
+       sit directly on top of the logo instead. Drop back to a normal
+       flex item on its own full-width wrapped row instead (flex-basis
+       100% forces the wrap; the row-gap above spaces it from the logo
+       row), centring its own buttons within that row via
+       justify-content — measured clear of the logo at 320/375/390px. */
+    .page-topbar .mode-switcher {
+        position: static;
+        transform: none;
+        flex: 1 1 100%;
+        justify-content: center;
+        gap: 0.15rem;
+    }
 
     /* All 46 tags wrapped at mobile width need ~16 rows — the bar would
        grow taller than the viewport itself and (being fixed) extend off
@@ -2326,8 +2351,6 @@ body.landing {
 }
 
 .acc-filter-group { min-width: 0; }
-
-.acc-tag-group { margin-bottom: 1.8rem; }
 
 .acc-filter-label {
     display: block;
