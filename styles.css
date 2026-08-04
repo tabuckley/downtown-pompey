@@ -101,65 +101,6 @@ body {
     transform: translateX(-50%) rotate(-0.5deg);
 }
 
-/* ===== CUSTOM CURSOR (editorial, fine-pointer devices only) ===== */
-/* cursor.js adds .has-custom-cursor after confirming (pointer: fine) — this
-   keeps touch/coarse-pointer devices on their normal cursor with no stray
-   ring/dot elements. cursor:none applies to every element (not just body)
-   so the native pointer doesn't reappear over links/buttons. */
-body.has-custom-cursor,
-body.has-custom-cursor * {
-    cursor: none;
-}
-
-/* A pixel-art arrow sprite: pointed tip, stepped diagonal front edge,
-   straight spine down the back, and a separate flared tail near the
-   bottom (the detail that makes it read as a cursor rather than a plain
-   wedge). Drawn as a tiny 8x12-unit SVG (one flat fill path plus a
-   lightened rect down the spine for a two-tone pixel-art look) and
-   scaled up with image-rendering:pixelated.
-   This used to be ~24 separate box-shadow squares standing in for
-   pixels — each one gets independently anti-aliased by the compositor,
-   and on a fractionally-scaled display (125%/150% Windows scaling, very
-   common) the seams between adjacent "pixels" don't quite line up,
-   reading as a fuzzy, gap-toothed mess instead of one solid sprite. A
-   single rasterized image has no seams between its own pixels — nearest-
-   neighbour upscaling is a browser-guaranteed operation, not many
-   independently-placed shadows hoping to land on the same device pixels.
-   shape-rendering:crispEdges keeps the SVG's own stepped edges hard
-   rather than softly anti-aliased before the pixelated upscale even
-   starts. Colours are hardcoded hex, not var(--accent)/var(--bg) — a
-   data URI is resolved once and can't read the page's custom properties,
-   but --accent is #d01359 in every mode on this site (checked), so
-   there's no theme this could silently drift out of sync with.
-   The tip sits at image-local (0,0), so left/top tracks the mouse with
-   no centering transform — same as a real cursor hotspot — and
-   transform-origin is pinned to that same corner so the hover-grow scale
-   (below) expands away from the tip instead of the image's visual
-   centre. filter:drop-shadow gives the whole sprite one hard-edged
-   offset duplicate as a retro pop shadow, matching the editorial room's
-   other pixel-art chrome (see .helper-bubble above). */
-.pixel-cursor {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 26px;
-    height: 39px;
-    pointer-events: none;
-    z-index: 9999;
-    opacity: 0;
-    transition: opacity 0.3s, transform 0.1s steps(2);
-    transform-origin: 0 0;
-    filter: drop-shadow(3px 3px 0 var(--bg));
-    background-repeat: no-repeat;
-    background-size: 26px 39px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 12' shape-rendering='crispEdges'%3E%3Cpath d='M0,0 L1,0 L1,1 L2,1 L2,2 L3,2 L3,3 L4,3 L4,4 L5,4 L5,5 L6,5 L6,6 L7,6 L7,7 L8,7 L8,8 L4,8 L4,9 L6,9 L6,10 L7,10 L7,11 L8,11 L8,12 L4,12 L4,11 L3,11 L3,10 L2,10 L2,9 L0,9 Z' fill='%23d01359'/%3E%3Crect x='0' y='0' width='1' height='9' fill='%23e05a93'/%3E%3C/svg%3E");
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-}
-
-body.has-custom-cursor .pixel-cursor { opacity: 1; }
-
 /* ===== HERO ===== */
 .hero {
     position: relative;
@@ -1922,10 +1863,6 @@ body.landing {
     font-size: 0.78rem;
     line-height: 1.65;
     margin-bottom: 1.2rem;
-}
-
-body.is-hovering .pixel-cursor {
-    transform: scale(1.4);
 }
 
 /* ===== SHELL PAGES ===== */

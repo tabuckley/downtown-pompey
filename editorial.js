@@ -1,11 +1,8 @@
 import { fetchSheet, yearFrom } from './sheet.js';
-import { initRoom, addFramedPhoto, addModel, addPlaceholders, addLowPolyModel, onObjectClick, onObjectHover, focusOnObject, clearFocus } from './three-scene.js';
-import { initCursor } from './cursor.js';
+import { initRoom, addFramedPhoto, addModel, addPlaceholders, addLowPolyModel, onObjectClick, focusOnObject, clearFocus } from './three-scene.js';
 
 const MAX_PHOTOS = 6;
 const MAX_MODELS = 2;
-
-initCursor();
 
 // ===== INFO PANEL =====
 const panel = document.getElementById('infoPanel');
@@ -66,9 +63,6 @@ function showPanel(data, object) {
         tagsEl.appendChild(span);
     });
 
-    // The panel now covers part of the canvas, so the raycast hover state
-    // can go stale — clear it explicitly.
-    document.body.classList.remove('is-hovering');
     panel.classList.add('open');
     document.getElementById('infoClose').focus();
 }
@@ -84,7 +78,6 @@ document.addEventListener('keydown', (e) => {
 });
 
 onObjectClick(showPanel);
-onObjectHover(hovering => document.body.classList.toggle('is-hovering', hovering));
 
 // Screen-reader / keyboard mirror of the objects in the room
 function addRoomItemButton(data) {
