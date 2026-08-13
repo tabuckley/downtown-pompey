@@ -1081,20 +1081,21 @@ body.landing {
    narrow viewport. height:auto plus a max-width cap (instead of a fixed
    height) lets the browser scale the whole image to fit inside both
    bounds at once, whichever is tighter, same idea as a standard
-   responsive img — no distortion, no overflow. These exact numbers (2x
-   scale, 20% rightward shift) were tuned for editorial's photos
-   specifically — if another page's turn out to need different sizing,
-   override with a `[data-page="x"].helper-figure-img--photo` rule
-   rather than changing this shared default. */
+   responsive img — no distortion, no overflow. These exact numbers were
+   tuned for editorial's photos specifically — if another page's turn
+   out to need different sizing, override with a
+   `[data-page="x"].helper-figure-img--photo` rule rather than changing
+   this shared default. */
 .helper-figure-img--photo {
     height: auto;
     min-height: 0;
-    max-height: 720px;
-    max-width: 600px;
-    /* Shifted right by 20% of the image's own (rendered) width, per
-       direct request — self-relative rather than a fixed px/vw amount so
-       it scales sensibly across the breakpoints below too. */
-    transform: translateX(20%);
+    max-height: 576px;
+    max-width: 480px;
+    /* 20% of the image's own width past the viewport's right edge, per
+       direct request — the +1.4rem first cancels out .helper-widget's
+       own right:1.4rem offset (without it, 20% would land 1.4rem short
+       of the edge, not 20% *past* it), then the 20% pushes past. */
+    transform: translateX(calc(20% + 1.4rem));
 }
 
 /* Mode switcher gets the exact same pixel-chip treatment as .helper-chip
@@ -1126,8 +1127,8 @@ body.landing {
     .helper-figure-img--photo {
         height: auto;
         min-height: 0;
-        max-height: 320px;
-        max-width: 280px;
+        max-height: 256px;
+        max-width: 224px;
     }
     .helper-bubble {
         width: min(180px, calc(100vw - 5.5rem));
@@ -1151,8 +1152,8 @@ body.landing {
     .helper-figure-img--photo {
         height: auto;
         min-height: 0;
-        max-height: 280px;
-        max-width: 240px;
+        max-height: 224px;
+        max-width: 192px;
     }
 }
 
