@@ -141,30 +141,6 @@ export function initRoom(canvasId = 'room-canvas', onEnvironmentReady = () => {}
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
 
-    // Hover outline: masks the hovered floater and edge-detects the mask
-    // itself, so the line traced is the model's exact silhouette from
-    // whatever angle the camera currently sees it — not an approximation
-    // via inflated geometry (see the note above buildSparkleRing/where
-    // buildOutline used to live). selectedObjects is toggled in
-    // onPointerMove/the pointerleave handler below.
-    outlinePass = new OutlinePass(
-        new THREE.Vector2(window.innerWidth * RETRO_RENDER_SCALE, window.innerHeight * RETRO_RENDER_SCALE),
-        scene,
-        camera
-    );
-    // Thick/strong relative to OutlinePass's own defaults — this scene's
-    // internal render buffer is tiny (RETRO_RENDER_SCALE), so a
-    // texel-scale edge would be a fraction of a single on-screen pixel
-    // block after upscaling and effectively disappear. edgeGlow:0 — a
-    // hard line instead of a soft glow, per direct request.
-    outlinePass.edgeStrength = 10;
-    outlinePass.edgeGlow = 0;
-    outlinePass.edgeThickness = 4;
-    outlinePass.visibleEdgeColor.set(HOVER_OUTLINE_COLOR);
-    outlinePass.hiddenEdgeColor.set(HOVER_OUTLINE_COLOR);
-    outlinePass.pulsePeriod = 0;
-    composer.addPass(outlinePass);
-
     bloomPass = new UnrealBloomPass(
         new THREE.Vector2(window.innerWidth * RETRO_RENDER_SCALE, window.innerHeight * RETRO_RENDER_SCALE),
         0.3,   // strength
@@ -172,6 +148,35 @@ export function initRoom(canvasId = 'room-canvas', onEnvironmentReady = () => {}
         1.0    // threshold
     );
     composer.addPass(bloomPass);
+
+    // Hover outline: masks the hovered floater and edge-detects the mask
+    // itself, so the line traced is the model's exact silhouette from
+    // whatever angle the camera currently sees it — not an approximation
+    // via inflated geometry (see the note above buildSparkleRing/where
+    // buildOutline used to live). selectedObjects is toggled in
+    // onPointerMove/the pointerleave handler below. Added AFTER bloomPass
+    // rather than before — a bright, hot-pink edge run through bloom first
+    // is exactly what re-introduces a soft halo even with edgeGlow:0,
+    // since bloom doesn't know or care that OutlinePass's own glow is
+    // turned off. Drawing the line after bloom keeps it crisp/hard.
+    outlinePass = new OutlinePass(
+        new THREE.Vector2(window.innerWidth * RETRO_RENDER_SCALE, window.innerHeight * RETRO_RENDER_SCALE),
+        scene,
+        camera
+    );
+    // edgeStrength stays high to keep the line crisp/opaque even at a
+    // small edgeThickness — this scene's internal render buffer is tiny
+    // (RETRO_RENDER_SCALE), so without a strong value a thin edge fades
+    // toward transparent instead of reading as a hard line. edgeGlow:0 —
+    // a hard line instead of a soft glow, per direct request.
+    outlinePass.edgeStrength = 10;
+    outlinePass.edgeGlow = 0;
+    outlinePass.edgeThickness = 1;
+    outlinePass.visibleEdgeColor.set(HOVER_OUTLINE_COLOR);
+    outlinePass.hiddenEdgeColor.set(HOVER_OUTLINE_COLOR);
+    outlinePass.pulsePeriod = 0;
+    composer.addPass(outlinePass);
+
     composer.addPass(new OutputPass());
 
     // The room: a box viewed from inside. Floor at y=-3.5, ceiling at y=6.5.
