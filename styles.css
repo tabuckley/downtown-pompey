@@ -1719,6 +1719,14 @@ body.landing {
     width: 100%;
     height: 100%;
     display: block;
+    /* The renderer draws at a reduced internal resolution (three-scene.js's
+       RETRO_RENDER_SCALE) and relies on this element's CSS size stretching
+       it back up — pixelated (nearest-neighbour) instead of the browser's
+       smooth default is what turns that stretch into genuine blocky
+       pixel-art rather than a soft low-res blur. */
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
 }
 
 /* Early-2000s "word art" energy — the same pixel bitmap font as Flo's

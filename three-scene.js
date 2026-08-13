@@ -4,10 +4,9 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
-import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
 
-let scene, camera, renderer, composer, bloomPass;
+let scene, camera, renderer, composer, bloomPass, outlinePass;
 let discoBall = null;
 let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
 // Default framing, overridden by applyCameraMarker() once/if the room
@@ -37,10 +36,14 @@ const FOCUS_BLEND_SPEED = 0.045;
 const FOCUS_MOVE_FRACTION = 0.22; // how far from the roam position toward the object to move — partial/soft, not a close-up dolly-in
 const FOCUS_LOOK_OFFSET = 0.5; // how far past the object (toward camera-right) to aim, which is what pushes the object itself toward screen-LEFT
 // Renders at a reduced internal resolution while the canvas's own CSS
-// 100%-width/height stretches it back up with the browser's normal smooth
-// scaling — a low native resolution plus bilinear filtering (not sharp
-// pixelation, which is more a PS1 thing) is the actual N64 signature look.
-const RETRO_RENDER_SCALE = 0.45;
+// 100%-width/height stretches it back up — paired with #room-canvas's
+// image-rendering:pixelated (styles.css), that upscale is nearest-neighbour
+// rather than smooth, so this reads as genuinely blocky PS1-era pixelation
+// rather than a soft low-res blur. The backing-buffer-to-CSS-pixel ratio is
+// constant regardless of viewport size (both scale with window.innerWidth
+// together), so this value directly IS the on-screen block size: 0.25 = 1
+// backing pixel per 4 CSS pixels = a 4px "pixel."
+const RETRO_RENDER_SCALE = 0.25;
 // Low-poly collectibles render on this camera layer, in a second plain
 // renderer.render() pass straight after the main composer.render() — see
 // animate(). That's what actually keeps them clean: MeshBasicMaterial +
@@ -62,10 +65,9 @@ const spinners = [];
 // Objects that pivot side-to-side and bob up/down rather than doing a full
 // 360° spin — for models (like the low-poly collectibles) whose back side
 // has no real texture/geometry detail, so a full rotation would eventually
-// show a blank/black back. Pauses and shows an outline (optional) instead
-// of the generic hover-scale every other clickable gets — see animate() and
-// the hoverTarget exclusion below.
-// { obj, baseY, baseRotY, phase, outlineMaterials }.
+// show a blank/black back. Pauses instead of the generic hover-scale every
+// other clickable gets — see animate() and the hoverTarget exclusion below.
+// { obj, baseY, baseRotY, phase }.
 const floaters = [];
 const floaterObjects = new Set(); // mirrors floaters' .obj values, for O(1) exclusion lookup in animate()
 let clickCb = null;
@@ -138,6 +140,30 @@ export function initRoom(canvasId = 'room-canvas', onEnvironmentReady = () => {}
     // entire lit surface instead of just the genuinely bright highlights.
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
+
+    // Hover outline: masks the hovered floater and edge-detects the mask
+    // itself, so the line traced is the model's exact silhouette from
+    // whatever angle the camera currently sees it — not an approximation
+    // via inflated geometry (see the note above buildSparkleRing/where
+    // buildOutline used to live). selectedObjects is toggled in
+    // onPointerMove/the pointerleave handler below.
+    outlinePass = new OutlinePass(
+        new THREE.Vector2(window.innerWidth * RETRO_RENDER_SCALE, window.innerHeight * RETRO_RENDER_SCALE),
+        scene,
+        camera
+    );
+    // Thick/strong relative to OutlinePass's own defaults — this scene's
+    // internal render buffer is tiny (RETRO_RENDER_SCALE), so a
+    // texel-scale edge would be a fraction of a single 4px on-screen
+    // block after upscaling and effectively disappear.
+    outlinePass.edgeStrength = 10;
+    outlinePass.edgeGlow = 1;
+    outlinePass.edgeThickness = 4;
+    outlinePass.visibleEdgeColor.set(HOVER_OUTLINE_COLOR);
+    outlinePass.hiddenEdgeColor.set(HOVER_OUTLINE_COLOR);
+    outlinePass.pulsePeriod = 0;
+    composer.addPass(outlinePass);
+
     bloomPass = new UnrealBloomPass(
         new THREE.Vector2(window.innerWidth * RETRO_RENDER_SCALE, window.innerHeight * RETRO_RENDER_SCALE),
         0.3,   // strength
@@ -177,6 +203,7 @@ export function initRoom(canvasId = 'room-canvas', onEnvironmentReady = () => {}
     canvas.addEventListener('pointermove', onPointerMove);
     canvas.addEventListener('pointerleave', () => {
         hoverTarget = null;
+        updateOutlineSelection();
         if (hoverCb) hoverCb(false);
     });
 
@@ -532,121 +559,14 @@ function buildSparkleRing(radius, count, color) {
     return points;
 }
 
-// The hover indicator — a soft radial glow disc centred behind the model,
-// larger than its silhouette so it only actually shows around the edges
-// (the opaque model in front occludes the rest via normal depth testing).
-// Starts fully invisible; animate() lerps its opacity uniform up while
-// hovered. Facing is fixed rather than a true camera-facing billboard —
-// acceptable since it's only visible while hovered, which is also when the
-// object's own pivot is paused (see animate()), so it isn't seen rotating
-// out of alignment.
-// The "inverted hull" outline technique: a shape pushed out along each
-// vertex's normal and rendered back-face-only — from outside, only that
-// enlarged back shell peeks out past the real mesh's silhouette edges,
-// tracing its shape from whatever angle the camera sees it, rather than a
-// generic circular glow. A single thin shell read as a flat outline rather
-// than a glow, so this stacks several shells at increasing inflate
-// distances with decreasing opacity — the same idea as the sparkle ring's
-// additive-blended points, but shaped to the model instead of a fixed ring.
-// Built from a convex hull of the WHOLE model, not each mesh's own raw
-// geometry: several of these scans are lattices/sculptures with genuine
-// holes and internal gaps, and outlining each mesh's literal surface traced
-// those too, making the glow read as coming from inside the object rather
-// than wrapping its outer shape. A convex hull has no holes or concavities
-// by definition, so it only ever traces the general silhouette — the
-// trade-off is that a concave model (an L-shaped building, say) gets a
-// glow that bridges its own notch rather than following it exactly, which
-// reads better here than the alternative. Returns the list of materials so
-// animate() can fade them together via uOpacity — each shell's own
-// uOpacityMul keeps their relative strengths fixed while doing so.
-const OUTLINE_GLOW_LAYERS = [
-    { inflate: 0.008, mul: 0.7 },
-    { inflate: 0.018, mul: 0.38 },
-    { inflate: 0.032, mul: 0.2 },
-    { inflate: 0.05, mul: 0.08 },
-];
-function buildOutline(model, color) {
-    // The exact brand hot-pink (#d01359) is fairly dark by raw luminance —
-    // reads as rich/on-brand for logo text, but muddy as a hover highlight
-    // against a busy, similarly-dark scene. This material isn't tone-mapped
-    // and renders in its own bloom-free pass (see MODEL_LAYER), so there's
-    // no post-process glow to lean on — lightening the colour itself
-    // (blended toward white) is what actually makes it read as "glowing"
-    // rather than just present.
-    const liteColor = new THREE.Color(color).lerp(new THREE.Color(0xffffff), 0.45);
-    const materials = [];
-
-    // Gather every mesh's vertices into model-local space (each mesh can
-    // sit under its own nested transform from the original GLTF hierarchy),
-    // so the resulting hull lines up correctly once added as a plain child
-    // of `model` itself.
-    model.updateMatrixWorld(true);
-    const modelInverse = new THREE.Matrix4().copy(model.matrixWorld).invert();
-    const points = [];
-    const v = new THREE.Vector3();
-    model.traverse((obj) => {
-        if (!obj.isMesh) return;
-        const relative = new THREE.Matrix4().multiplyMatrices(modelInverse, obj.matrixWorld);
-        const posAttr = obj.geometry.attributes.position;
-        for (let i = 0; i < posAttr.count; i++) {
-            v.fromBufferAttribute(posAttr, i).applyMatrix4(relative);
-            points.push(v.clone());
-        }
-    });
-    if (points.length < 4) return materials; // too few points for a hull — nothing to outline
-
-    // ConvexGeometry emits flat per-face normals (each hull triangle its own
-    // normal, unshared with its neighbours), so inflating along them pushes
-    // each flat facet straight outward — the outline reads as the hull's
-    // own angular facets rather than a line that curves smoothly around the
-    // model's actual silhouette. Dropping the flat normals and welding
-    // coincident hull vertices by position alone, then recomputing smooth
-    // (averaged) normals, rounds the inflation over the seams between
-    // facets instead of stepping between them.
-    const hullGeometry = new ConvexGeometry(points);
-    hullGeometry.deleteAttribute('normal');
-    const smoothHull = mergeVertices(hullGeometry);
-    smoothHull.computeVertexNormals();
-
-    OUTLINE_GLOW_LAYERS.forEach((layer) => {
-        const mat = new THREE.ShaderMaterial({
-            uniforms: {
-                uColor: { value: liteColor },
-                uOpacity: { value: 0 },
-                uOpacityMul: { value: layer.mul },
-                uInflate: { value: layer.inflate },
-            },
-            vertexShader: `
-                uniform float uInflate;
-                void main() {
-                    vec3 inflated = position + normal * uInflate;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(inflated, 1.0);
-                }
-            `,
-            fragmentShader: `
-                uniform vec3 uColor;
-                uniform float uOpacity;
-                uniform float uOpacityMul;
-                void main() {
-                    gl_FragColor = vec4(uColor, uOpacity * uOpacityMul);
-                }
-            `,
-            side: THREE.BackSide,
-            transparent: true,
-            depthWrite: false,
-            // Additive rather than plain alpha blend — stacked shells
-            // brighten where they overlap instead of just layering flat
-            // colour, which is what actually reads as a glow rather than a
-            // thicker outline.
-            blending: THREE.AdditiveBlending,
-        });
-        const outlineMesh = new THREE.Mesh(smoothHull, mat);
-        outlineMesh.raycast = () => {}; // decorative only — hovering it shouldn't count as hovering the outline itself
-        model.add(outlineMesh);
-        materials.push(mat);
-    });
-    return materials;
-}
+// Hover outlining is now handled by a real edge-detection post-process
+// pass (OutlinePass, wired up in initRoom/onPointerMove below) instead of
+// a hand-built inflated-hull glow. The hull version never actually tracked
+// a model's real silhouette — a convex hull can't represent a concave
+// shape, so the glow visibly drifted off the model's actual edge from most
+// angles no matter how it was tuned. OutlinePass masks the selected object
+// and edge-detects the mask itself, which is exact by construction at any
+// camera angle.
 
 // A soft radial-gradient disc for the low-poly models' drop shadow —
 // CanvasTexture rather than a lighting-based shadow map, since these models
@@ -774,9 +694,6 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
             group.add(ring);
             ring.layers.set(MODEL_LAYER);
 
-            const outlineMaterials = buildOutline(model, HOVER_OUTLINE_COLOR);
-            // Moves the model (and, since buildOutline already ran, its
-            // outline children too) onto the dedicated render layer.
             model.traverse(obj => obj.layers.set(MODEL_LAYER));
 
             // Floats clear of the floor rather than sitting on it.
@@ -823,7 +740,7 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
             };
             scene.add(group);
             clickables.push(group);
-            floaters.push({ obj: group, baseY: group.position.y, baseRotY, phase: Math.random() * Math.PI * 2, outlineMaterials });
+            floaters.push({ obj: group, baseY: group.position.y, baseRotY, phase: Math.random() * Math.PI * 2 });
             floaterObjects.add(group);
             // Resolves with the item's data (like addFramedPhoto/addModel
             // do), not the Three.js group itself, so callers can treat every
@@ -898,7 +815,15 @@ function onPointerMove(e) {
     raycaster.setFromCamera(pointer, camera);
     const hits = raycaster.intersectObjects(clickables, true);
     hoverTarget = hits.length ? findClickableRoot(hits[0].object) : null;
+    updateOutlineSelection();
     if (hoverCb) hoverCb(!!hoverTarget);
+}
+
+// Scoped to floaters (the low-poly collectibles) only, matching the old
+// hull-outline's scope — other clickables (framed photos, archive models,
+// placeholders) keep the plain hover-scale bump instead, unchanged.
+function updateOutlineSelection() {
+    outlinePass.selectedObjects = (hoverTarget && floaterObjects.has(hoverTarget)) ? [hoverTarget] : [];
 }
 
 function onMouseMove(e) {
@@ -915,6 +840,7 @@ function onResize() {
     renderer.setSize(w, h, false);
     composer.setSize(w, h);
     bloomPass.setSize(w, h);
+    outlinePass.setSize(w, h);
 }
 
 function animate() {
@@ -992,12 +918,6 @@ function animate() {
                 f.obj.rotation.y = f.baseRotY + Math.sin(t * 0.4 + f.phase) * 0.5; // pivot ±~29° around its facing direction, never shows the back
                 f.obj.position.y = f.baseY + Math.sin(t * 0.3 + f.phase) * 0.08; // slow drift up/down
             }
-            if (f.outlineMaterials) {
-                const targetOpacity = hovered ? 1 : 0;
-                f.outlineMaterials.forEach(mat => {
-                    mat.uniforms.uOpacity.value += (targetOpacity - mat.uniforms.uOpacity.value) * 0.15;
-                });
-            }
         });
     }
 
@@ -1016,7 +936,19 @@ function animate() {
     // Two passes: the room through the normal composer (tone mapping +
     // bloom), then the low-poly models straight to the canvas afterward,
     // entirely outside that pipeline — see MODEL_LAYER above for why.
+    // OutlinePass lives inside this first pass, though, and camera.layers
+    // is what any render call uses to decide what's even visible to it —
+    // with the camera locked to layer 0 here, OutlinePass's own internal
+    // mask render (using this same camera) could never actually see a
+    // hovered floater to trace its silhouette, regardless of
+    // selectedObjects being set correctly. Briefly including MODEL_LAYER
+    // just for this call, only while a floater is hovered, fixes that.
+    // The floater itself still gets fully redrawn a moment later by the
+    // raw pass below (which clears depth first) — so the only trace left
+    // from this pass is bloom/outline bleeding past its silhouette, not a
+    // visible double-render of the model itself.
     camera.layers.set(0);
+    if (hoverTarget && floaterObjects.has(hoverTarget)) camera.layers.enable(MODEL_LAYER);
     composer.render();
 
     camera.layers.set(MODEL_LAYER);
