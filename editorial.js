@@ -7,13 +7,28 @@ const MAX_MODELS = 2;
 // ===== INFO PANEL =====
 const panel = document.getElementById('infoPanel');
 const roomHint = document.getElementById('roomHint');
-const roomItems = document.getElementById('roomItems');
 
 const LOADING_HINT = 'Loading room…';
 function normalHint() {
     return window.matchMedia('(pointer: coarse)').matches
         ? 'Drag to look around · tap an object to learn its story'
         : 'Move to look around · click an object to learn its story';
+}
+
+// Wraps each character in its own span so the gently-waving pixel-art
+// animation (styles.css .wave-char) can stagger a per-letter delay off
+// --i. textContent still reads back as the plain string afterwards
+// (it concatenates all descendant text nodes), so the equality guard
+// below keeps working unchanged.
+function setRoomHint(text) {
+    roomHint.innerHTML = '';
+    [...text].forEach((ch, i) => {
+        const span = document.createElement('span');
+        span.className = 'wave-char';
+        span.style.setProperty('--i', i);
+        span.textContent = ch;
+        roomHint.appendChild(span);
+    });
 }
 
 // The 3D room model loads async — the placeholder box room renders
@@ -23,16 +38,12 @@ function normalHint() {
 // room-load callback from clobbering whatever fallBackToPlaceholders()/
 // populate() (below) may have already written on their own, independent
 // async path (the archive Sheet fetch, not the room model fetch).
-roomHint.textContent = LOADING_HINT;
+setRoomHint(LOADING_HINT);
 initRoom('room-canvas', () => {
-    if (roomHint.textContent === LOADING_HINT) roomHint.textContent = normalHint();
+    if (roomHint.textContent === LOADING_HINT) setRoomHint(normalHint());
 });
 
 function showPanel(data, object) {
-    // object is only set for a real 3D click (see onObjectClick below) —
-    // the keyboard/screen-reader room-items list (addRoomItemButton) opens
-    // the same panel without a click, so there's nothing to zoom the
-    // camera to in that path.
     if (object) focusOnObject(object);
 
     const img = document.getElementById('infoImage');
@@ -79,20 +90,9 @@ document.addEventListener('keydown', (e) => {
 
 onObjectClick(showPanel);
 
-// Screen-reader / keyboard mirror of the objects in the room
-function addRoomItemButton(data) {
-    const li = document.createElement('li');
-    const btn = document.createElement('button');
-    btn.textContent = `View: ${data.title || 'Untitled'}${data.project ? ` (${data.project})` : ''}`;
-    btn.addEventListener('click', () => showPanel(data));
-    li.appendChild(btn);
-    roomItems.appendChild(li);
-}
-
 function fallBackToPlaceholders(hint) {
-    const placed = addPlaceholders();
-    placed.forEach(addRoomItemButton);
-    roomHint.textContent = hint;
+    addPlaceholders();
+    setRoomHint(hint);
 }
 
 // ===== POPULATE THE ROOM FROM THE ARCHIVE =====
@@ -184,11 +184,7 @@ async function populateLowPoly() {
                 override.spinY
             );
         });
-        // Same pattern as populate() below — only register what actually
-        // succeeded, so a failed load doesn't leave a dead entry in the
-        // keyboard/screen-reader item list.
-        const placed = (await Promise.all(attempts)).filter(Boolean);
-        placed.forEach(addRoomItemButton);
+        await Promise.all(attempts);
     } catch (err) {
         console.warn('Low-poly models failed to load:', err.message);
     }
@@ -233,7 +229,6 @@ async function populate() {
             fallBackToPlaceholders('The room is empty for now — placeholder objects on display');
             return;
         }
-        placed.forEach(addRoomItemButton);
     } catch (err) {
         console.warn('Could not load archive:', err.message);
         fallBackToPlaceholders('Could not reach the archive — placeholder objects on display');

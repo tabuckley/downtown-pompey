@@ -1721,19 +1721,45 @@ body.landing {
     display: block;
 }
 
+/* Early-2000s "word art" energy — the same pixel bitmap font as Flo's
+   speech bubble in this room (Press Start 2P, see editorial.html's font
+   link), coloured instead of muted grey, with a hard pixel drop-shadow
+   for pop and a gentle per-letter wave. One line rather than wrapping —
+   there's an entire corner of empty room floor to the right of it on any
+   real desktop viewport, so nowrap costs nothing here. */
 .room-hint {
     position: fixed;
-    bottom: 1.6rem;
+    bottom: 1.8rem;
     left: 1.6rem;
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    letter-spacing: 0.25em;
+    font-family: 'Press Start 2P', var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--accent);
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.6);
     z-index: 100;
-    max-width: 40ch;
+    white-space: nowrap;
     line-height: 1.8;
     pointer-events: none;
+}
+
+.room-hint .wave-char {
+    display: inline-block;
+    /* Without this, a lone space character as the entire content of an
+       inline-block box collapses to zero width — confirmed the word
+       gaps were vanishing entirely, not just shrinking. */
+    white-space: pre;
+    animation: room-hint-wave 1.6s ease-in-out infinite;
+    animation-delay: calc(var(--i) * 0.045s);
+}
+
+@keyframes room-hint-wave {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .room-hint .wave-char { animation: none; }
 }
 
 /* Keyboard/screen-reader route to the room's content, since the 3D canvas
@@ -2212,6 +2238,17 @@ body.landing {
         flex: 1 1 100%;
         justify-content: center;
         gap: 0.15rem;
+    }
+
+    /* The desktop one-line treatment needs ~671px at 0.72rem — Press
+       Start 2P is a wide bitmap font, and shrinking it enough to fit a
+       375px phone on one line (~0.35rem) would be illegible, losing the
+       whole point of a pixel-art word treatment. Wrapping to 2-3 lines
+       at a still-readable size is the better trade-off here. */
+    .room-hint {
+        font-size: 0.5rem;
+        white-space: normal;
+        max-width: calc(100vw - 3.2rem);
     }
 
     /* All 46 tags wrapped at mobile width need ~16 rows — the bar would
