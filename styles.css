@@ -1083,8 +1083,12 @@ body.landing {
 [data-mode="editorial"] .helper-figure-img {
     height: auto;
     min-height: 0;
-    max-height: 360px;
-    max-width: 300px;
+    max-height: 720px;
+    max-width: 600px;
+    /* Shifted right by 20% of the image's own (rendered) width, per
+       direct request — self-relative rather than a fixed px/vw amount so
+       it scales sensibly across the breakpoints below too. */
+    transform: translateX(20%);
 }
 
 /* Mode switcher gets the exact same pixel-chip treatment as .helper-chip
@@ -1116,8 +1120,8 @@ body.landing {
     [data-mode="editorial"] .helper-figure-img {
         height: auto;
         min-height: 0;
-        max-height: 160px;
-        max-width: 140px;
+        max-height: 320px;
+        max-width: 280px;
     }
     .helper-bubble {
         width: min(180px, calc(100vw - 5.5rem));
@@ -1141,8 +1145,8 @@ body.landing {
     [data-mode="editorial"] .helper-figure-img {
         height: auto;
         min-height: 0;
-        max-height: 140px;
-        max-width: 120px;
+        max-height: 280px;
+        max-width: 240px;
     }
 }
 

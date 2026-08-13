@@ -26,9 +26,9 @@ const ARCHIE_IMAGE_URL = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
 // then each tip) instead of showing one static image throughout. Order
 // matches how they were supplied, not the filenames' own numbering.
 const EDITORIAL_FLO_IMAGES = [
-    'images/flo-editorial-1.jpg',
-    'images/flo-editorial-2.jpg',
-    'images/flo-editorial-3.jpg',
+    'images/flo-editorial-1.png',
+    'images/flo-editorial-2.png',
+    'images/flo-editorial-3.png',
 ];
 
 const MAX_TIPS = 8;
