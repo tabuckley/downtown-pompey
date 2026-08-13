@@ -726,8 +726,21 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
             model.traverse((obj) => {
                 if (!obj.isMesh) return;
                 const old = obj.material;
+                const map = old.map || null;
+                // Nearest-neighbour instead of the default smooth bilinear
+                // sampling — texels show as hard blocks rather than a soft
+                // blur, which is most of what actually reads as "00s pixel
+                // art" versus a low-poly model with a normal photo texture.
+                // Both mag and min (not just mag) for the full PS1-era
+                // effect, shimmer at a distance included — that aliasing is
+                // part of the retro character, not a bug to mipmap away.
+                if (map) {
+                    map.magFilter = THREE.NearestFilter;
+                    map.minFilter = THREE.NearestFilter;
+                    map.needsUpdate = true;
+                }
                 obj.material = new THREE.MeshBasicMaterial({
-                    map: old.map || null,
+                    map,
                     color: old.color ? old.color.clone() : new THREE.Color(0xffffff),
                     toneMapped: false,
                 });
