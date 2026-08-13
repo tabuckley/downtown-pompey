@@ -41,9 +41,9 @@ const FOCUS_LOOK_OFFSET = 0.5; // how far past the object (toward camera-right) 
 // rather than smooth, so this reads as genuinely blocky PS1-era pixelation
 // rather than a soft low-res blur. The backing-buffer-to-CSS-pixel ratio is
 // constant regardless of viewport size (both scale with window.innerWidth
-// together), so this value directly IS the on-screen block size: 1/3 = 1
-// backing pixel per 3 CSS pixels = a 3px "pixel."
-const RETRO_RENDER_SCALE = 1 / 3;
+// together), so this value directly IS the on-screen block size: 1/2 = 1
+// backing pixel per 2 CSS pixels = a 2px "pixel."
+const RETRO_RENDER_SCALE = 1 / 2;
 // Low-poly collectibles render on this camera layer, in a second plain
 // renderer.render() pass straight after the main composer.render() — see
 // animate(). That's what actually keeps them clean: MeshBasicMaterial +
