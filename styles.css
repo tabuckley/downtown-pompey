@@ -1071,6 +1071,22 @@ body.landing {
     border-color: var(--text);
 }
 
+/* Editorial's real portrait photos (images/flo-editorial-*.jpg) are
+   landscape (~3:2, waist-up with gesturing arms) where the placeholder
+   .helper-figure-img everywhere else is a tall, narrow SVG figure — the
+   base rule's fixed height:25vh + width:auto would make these render
+   ~500px wide at the max-height end, easily wide enough to overlap the
+   bubble or run off a narrow viewport. height:auto plus a max-width cap
+   (instead of a fixed height) lets the browser scale the whole image to
+   fit inside both bounds at once, whichever is tighter, same idea as a
+   standard responsive img — no distortion, no overflow. */
+[data-mode="editorial"] .helper-figure-img {
+    height: auto;
+    min-height: 0;
+    max-height: 360px;
+    max-width: 300px;
+}
+
 /* Mode switcher gets the exact same pixel-chip treatment as .helper-chip
    above, so it reads as the same control in this room. */
 [data-mode="editorial"] .mode-btn {
@@ -1097,6 +1113,12 @@ body.landing {
         min-height: 110px;
         max-height: 160px;
     }
+    [data-mode="editorial"] .helper-figure-img {
+        height: auto;
+        min-height: 0;
+        max-height: 160px;
+        max-width: 140px;
+    }
     .helper-bubble {
         width: min(180px, calc(100vw - 5.5rem));
         padding: 0.75rem 0.85rem;
@@ -1115,6 +1137,12 @@ body.landing {
         height: 20vh;
         min-height: 90px;
         max-height: 140px;
+    }
+    [data-mode="editorial"] .helper-figure-img {
+        height: auto;
+        min-height: 0;
+        max-height: 140px;
+        max-width: 120px;
     }
 }
 
