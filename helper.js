@@ -10,8 +10,8 @@
 
 import { getCopyMap } from './copy.js';
 
-// Placeholder torso-up figure — still the fallback for every page except
-// editorial, which has real photos now (see EDITORIAL_FLO_IMAGES below).
+// Placeholder torso-up figure — the fallback for any page with no entry
+// (or an empty one) in FLO_IMAGES below.
 const ARCHIE_IMAGE_URL = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260">
   <path d="M20 260 Q20 140 100 140 Q180 140 180 260 Z" fill="#8b3a00" stroke="#3a2a10" stroke-width="5"/>
@@ -22,14 +22,22 @@ const ARCHIE_IMAGE_URL = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
 </svg>
 `.trim());
 
-// Editorial room only — cycles one pose per line of dialogue (the intro,
-// then each tip) instead of showing one static image throughout. Order
-// matches how they were supplied, not the filenames' own numbering.
-const EDITORIAL_FLO_IMAGES = [
-    'images/flo-editorial-1.png',
-    'images/flo-editorial-2.png',
-    'images/flo-editorial-3.png',
-];
+// Per-page real photo sets, keyed by the same <page> value used above and
+// in document.body.dataset.page. Cycles one pose per line of dialogue
+// (the intro, then each tip) instead of showing one static image
+// throughout — order is display order, not the source filenames'
+// numbering. To bring a new page's photos in: drop the files in images/,
+// add its array here, done — buildHelper() below and the sizing rule in
+// styles.css (.helper-figure-img--photo) both key off this same object
+// and need no changes. Pages with no entry (or an empty array) keep
+// showing the placeholder SVG.
+const FLO_IMAGES = {
+    editorial: [
+        'images/flo-editorial-1.png',
+        'images/flo-editorial-2.png',
+        'images/flo-editorial-3.png',
+    ],
+};
 
 const MAX_TIPS = 8;
 
@@ -105,6 +113,8 @@ function buildHelper() {
     applyArchieOverrides(page, script);
     let tipIndex = -1;
     let floImageIndex = -1;
+    const floImages = FLO_IMAGES[page];
+    const hasFloPhotos = !!(floImages && floImages.length);
 
     const widget = document.createElement('div');
     widget.className = 'helper-widget';
@@ -125,7 +135,11 @@ function buildHelper() {
     btn.className = 'helper-figure-btn';
     btn.setAttribute('aria-label', 'Site helper — Flo');
     btn.setAttribute('aria-expanded', 'false');
-    btn.innerHTML = `<img class="helper-figure-img" src="${page === 'editorial' ? EDITORIAL_FLO_IMAGES[0] : ARCHIE_IMAGE_URL}" alt="">`;
+    // The --photo class (not a page-name selector) is what styles.css's
+    // sizing override keys off — real photos are a different aspect ratio
+    // (landscape, waist-up with gesturing arms) than the tall narrow
+    // placeholder SVG, regardless of which page they end up on.
+    btn.innerHTML = `<img class="helper-figure-img${hasFloPhotos ? ' helper-figure-img--photo' : ''}" src="${hasFloPhotos ? floImages[0] : ARCHIE_IMAGE_URL}" alt="">`;
 
     widget.appendChild(bubble);
     widget.appendChild(btn);
@@ -152,9 +166,9 @@ function buildHelper() {
 
     function say(text) {
         textEl.textContent = text;
-        if (page === 'editorial') {
-            floImageIndex = (floImageIndex + 1) % EDITORIAL_FLO_IMAGES.length;
-            figureImg.src = EDITORIAL_FLO_IMAGES[floImageIndex];
+        if (hasFloPhotos) {
+            floImageIndex = (floImageIndex + 1) % floImages.length;
+            figureImg.src = floImages[floImageIndex];
         }
         fitTextToBubble();
         bubble.classList.add('open');

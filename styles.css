@@ -1071,16 +1071,22 @@ body.landing {
     border-color: var(--text);
 }
 
-/* Editorial's real portrait photos (images/flo-editorial-*.jpg) are
-   landscape (~3:2, waist-up with gesturing arms) where the placeholder
-   .helper-figure-img everywhere else is a tall, narrow SVG figure — the
-   base rule's fixed height:25vh + width:auto would make these render
-   ~500px wide at the max-height end, easily wide enough to overlap the
-   bubble or run off a narrow viewport. height:auto plus a max-width cap
-   (instead of a fixed height) lets the browser scale the whole image to
-   fit inside both bounds at once, whichever is tighter, same idea as a
-   standard responsive img — no distortion, no overflow. */
-[data-mode="editorial"] .helper-figure-img {
+/* Applied via helper.js (a class, not a page selector — see FLO_IMAGES
+   there) to any page whose Flo widget has real photos instead of the
+   placeholder SVG. Editorial's are landscape (~3:2, waist-up with
+   gesturing arms) where the placeholder .helper-figure-img everywhere
+   else is a tall, narrow SVG figure — the base rule's fixed height:25vh
+   + width:auto would make a photo like this render ~500px wide at the
+   max-height end, easily wide enough to overlap the bubble or run off a
+   narrow viewport. height:auto plus a max-width cap (instead of a fixed
+   height) lets the browser scale the whole image to fit inside both
+   bounds at once, whichever is tighter, same idea as a standard
+   responsive img — no distortion, no overflow. These exact numbers (2x
+   scale, 20% rightward shift) were tuned for editorial's photos
+   specifically — if another page's turn out to need different sizing,
+   override with a `[data-page="x"].helper-figure-img--photo` rule
+   rather than changing this shared default. */
+.helper-figure-img--photo {
     height: auto;
     min-height: 0;
     max-height: 720px;
@@ -1117,7 +1123,7 @@ body.landing {
         min-height: 110px;
         max-height: 160px;
     }
-    [data-mode="editorial"] .helper-figure-img {
+    .helper-figure-img--photo {
         height: auto;
         min-height: 0;
         max-height: 320px;
@@ -1142,7 +1148,7 @@ body.landing {
         min-height: 90px;
         max-height: 140px;
     }
-    [data-mode="editorial"] .helper-figure-img {
+    .helper-figure-img--photo {
         height: auto;
         min-height: 0;
         max-height: 280px;
