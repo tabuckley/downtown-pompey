@@ -154,10 +154,11 @@ export function initRoom(canvasId = 'room-canvas', onEnvironmentReady = () => {}
     );
     // Thick/strong relative to OutlinePass's own defaults — this scene's
     // internal render buffer is tiny (RETRO_RENDER_SCALE), so a
-    // texel-scale edge would be a fraction of a single 4px on-screen
-    // block after upscaling and effectively disappear.
+    // texel-scale edge would be a fraction of a single on-screen pixel
+    // block after upscaling and effectively disappear. edgeGlow:0 — a
+    // hard line instead of a soft glow, per direct request.
     outlinePass.edgeStrength = 10;
-    outlinePass.edgeGlow = 1;
+    outlinePass.edgeGlow = 0;
     outlinePass.edgeThickness = 4;
     outlinePass.visibleEdgeColor.set(HOVER_OUTLINE_COLOR);
     outlinePass.hiddenEdgeColor.set(HOVER_OUTLINE_COLOR);
@@ -605,12 +606,13 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
             // Normalise to a "handheld collectible" scale relative to this
             // room, which is itself only ~2-3 units across — NOT the old
             // placeholder box room's ~20-unit scale that addModel()'s own
-            // 2.2-unit target was tuned against. 0.64 rather than a round
-            // 0.8 is a 20% reduction requested once two of these needed to
-            // share the foreground without crowding each other.
+            // 2.2-unit target was tuned against. 0.544 is 0.64 (itself a 20%
+            // reduction from a round 0.8, requested once two of these needed
+            // to share the foreground without crowding each other) taken
+            // down a further 15% on top.
             const box = new THREE.Box3().setFromObject(model);
             const size = box.getSize(new THREE.Vector3());
-            const scale = 0.64 / Math.max(size.x, size.y, size.z, 0.001);
+            const scale = 0.544 / Math.max(size.x, size.y, size.z, 0.001);
             model.scale.setScalar(scale);
 
             // The doll model is wider than it is tall (raw bounding box
