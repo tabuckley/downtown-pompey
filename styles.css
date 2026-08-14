@@ -854,10 +854,7 @@ body.landing {
     margin: 0;
     line-height: 0;
     cursor: pointer;
-    transition: transform 0.2s ease;
 }
-
-.helper-figure-btn:hover { transform: translateY(-4px); }
 
 .helper-figure-img {
     display: block;
@@ -1089,8 +1086,8 @@ body.landing {
 .helper-figure-img--photo {
     height: auto;
     min-height: 0;
-    max-height: 461px;
-    max-width: 384px;
+    max-height: 369px;
+    max-width: 307px;
     /* Flush against the right edge (no overflow past it, unlike the
        previous 20%-off-screen treatment) — this cancels out
        .helper-widget's own right:1.4rem offset exactly, so the image's
@@ -1130,8 +1127,8 @@ body.landing {
     .helper-figure-img--photo {
         height: auto;
         min-height: 0;
-        max-height: 205px;
-        max-width: 179px;
+        max-height: 164px;
+        max-width: 143px;
     }
     .helper-bubble {
         width: min(180px, calc(100vw - 5.5rem));
@@ -1155,8 +1152,8 @@ body.landing {
     .helper-figure-img--photo {
         height: auto;
         min-height: 0;
-        max-height: 179px;
-        max-width: 154px;
+        max-height: 143px;
+        max-width: 123px;
     }
 }
 
