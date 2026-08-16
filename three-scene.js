@@ -744,8 +744,8 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
             group.rotation.y = baseRotY;
             group.userData.itemData = {
                 title: data.title || 'Low-poly test piece',
-                project: data.project || 'Editorial — low-poly',
-                year: data.year || '—',
+                project: data.project || '',
+                year: data.year || '',
                 description: data.description || 'A low-poly model from the editorial room\'s rotating collectible pool.',
                 type: data.type,
                 url: data.url,
