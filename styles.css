@@ -811,10 +811,10 @@ body.landing {
 .process-link span {
     text-decoration: underline;
     text-underline-offset: 4px;
-    transition: color 0.2s;
+    transition: color 0.2s, font-weight 0.2s;
 }
 
-.process-link:hover span { color: #d01359; }
+.process-link:hover span { color: #000; font-weight: 700; }
 
 .process-badge {
     width: 52px;
@@ -3064,31 +3064,21 @@ body.landing {
     margin-top: 1.4rem;
 }
 
-.acc-credit-intro {
-    font-size: 0.9rem;
-    color: var(--muted);
-    max-width: 50ch;
-    margin-bottom: 1rem;
+.acc-credit-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
 }
 
-.acc-credit-form {
+.acc-credit-line {
     display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    max-width: 420px;
+    gap: 0.6rem;
+    max-width: 480px;
 }
 
-.acc-credit-form label:not(:first-child) { margin-top: 0.6rem; }
-
-.acc-credit-textarea {
-    resize: vertical;
-    font-family: var(--font-body);
-}
-
-.acc-credit-form .acc-btn {
-    align-self: flex-start;
-    margin-top: 0.9rem;
-}
+.acc-credit-input { flex: 1 1 auto; }
 
 .acc-share-heading {
     font-size: 1rem;

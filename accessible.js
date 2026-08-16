@@ -5,7 +5,7 @@
 // embeddings yet).
 import { loadArchive } from './archive.js';
 import { itemTags } from './tags.js';
-import { buildSearchIndex, search, likeQueryFor } from './search.js';
+import { buildSearchIndex, search } from './search.js';
 import { yearFrom } from './sheet.js';
 
 const TYPE_LABELS = { photo: 'Photo', video: 'Video', audio: 'Audio', '3d': '3D object', download: 'Document' };
@@ -46,9 +46,6 @@ let lastSearchUrl = 'accessible.html';
 // runSearch) — otherwise "show more" state from a previous, longer result
 // set would carry over and dump everything from a new one at once.
 let visibleCount = RESULTS_PAGE_SIZE;
-// Session-only — "not this one" hides a result from THIS visitor's current
-// browsing without recording anything server-side or requiring an account.
-const dismissed = new Set();
 
 function esc(str) {
     const div = document.createElement('div');
@@ -79,7 +76,6 @@ function buildFilterChips() {
 // ===== SEARCH + RENDER =====
 function applyFilters(items) {
     return items.filter(item => {
-        if (dismissed.has(item.id)) return false;
         if (activeTypes.size && !activeTypes.has(item.type)) return false;
         return true;
     });
@@ -348,7 +344,6 @@ function showItem(id, pushUrl = true) {
     `;
     detailContent.appendChild(info);
     detailContent.appendChild(buildShareBlock(item));
-    detailContent.appendChild(buildRefinementBlock(item));
     detailContent.appendChild(buildCreditRequestBlock(item));
 
     if (pushUrl) history.pushState({ view: 'item', id }, '', `accessible.html?item=${encodeURIComponent(id)}`);
@@ -439,57 +434,6 @@ function buildShareBlock(item) {
     return wrap;
 }
 
-// ===== "IS THIS YOURS?" / "NOT THIS ONE" / "SHOW MORE LIKE THIS" =====
-// Local-only, per the brief — nothing here is sent anywhere or persisted
-// past this browser session; refreshing clears it.
-function buildRefinementBlock(item) {
-    const wrap = document.createElement('div');
-    wrap.className = 'acc-refine';
-
-    const isYours = document.createElement('button');
-    isYours.type = 'button';
-    isYours.className = 'acc-btn';
-    isYours.textContent = 'Is this yours?';
-    const confirmMsg = document.createElement('p');
-    confirmMsg.className = 'acc-refine-msg';
-    confirmMsg.hidden = true;
-    confirmMsg.setAttribute('role', 'status');
-    isYours.addEventListener('click', () => {
-        confirmMsg.textContent = 'Glad you found it! (This isn’t recorded anywhere — it’s just for you.)';
-        confirmMsg.hidden = false;
-        isYours.disabled = true;
-    });
-
-    const notThis = document.createElement('button');
-    notThis.type = 'button';
-    notThis.className = 'acc-btn';
-    notThis.textContent = 'Not this one';
-    notThis.addEventListener('click', () => {
-        dismissed.add(item.id);
-        history.pushState({ view: 'search' }, '', lastSearchUrl);
-        resultsPane.hidden = false;
-        detailPane.hidden = true;
-        runSearch(false);
-    });
-
-    const moreLike = document.createElement('button');
-    moreLike.type = 'button';
-    moreLike.className = 'acc-btn';
-    moreLike.textContent = 'Show more like this';
-    moreLike.addEventListener('click', () => {
-        input.value = likeQueryFor(item);
-        resultsPane.hidden = false;
-        detailPane.hidden = true;
-        runSearch();
-        input.focus();
-    });
-
-    const row = document.createElement('div');
-    row.className = 'acc-share-row';
-    row.append(isYours, notThis, moreLike);
-    wrap.append(row, confirmMsg);
-    return wrap;
-}
 
 // ===== "ASK TO BE CREDITED" =====
 // No backend on this site (static files only), so this reuses the same
@@ -500,67 +444,61 @@ function buildRefinementBlock(item) {
 // there themselves.
 const CREDIT_REQUEST_EMAIL = 'Thomas@Thomas-Buckley.com';
 
+// Two steps sharing ONE input box rather than two fields stacked (name,
+// then connection) — asking the name, then swapping the same box's
+// placeholder/purpose to ask the connection once that's answered, so the
+// whole thing stays a single compact line instead of growing the page
+// every time a new question appeared underneath the last one.
 function buildCreditRequestBlock(item) {
     const wrap = document.createElement('div');
     wrap.className = 'acc-credit';
 
-    const heading = document.createElement('h2');
-    heading.className = 'acc-share-heading';
-    heading.textContent = 'Are you in this, or did you make it?';
-    wrap.appendChild(heading);
-
-    const intro = document.createElement('p');
-    intro.className = 'acc-credit-intro';
-    intro.textContent = 'Ask to be credited as a contributor — this opens an email with your answer already filled in, ready to send.';
-    wrap.appendChild(intro);
+    const label = document.createElement('label');
+    label.className = 'acc-credit-label';
+    label.htmlFor = 'accCreditField';
+    label.textContent = 'Are you in this, or did you make it? Ask to be credited:';
+    wrap.appendChild(label);
 
     const form = document.createElement('form');
-    form.className = 'acc-credit-form';
+    form.className = 'acc-credit-line';
 
-    const nameLabel = document.createElement('label');
-    nameLabel.className = 'acc-search-label';
-    nameLabel.htmlFor = 'accCreditName';
-    nameLabel.textContent = "Your name (how you'd like to be credited)";
-    const nameInput = document.createElement('input');
-    nameInput.type = 'text';
-    nameInput.id = 'accCreditName';
-    nameInput.className = 'acc-search-input';
-    nameInput.required = true;
-
-    const noteLabel = document.createElement('label');
-    noteLabel.className = 'acc-search-label';
-    noteLabel.htmlFor = 'accCreditNote';
-    noteLabel.textContent = 'How are you connected to this item?';
-    const noteInput = document.createElement('textarea');
-    noteInput.id = 'accCreditNote';
-    noteInput.className = 'acc-search-input acc-credit-textarea';
-    noteInput.rows = 3;
-    noteInput.placeholder = 'e.g. "I\'m the person on the left" or "I made this piece"';
-    noteInput.required = true;
+    const field = document.createElement('input');
+    field.type = 'text';
+    field.id = 'accCreditField';
+    field.className = 'acc-search-input acc-credit-input';
+    field.placeholder = 'Your name…';
+    field.required = true;
 
     const submitBtn = document.createElement('button');
     submitBtn.type = 'submit';
     submitBtn.className = 'acc-btn';
-    submitBtn.textContent = 'Send credit request';
+    submitBtn.textContent = 'Next';
 
-    const confirmMsg = document.createElement('p');
-    confirmMsg.className = 'acc-refine-msg';
-    confirmMsg.hidden = true;
-    confirmMsg.setAttribute('role', 'status');
+    form.append(field, submitBtn);
+    wrap.appendChild(form);
 
+    let name = '';
     form.addEventListener('submit', (e) => {
         e.preventDefault();
+        if (!name) {
+            // Step 1 done — swap the same box over to the second question
+            // rather than adding a new one below it.
+            name = field.value.trim();
+            field.value = '';
+            field.placeholder = 'How are you connected? e.g. "I\'m on the left"';
+            submitBtn.textContent = 'Send';
+            field.focus();
+            return;
+        }
+        const note = field.value.trim();
         const url = `${location.origin}${location.pathname}?item=${encodeURIComponent(item.id)}`;
         const subject = `Credit request — ${item.title || 'Untitled item'}`;
-        const body = `Item: ${item.title || 'Untitled'}\nLink: ${url}\n\nName: ${nameInput.value.trim()}\nConnection: ${noteInput.value.trim()}`;
-        const mailto = `mailto:${CREDIT_REQUEST_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        window.location.href = mailto;
-        confirmMsg.textContent = 'Opening your email app with this filled in — just hit send.';
-        confirmMsg.hidden = false;
+        const body = `Item: ${item.title || 'Untitled'}\nLink: ${url}\n\nName: ${name}\nConnection: ${note}`;
+        window.location.href = `mailto:${CREDIT_REQUEST_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        label.textContent = 'Opening your email app with this filled in — just hit send.';
+        form.remove();
     });
 
-    form.append(nameLabel, nameInput, noteLabel, noteInput, submitBtn);
-    wrap.append(form, confirmMsg);
     return wrap;
 }
 
