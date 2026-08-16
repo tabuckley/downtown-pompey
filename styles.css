@@ -1023,49 +1023,96 @@ body.landing {
     border-color: var(--text);
 }
 
-/* Editorial — pixel/retro treatment matching the 3D room's own low-poly,
-   N64-style render (three-scene.js's RETRO_RENDER_SCALE). Press Start 2P
-   is a real 8-bit bitmap font, so it needs real headroom vs Montserrat —
-   it reads much wider and taller per character at the same rem value. */
+/* Editorial — Flo's bubble as a pink Windows 98 dialog box: a titlebar
+   (repurposing .helper-bubble-name), a pale beveled body, and chunky
+   beveled pushbuttons instead of the pill chips used elsewhere. Real Win98
+   chrome bevels are always greyscale regardless of accent colour — kept
+   pink throughout instead (highlight/shadow both pink-family) since a hot-
+   pink reskin, not literal Win98, is the point. System font stack rather
+   than a webfont: MS Sans Serif/Tahoma were literally the OS's own UI
+   fonts, so no approximation is more authentic than the real thing on any
+   Windows box, with a plain sans-serif fallback elsewhere. This replaces
+   the previous Press Start 2P speech-bubble treatment for this one
+   component — the room hint and 3D room's own retro look are unrelated
+   and untouched. */
 [data-mode="editorial"] .helper-bubble {
     border-radius: 0;
-    border: 3px solid var(--text);
-    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.7);
+    border: none;
+    background: #ffe3f0;
+    box-shadow:
+        0 0 0 1px #4a0e28,
+        inset 2px 2px 0 #fff,
+        inset -2px -2px 0 #a3175c,
+        6px 6px 0 rgba(0, 0, 0, 0.7);
+    padding: 0 0.7rem 0.7rem;
+    font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
 }
 
 [data-mode="editorial"] .helper-bubble::after {
-    border-right-width: 3px;
-    border-bottom-width: 3px;
-}
-
-[data-mode="editorial"] .helper-bubble-name,
-[data-mode="editorial"] .helper-bubble-text,
-[data-mode="editorial"] .helper-chip {
-    font-family: 'Press Start 2P', var(--font-mono);
+    display: none;
 }
 
 [data-mode="editorial"] .helper-bubble-name {
-    font-size: 0.5rem;
-    letter-spacing: 0.1em;
+    /* Escapes the bubble's own padding to sit flush as a full-width
+       titlebar strip, Win98-style. */
+    margin: 0 -0.7rem 0.7rem;
+    padding: 0.4rem 0.5rem;
+    background: linear-gradient(90deg, #7a0a35 0%, #d01359 55%, #ff5fa2 100%);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Decorative close square in the titlebar corner — purely visual, the real
+   (functional) close button stays below in .helper-bubble-actions so no JS
+   needs to change. */
+[data-mode="editorial"] .helper-bubble-name::after {
+    content: '\00d7';
+    width: 1rem;
+    height: 1rem;
+    line-height: 0.9rem;
+    text-align: center;
+    background: #ffe3f0;
+    color: #4a0e28;
+    font-weight: 700;
+    box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #a3175c;
 }
 
 [data-mode="editorial"] .helper-bubble-text {
-    font-size: 0.62rem;
-    line-height: 1.8;
+    color: #4a0e28;
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+
+[data-mode="editorial"] .helper-bubble-actions {
+    justify-content: flex-end;
 }
 
 [data-mode="editorial"] .helper-chip {
-    font-size: 0.5rem;
+    font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
+    font-size: 0.7rem;
+    color: #4a0e28;
+    background: #ffe3f0;
     border-radius: 0;
-    border: 2px solid var(--border);
-    padding: 0.5rem 0.6rem;
-    letter-spacing: 0.03em;
+    border: none;
+    box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #a3175c, 0 0 0 1px #4a0e28;
+    padding: 0.35rem 0.8rem;
+    letter-spacing: normal;
 }
 
 [data-mode="editorial"] .helper-chip:hover {
-    background: var(--text);
-    color: var(--bg);
-    border-color: var(--text);
+    background: #ffd0e7;
+    color: #4a0e28;
+    border-color: transparent;
+}
+
+[data-mode="editorial"] .helper-chip:active {
+    box-shadow: inset -1px -1px 0 #fff, inset 1px 1px 0 #a3175c, 0 0 0 1px #4a0e28;
 }
 
 /* Applied via helper.js (a class, not a page selector — see FLO_IMAGES
