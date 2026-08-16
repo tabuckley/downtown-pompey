@@ -836,7 +836,7 @@ body.landing {
 }
 
 .logo-strip-item {
-    height: 44px;
+    height: 76px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -848,7 +848,7 @@ body.landing {
 
 .logo-strip-item img {
     max-height: 100%;
-    max-width: 130px;
+    max-width: 200px;
     width: auto;
     height: auto;
     object-fit: contain;
