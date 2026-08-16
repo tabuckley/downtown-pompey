@@ -148,10 +148,14 @@ const LOW_POLY_SLOTS = [
 // separate rotateOnAxis-based parameter was added for it. Confirmed
 // correct against the original archive photo for Fountain Reflections
 // (fountain at top, reflection below, matching the source image exactly);
-// Millenium Walk previously needed a different fix (±90° both left it
-// edge-on) and was left unresolved. Now given a spinY value per a direct
-// "needs 90° counter-clockwise" call after visually checking the live
-// page — sign chosen to match; flip it if it turns out backwards.
+// promonade photo.glb (Millenium Walk Southsea Seafront) previously used a
+// rotationZ "tip it upright" fix inherited from reflectionphoto.glb's
+// pattern, but never actually stood the model up — confirmed via its raw
+// (pre-rotation) bounding box: width 1.9 already on local X, height 1.55
+// already on local Y, with only the true thin/normal axis (0.07) on local
+// Z. It was never lying flat in the "photo on a table" sense the rotationZ
+// fix assumes — it just needed the same plain baseRotY turn-to-face-camera
+// as most of the other models below, same as the rest of this list.
 const LOW_POLY_ROTATION_OVERRIDES = {
     'doll-on-the-beach.glb': { rotationZ: Math.PI / 2, baseRotY: Math.PI }, // left as-is — the review gallery didn't apply this model's own rotationZ, so its 4 options were all shown lying on its back and weren't a fair comparison
     'Discount store.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
@@ -164,7 +168,7 @@ const LOW_POLY_ROTATION_OVERRIDES = {
     'pink mask.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
     'dear creative.glb': { rotationZ: 0, baseRotY: Math.PI / 2 },
     'reflectionphoto.glb': { rotationZ: -Math.PI / 2, baseRotY: 0, spinY: -Math.PI / 2 }, // was Math.PI/2 — confirmed upside down at that value, this is +180deg from it
-    'promonade photo.glb': { rotationZ: -Math.PI / 2, baseRotY: 0, spinY: Math.PI / 2 }, // 90° counter-clockwise per direct request
+    'promonade photo.glb': { rotationZ: 0, baseRotY: Math.PI / 2 }, // confirmed upright + correctly oriented against the source photo
 };
 
 async function populateLowPoly() {
