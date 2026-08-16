@@ -1865,17 +1865,12 @@ body.landing {
    against the topbar's actual live rendered height (122px desktop,
    ~129px once it wraps to two rows on mobile) plus a buffer, not
    guessed. */
-/* Tiled, animated "desktop wallpaper" behind the room window — same idea
-   as a classic Windows 98 tiled background, using the site's own glow-logo
-   loop (images/dtp-glow-tile.gif) rather than a generic pattern. Sits on
-   the body itself so it's visible in the frame's own pad margin and
-   anywhere else the opaque window/UI doesn't cover — a background-image
-   repeats for free with no extra asset cost per tile. */
+/* Plain white "desktop" behind the room window, classic Windows 98 style —
+   swapped from the tiled animated glow-logo (images/dtp-glow-tile.gif) to
+   try a flatter, more authentic look. */
 [data-mode="editorial"] {
     --room-frame-pad: clamp(1.2rem, 3.5vw, 3rem);
-    background-color: var(--bg);
-    background-image: url('images/dtp-glow-tile.gif');
-    background-repeat: repeat;
+    background: #ffffff;
 }
 
 .room-window {
