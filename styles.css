@@ -1049,14 +1049,14 @@ body.landing {
     font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
 }
 
-/* Sits the dialog box closer to Flo than the shared widget gap allows, and
-   moves the whole widget in from the raw viewport edge to the new room
-   window's edge instead (see --room-frame-pad/.room-window) — same 1.4rem
-   relative offset it always had, just measured from the window now. */
+/* Sits the dialog box closer to Flo than the shared widget gap allows.
+   Flo herself stays pinned to the actual viewport corner (the shared
+   base rule's bottom:0/right:1.4rem) rather than the room window's inset
+   edge — she's page-level chrome floating over the framed 3D scene, not
+   confined inside it, and her speech bubble is allowed to overlap the
+   window's own border. */
 [data-mode="editorial"] .helper-widget {
     gap: 0.25rem;
-    bottom: var(--room-frame-pad);
-    right: calc(var(--room-frame-pad) + 1.4rem);
 }
 
 [data-mode="editorial"] .helper-bubble::after {
@@ -1162,11 +1162,8 @@ body.landing {
 [data-mode="editorial"] .helper-figure-img--photo {
     max-height: 443px;
     max-width: 368px;
-    /* Same cancel-the-widget's-own-inset trick as the shared base rule,
-       just measured from the room window's edge instead of the raw
-       viewport edge, since .helper-widget's own right offset now includes
-       --room-frame-pad too. */
-    transform: translateX(calc(var(--room-frame-pad) + 1.4rem));
+    /* transform is inherited unchanged from the shared base rule — Flo
+       stays flush against the real viewport edge, not the room window's. */
 }
 
 /* Mode switcher gets the exact same pixel-chip treatment as .helper-chip
@@ -1913,100 +1910,43 @@ body.landing {
     image-rendering: crisp-edges;
 }
 
-/* 90s MySpace glitter-GIF energy — the bubble display font those
-   cooltext.com/glitter-graphics.net generators used (Luckiest Guy, see
-   editorial.html's font link), a rainbow gradient sweeping across the
-   fill instead of a flat colour, and a hard dark stroke so the letters
-   read as "glitter text" rather than just coloured type. Sat on its own
-   solid dark plate with a hard border — the previous flat-pink-on-the-
-   room's-own-pink-and-magenta walls had nowhere near enough contrast to
-   actually read, no matter how the type itself was treated. One line
-   rather than wrapping — there's an entire corner of empty room floor to
-   the right of it on any real desktop viewport, so nowrap costs nothing. */
-.room-hint {
+/* Same pink Windows 98 dialog chrome as Flo's speech bubble and the room
+   window itself (titlebar + beveled body) — pinned to the real viewport
+   corner like Flo, not the room window's inset edge, so it's allowed to
+   overlap the window's own border rather than being squeezed inside it. */
+.room-hint-window {
     position: fixed;
-    bottom: calc(var(--room-frame-pad) + 1.6rem);
-    left: calc(var(--room-frame-pad) + 1.6rem);
+    bottom: 1.6rem;
+    left: 1.6rem;
     z-index: 100;
+    display: flex;
+    flex-direction: column;
+    background: #ffe3f0;
+    box-shadow:
+        0 0 0 1px #4a0e28,
+        inset 2px 2px 0 #fff,
+        inset -2px -2px 0 #a3175c,
+        6px 6px 0 rgba(0, 0, 0, 0.7);
+    pointer-events: none;
+}
+
+.room-hint-titlebar {
+    padding: 0.35rem 0.6rem;
+    background: #d01359;
+    color: #fff;
+    font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.room-hint {
     padding: 0.55rem 0.9rem;
-    background: rgba(10, 6, 12, 0.82);
-    border: 3px solid var(--text);
-    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.65);
+    color: #4a0e28;
+    font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
+    font-size: 0.78rem;
+    line-height: 1.5;
     white-space: nowrap;
-    line-height: 1.8;
-    pointer-events: none;
-}
-
-.room-hint .wave-char {
-    display: inline-block;
-    /* Without this, a lone space character as the entire content of an
-       inline-block box collapses to zero width — confirmed the word
-       gaps were vanishing entirely, not just shrinking. */
-    white-space: pre;
-    font-family: 'Luckiest Guy', 'Press Start 2P', var(--font-mono);
-    font-size: 0.9rem;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    /* The glitter sweep: a repeating rainbow strip wider than the text,
-       animated sideways — background-clip:text plus a transparent fill
-       is what lets the gradient itself become the letterforms rather
-       than sitting behind them. */
-    background-image: linear-gradient(100deg, #ff2fb0, #ffe94d, #43e6ff, #b968ff, #ff2fb0);
-    background-size: 300% 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-stroke: 1.5px #24081a;
-    animation: room-hint-wave 1.6s ease-in-out infinite, room-hint-glitter 3.5s linear infinite;
-    animation-delay: calc(var(--i) * 0.045s), calc(var(--i) * -0.12s);
-}
-
-@keyframes room-hint-wave {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
-}
-
-@keyframes room-hint-glitter {
-    0% { background-position: 0% 50%; }
-    100% { background-position: -300% 50%; }
-}
-
-/* A few fixed twinkling sparkles on the plate itself — glitter-GIFs
-   almost always had loose stars scattered around the text, not just
-   glinting off the letters themselves. */
-.room-hint::before,
-.room-hint::after {
-    content: '\2726';
-    position: absolute;
-    color: #fff6c9;
-    text-shadow: 0 0 4px #ffe94d, 0 0 8px #ff2fb0;
-    animation: room-hint-twinkle 1.8s ease-in-out infinite;
-    pointer-events: none;
-}
-
-.room-hint::before {
-    top: -0.5rem;
-    left: 0.8rem;
-    font-size: 0.85rem;
-    animation-delay: 0.3s;
-}
-
-.room-hint::after {
-    bottom: -0.55rem;
-    right: 1.4rem;
-    font-size: 0.65rem;
-    animation-delay: 1s;
-}
-
-@keyframes room-hint-twinkle {
-    0%, 100% { opacity: 0.25; transform: scale(0.7) rotate(0deg); }
-    50% { opacity: 1; transform: scale(1.15) rotate(15deg); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .room-hint .wave-char { animation: none; }
-    .room-hint::before,
-    .room-hint::after { animation: none; opacity: 0.85; }
 }
 
 /* Keyboard/screen-reader route to the room's content, since the 3D canvas
@@ -2487,18 +2427,22 @@ body.landing {
         gap: 0.15rem;
     }
 
-    /* The desktop one-line treatment needs real width at 0.9rem — a bold
-       display font, and shrinking it enough to fit a 375px phone on one
-       line would be illegible, losing the whole point of a glitter-text
-       treatment. Wrapping to 2-3 lines at a still-readable size is the
-       better trade-off here. font-size lives on .wave-char now (each
-       character's own span), not this container, so it's set there too. */
+    /* The desktop one-line treatment needs real width — wrapping to 2-3
+       lines at a smaller size is the better trade-off on a 375px phone.
+       width (not just max-width) — a fixed-position flex box with no
+       explicit width shrinks to fit its content's unwrapped line first,
+       so max-width alone never actually triggers the wrap. The second
+       min() term specifically clears Flo's own now-bigger photo (a fixed
+       172px at this breakpoint, flush against the opposite corner) rather
+       than just being "narrower" — a flat px cap that worked at 375px
+       started overlapping her again on a 320px-wide phone, where her
+       fixed-width photo eats a bigger share of the screen. */
+    .room-hint-window {
+        width: min(calc(100vw - 3.2rem), calc(100vw - 172px - 1.6rem - 0.6rem));
+    }
     .room-hint {
         white-space: normal;
-        max-width: calc(100vw - 2 * var(--room-frame-pad) - 3.2rem);
-    }
-    .room-hint .wave-char {
-        font-size: 0.62rem;
+        font-size: 0.68rem;
     }
 
     /* All 46 tags wrapped at mobile width need ~16 rows — the bar would
