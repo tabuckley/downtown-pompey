@@ -42,7 +42,7 @@ const FLO_IMAGES = {
         // short enough that a resize + colour/lossy pass alone got them
         // under a comparable file size. A plain <img> animates a GIF
         // exactly like any other browser-native image, no extra JS needed.
-        'images/flo-editorial-1.gif',
+        'images/flo-editorial-1.png',
         'images/flo-editorial-2.gif',
         'images/flo-editorial-3.gif',
     ],
