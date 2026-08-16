@@ -35,13 +35,14 @@ let focusBlend = 0;
 const FOCUS_BLEND_SPEED = 0.045;
 const FOCUS_MOVE_FRACTION = 0.22; // how far from the roam position toward the object to move — partial/soft, not a close-up dolly-in
 const FOCUS_LOOK_OFFSET = 0.5; // how far past the object (toward camera-right) to aim, which is what pushes the object itself toward screen-LEFT
-// Renders at a reduced internal resolution while the canvas's own CSS
-// 100%-width/height stretches it back up — paired with #room-canvas's
-// image-rendering:pixelated (styles.css), that upscale is nearest-neighbour
-// rather than smooth, so this reads as genuinely blocky PS1-era pixelation
-// rather than a soft low-res blur. The backing-buffer-to-CSS-pixel ratio is
-// constant regardless of viewport size (both scale with window.innerWidth
-// together), so this value directly IS the on-screen block size: 1/2 = 1
+// Renders at a reduced internal resolution while the canvas's own CSS size
+// (a flex child filling .room-window — see styles.css) stretches it back up
+// — paired with #room-canvas's image-rendering:pixelated, that upscale is
+// nearest-neighbour rather than smooth, so this reads as genuinely blocky
+// PS1-era pixelation rather than a soft low-res blur. The backing-buffer-
+// to-CSS-pixel ratio is constant regardless of the canvas's own size (both
+// scale off canvas.clientWidth/clientHeight together, see initRoom/
+// onResize), so this value directly IS the on-screen block size: 1/2 = 1
 // backing pixel per 2 CSS pixels = a 2px "pixel."
 const RETRO_RENDER_SCALE = 1 / 2;
 // Low-poly collectibles render on this camera layer, in a second plain
@@ -112,15 +113,16 @@ export function initRoom(canvasId = 'room-canvas', onEnvironmentReady = () => {}
     scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x0d0d0d, 16, 34);
 
-    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
     camera.position.copy(baseCamPos);
 
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    // setSize's third arg (false) keeps the canvas's CSS size at the full
-    // viewport (see #room-canvas's own 100%-width/height) while its actual
-    // drawing buffer — and so the whole render — is smaller; the browser's
-    // normal smooth upscaling does the rest. See RETRO_RENDER_SCALE above.
-    renderer.setSize(window.innerWidth * RETRO_RENDER_SCALE, window.innerHeight * RETRO_RENDER_SCALE, false);
+    // setSize's third arg (false) keeps the canvas's CSS size as laid out by
+    // styles.css (a flex child filling .room-window, not the raw viewport —
+    // see the "windowed" room frame there) while its actual drawing buffer —
+    // and so the whole render — is smaller; the browser's normal smooth
+    // upscaling does the rest. See RETRO_RENDER_SCALE above.
+    renderer.setSize(canvas.clientWidth * RETRO_RENDER_SCALE, canvas.clientHeight * RETRO_RENDER_SCALE, false);
     renderer.setPixelRatio(1);
     // The room model's spot lights (KHR_lights_punctual) carry Blender's raw
     // candela values — thousands of units, meant for a tone-mapped renderer.
@@ -142,7 +144,7 @@ export function initRoom(canvasId = 'room-canvas', onEnvironmentReady = () => {}
     composer.addPass(new RenderPass(scene, camera));
 
     bloomPass = new UnrealBloomPass(
-        new THREE.Vector2(window.innerWidth * RETRO_RENDER_SCALE, window.innerHeight * RETRO_RENDER_SCALE),
+        new THREE.Vector2(canvas.clientWidth * RETRO_RENDER_SCALE, canvas.clientHeight * RETRO_RENDER_SCALE),
         0.3,   // strength
         0.4,   // radius
         1.0    // threshold
@@ -160,7 +162,7 @@ export function initRoom(canvasId = 'room-canvas', onEnvironmentReady = () => {}
     // since bloom doesn't know or care that OutlinePass's own glow is
     // turned off. Drawing the line after bloom keeps it crisp/hard.
     outlinePass = new OutlinePass(
-        new THREE.Vector2(window.innerWidth * RETRO_RENDER_SCALE, window.innerHeight * RETRO_RENDER_SCALE),
+        new THREE.Vector2(canvas.clientWidth * RETRO_RENDER_SCALE, canvas.clientHeight * RETRO_RENDER_SCALE),
         scene,
         camera
     );
@@ -804,8 +806,13 @@ function findClickableRoot(object) {
 }
 
 function setPointerFromEvent(e) {
-    pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
-    pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    // Canvas-relative, not viewport-relative — the room window (see
+    // .room-window in styles.css) no longer fills the full viewport, so a
+    // raw window.innerWidth/innerHeight mapping would raycast against the
+    // wrong point whenever the canvas doesn't start at (0,0).
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 }
 
 function onClick(e) {
@@ -840,10 +847,11 @@ function onMouseMove(e) {
 
 function onResize() {
     if (!renderer) return;
-    camera.aspect = window.innerWidth / window.innerHeight;
+    const canvas = renderer.domElement;
+    camera.aspect = canvas.clientWidth / canvas.clientHeight;
     camera.updateProjectionMatrix();
-    const w = window.innerWidth * RETRO_RENDER_SCALE;
-    const h = window.innerHeight * RETRO_RENDER_SCALE;
+    const w = canvas.clientWidth * RETRO_RENDER_SCALE;
+    const h = canvas.clientHeight * RETRO_RENDER_SCALE;
     renderer.setSize(w, h, false);
     composer.setSize(w, h);
     bloomPass.setSize(w, h);

@@ -1049,9 +1049,14 @@ body.landing {
     font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
 }
 
-/* Sits the dialog box closer to Flo than the shared widget gap allows. */
+/* Sits the dialog box closer to Flo than the shared widget gap allows, and
+   moves the whole widget in from the raw viewport edge to the new room
+   window's edge instead (see --room-frame-pad/.room-window) — same 1.4rem
+   relative offset it always had, just measured from the window now. */
 [data-mode="editorial"] .helper-widget {
     gap: 0.25rem;
+    bottom: var(--room-frame-pad);
+    right: calc(var(--room-frame-pad) + 1.4rem);
 }
 
 [data-mode="editorial"] .helper-bubble::after {
@@ -1157,6 +1162,11 @@ body.landing {
 [data-mode="editorial"] .helper-figure-img--photo {
     max-height: 443px;
     max-width: 368px;
+    /* Same cancel-the-widget's-own-inset trick as the shared base rule,
+       just measured from the room window's edge instead of the raw
+       viewport edge, since .helper-widget's own right offset now includes
+       --room-frame-pad too. */
+    transform: translateX(calc(var(--room-frame-pad) + 1.4rem));
 }
 
 /* Mode switcher gets the exact same pixel-chip treatment as .helper-chip
@@ -1821,12 +1831,78 @@ body.landing {
 .lightbox-next { top: 50%; right: calc(300px + 1.2rem); transform: translateY(-50%); }
 
 /* ===== EDITORIAL ROOM PAGE ===== */
-#room-canvas {
+/* Frames the 3D scene as a pink Windows 98 dialog window, same idea (and
+   same side/bottom pad dimensions) as the landing page's paper-texture
+   frame around .landing-panel — sized via --room-frame-pad below rather
+   than repeating the clamp() at every call site. Top gets its own, taller
+   clearance instead of the plain pad: .page-topbar (fixed, ~90px logo +
+   padding) sits above everything site-wide, and 3rem of pad alone would
+   run the window's titlebar straight under it — 8.5rem is measured
+   against the topbar's actual live rendered height (122px desktop,
+   ~129px once it wraps to two rows on mobile) plus a buffer, not
+   guessed. */
+[data-mode="editorial"] {
+    --room-frame-pad: clamp(1.2rem, 3.5vw, 3rem);
+}
+
+.room-window {
     position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    top: 8.5rem;
+    right: var(--room-frame-pad);
+    bottom: var(--room-frame-pad);
+    left: var(--room-frame-pad);
+    display: flex;
+    flex-direction: column;
+    background: #ffe3f0;
+    box-shadow:
+        0 0 0 1px #4a0e28,
+        inset 2px 2px 0 #fff,
+        inset -2px -2px 0 #a3175c,
+        8px 8px 0 rgba(0, 0, 0, 0.7);
+}
+
+.room-window-titlebar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.6rem;
+    background: #d01359;
+    color: #fff;
+    font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.room-window-controls {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.room-window-controls span {
+    width: 1.1rem;
+    height: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffe3f0;
+    color: #4a0e28;
+    font-weight: 700;
+    font-size: 0.65rem;
+    line-height: 1;
+    box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #a3175c;
+}
+
+#room-canvas {
     display: block;
+    flex: 1 1 auto;
+    width: 100%;
+    /* Without this a flex item refuses to shrink below its content's
+       intrinsic size — a canvas's intrinsic size is its drawing-buffer
+       resolution, which would otherwise force the window taller than the
+       frame actually allows. */
+    min-height: 0;
     /* The renderer draws at a reduced internal resolution (three-scene.js's
        RETRO_RENDER_SCALE) and relies on this element's CSS size stretching
        it back up — pixelated (nearest-neighbour) instead of the browser's
@@ -1849,8 +1925,8 @@ body.landing {
    the right of it on any real desktop viewport, so nowrap costs nothing. */
 .room-hint {
     position: fixed;
-    bottom: 1.6rem;
-    left: 1.6rem;
+    bottom: calc(var(--room-frame-pad) + 1.6rem);
+    left: calc(var(--room-frame-pad) + 1.6rem);
     z-index: 100;
     padding: 0.55rem 0.9rem;
     background: rgba(10, 6, 12, 0.82);
@@ -2419,7 +2495,7 @@ body.landing {
        character's own span), not this container, so it's set there too. */
     .room-hint {
         white-space: normal;
-        max-width: calc(100vw - 3.2rem);
+        max-width: calc(100vw - 2 * var(--room-frame-pad) - 3.2rem);
     }
     .room-hint .wave-char {
         font-size: 0.62rem;
