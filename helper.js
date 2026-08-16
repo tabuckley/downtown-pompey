@@ -33,18 +33,12 @@ const ARCHIE_IMAGE_URL = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
 // showing the placeholder SVG.
 const FLO_IMAGES = {
     editorial: [
-        // All three animated — the full 90s-glitter-graphic treatment
-        // (sparkles, fairies, glitter text) rather than static photos.
-        // Each resized to 480x480 (matching flo-editorial-1's original
-        // trim) and recompressed via gifsicle; #1 also has its frames
-        // subsampled (every 3rd of its 111-frame source, delay tripled to
-        // compensate) since it was long enough to need it — #2/#3 were
-        // short enough that a resize + colour/lossy pass alone got them
-        // under a comparable file size. A plain <img> animates a GIF
-        // exactly like any other browser-native image, no extra JS needed.
+        // Matching pink duotone/halftone treatment across all three —
+        // shrug, thoughtful, pointing — each resized to 480x480 to match
+        // the set's existing footprint.
         'images/flo-editorial-1.png',
-        'images/flo-editorial-2.gif',
-        'images/flo-editorial-3.gif',
+        'images/flo-editorial-2.png',
+        'images/flo-editorial-3.png',
     ],
 };
 
