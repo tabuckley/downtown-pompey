@@ -1838,8 +1838,17 @@ body.landing {
    against the topbar's actual live rendered height (122px desktop,
    ~129px once it wraps to two rows on mobile) plus a buffer, not
    guessed. */
+/* Tiled, animated "desktop wallpaper" behind the room window — same idea
+   as a classic Windows 98 tiled background, using the site's own glow-logo
+   loop (images/dtp-glow-tile.gif) rather than a generic pattern. Sits on
+   the body itself so it's visible in the frame's own pad margin and
+   anywhere else the opaque window/UI doesn't cover — a background-image
+   repeats for free with no extra asset cost per tile. */
 [data-mode="editorial"] {
     --room-frame-pad: clamp(1.2rem, 3.5vw, 3rem);
+    background-color: var(--bg);
+    background-image: url('images/dtp-glow-tile.gif');
+    background-repeat: repeat;
 }
 
 .room-window {
@@ -1851,10 +1860,14 @@ body.landing {
     display: flex;
     flex-direction: column;
     background: #ffe3f0;
+    /* A few pixels thicker than the other Win98 boxes' 1px+2px bevel
+       (Flo's bubble, readme.txt) — at this box's much larger size, that
+       same thickness read as comparatively thin/negligible, where it's
+       clearly visible as a real border on the smaller boxes. */
     box-shadow:
-        0 0 0 1px #4a0e28,
-        inset 2px 2px 0 #fff,
-        inset -2px -2px 0 #a3175c,
+        0 0 0 2px #4a0e28,
+        inset 3px 3px 0 #fff,
+        inset -3px -3px 0 #a3175c,
         8px 8px 0 rgba(0, 0, 0, 0.7);
 }
 
