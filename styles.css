@@ -1893,6 +1893,24 @@ body.landing {
     margin-bottom: 0.5rem;
 }
 
+/* Grid, not flex — a two-column 1fr/auto grid gives the title all the
+   flexible space (wrapping normally across as many lines as it needs)
+   while the tags column stays exactly content-width, pinned to the right
+   edge. Flex+wrap would instead pop the tags onto their own left-aligned
+   line once a long title forced a wrap (a lone item on a wrapped
+   space-between line packs to flex-start, not the end). */
+.lightbox-info .lightbox-title-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: 0.6rem;
+    margin-bottom: 0.5rem;
+}
+
+.lightbox-info .lightbox-title-row h3 { margin-bottom: 0; }
+
+.lightbox-info .lightbox-title-row .lb-tags { justify-content: flex-end; }
+
 .lightbox-info .lb-meta {
     font-family: var(--font-mono);
     font-size: 0.68rem;
