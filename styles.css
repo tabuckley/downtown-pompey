@@ -1353,59 +1353,63 @@ body.landing {
     padding: 0.24rem 0 0.6rem;
 }
 
-/* CSS-only sticker look — no image assets. Each tag cycles through one of
-   8 colour/tilt/corner combinations (:nth-child below) rather than one
-   uniform pill, so the ~46-tag bar reads as a mixed sheet of stickers
-   rather than a repeated shape. --variant-bg/--variant-color carry each
-   pill's own colour pair through to :hover/.active below without those
-   needing 8 separate overrides of their own. --tilt/--lift compose into
-   one shared `transform` (rather than each state setting its own
-   transform outright) so hovering or activating a pill doesn't cancel out
-   its individual rotation — the same bug already hit once this session
-   with Flo's pop-in animation fighting her static translateX offset. */
+/* Real sticker images now (images/tag-stickers/, paired per-tag by
+   tagStickerUrl() in tags.js) — the earlier CSS-only version (colour +
+   corner-radius cycling, no assets) read as flat/generic rather than an
+   actual sticker sheet. background-image is set inline per-pill in
+   scrapbook.js since it's data-driven (which tag), not positional —
+   :nth-child can't reach it. --tilt/--lift still compose into one shared
+   `transform` (rather than each state setting transform outright) so
+   hovering or activating a pill doesn't cancel out its individual
+   rotation — the same bug already hit once this session with Flo's
+   pop-in animation fighting her static translateX offset. */
 .tag-pill {
-    --variant-bg: #ffffff;
-    --variant-color: var(--accent);
     --tilt: 0deg;
     --lift: 0px;
     flex-shrink: 0;
-    background: var(--variant-bg);
-    border: 2px solid var(--variant-color);
-    border-radius: 14px 6px 16px 8px;
-    padding: 0.384rem 1.02rem;
+    background-color: transparent;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: none;
+    border-radius: 0;
+    padding: 0.6rem 1.3rem;
     font-family: var(--font-mono);
-    font-size: 0.816rem;
-    color: var(--variant-color);
+    font-weight: 700;
+    font-size: 0.78rem;
+    /* A dark warm ink tone rather than the site's own pink accent — every
+       sticker's label area is the same aged-cream tone, and that reads
+       more legibly under a dark ink than under pink. */
+    color: #3a2510;
     cursor: pointer;
     white-space: nowrap;
-    box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.15);
+    filter: none;
     transform: rotate(var(--tilt)) translateY(var(--lift));
-    transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+    transition: filter 0.15s, transform 0.15s, box-shadow 0.15s;
 }
 
-.tag-pill:nth-child(8n+1) { --variant-bg: #ffe1ee; --variant-color: #d01359; --tilt: -3deg; border-radius: 14px 6px 16px 8px; }
-.tag-pill:nth-child(8n+2) { --variant-bg: #fff3c4; --variant-color: #a6790a; --tilt: 2deg; border-radius: 8px 16px 6px 14px; }
-.tag-pill:nth-child(8n+3) { --variant-bg: #d6ecff; --variant-color: #1c6fb0; --tilt: -1.5deg; border-radius: 16px 8px 12px 10px; }
-.tag-pill:nth-child(8n+4) { --variant-bg: #d7f7e3; --variant-color: #1a8f5c; --tilt: 3deg; border-radius: 10px 14px 8px 16px; }
-.tag-pill:nth-child(8n+5) { --variant-bg: #ece0ff; --variant-color: #6b3fbf; --tilt: -2.5deg; border-radius: 12px 6px 14px 10px; }
-.tag-pill:nth-child(8n+6) { --variant-bg: #ffe3d1; --variant-color: #c05a1f; --tilt: 1deg; border-radius: 6px 14px 10px 8px; }
-.tag-pill:nth-child(8n+7) { --variant-bg: #ffd9d9; --variant-color: #c53030; --tilt: -4deg; border-radius: 14px 10px 6px 16px; }
-.tag-pill:nth-child(8n+8) { --variant-bg: #d0f5f0; --variant-color: #157b74; --tilt: 2.5deg; border-radius: 10px 8px 16px 6px; }
+.tag-pill:nth-child(6n+1) { --tilt: -2deg; }
+.tag-pill:nth-child(6n+2) { --tilt: 1.5deg; }
+.tag-pill:nth-child(6n+3) { --tilt: -1deg; }
+.tag-pill:nth-child(6n+4) { --tilt: 2deg; }
+.tag-pill:nth-child(6n+5) { --tilt: -1.5deg; }
+.tag-pill:nth-child(6n+6) { --tilt: 1deg; }
 
 .tag-pill:hover {
     --lift: -3px;
-    box-shadow: 3px 5px 0 rgba(0, 0, 0, 0.2);
+    filter: brightness(1.06) saturate(1.1);
 }
 
-/* Comes after the :nth-child block so --tilt:0 (a "pressed flat and
-   highlighted" read) reliably wins the cascade tie regardless of which
-   variant a given pill landed on — same specificity as the nth-child
-   rules above, so source order is what decides it. */
+/* Comes after the :nth-child block so --tilt:0 (a "pressed flat" read)
+   reliably wins the cascade tie regardless of which tilt a given pill
+   landed on — same specificity as the nth-child rules above, so source
+   order is what decides it. A ring rather than a colour swap (the sticker
+   image itself can't easily swap colour) — visible against every sticker
+   in the set regardless of its own palette. */
 .tag-pill.active {
     --tilt: 0deg;
-    background: var(--variant-color);
-    color: #ffffff;
-    box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.3);
+    filter: brightness(0.88) saturate(1.25);
+    box-shadow: 0 0 0 3px var(--accent);
 }
 
 /* Sits as the first item in the tag row — the actual way keyboard/screen-
