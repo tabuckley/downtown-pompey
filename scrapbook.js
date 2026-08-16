@@ -1,7 +1,7 @@
 import { yearFrom, dateStamp } from './sheet.js';
 import { initPanCanvas } from './pan-canvas.js';
 import { loadArchive } from './archive.js';
-import { TAGS, itemTags, matchesTag, tagStickerUrl } from './tags.js';
+import { TAGS, itemTags, matchesTag } from './tags.js';
 
 const PLACEHOLDER_COUNT = 140;
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -152,7 +152,6 @@ TAGS.forEach(tag => {
     const pill = document.createElement('button');
     pill.className = 'tag-pill';
     pill.textContent = tag;
-    pill.style.backgroundImage = `url('${tagStickerUrl(tag)}')`;
     pill.setAttribute('aria-pressed', 'false');
     pill.addEventListener('click', () => {
         if (activeTags.has(tag)) activeTags.delete(tag);
