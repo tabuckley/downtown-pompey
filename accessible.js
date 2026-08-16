@@ -27,7 +27,6 @@ const detailView = document.getElementById('accDetailView');
 const form = document.getElementById('accSearchForm');
 const input = document.getElementById('accSearchInput');
 const typeFiltersEl = document.getElementById('accTypeFilters');
-const projectFilterEl = document.getElementById('accProjectFilter');
 const statusEl = document.getElementById('accStatus');
 const resultsEl = document.getElementById('accResults');
 const backLink = document.getElementById('accBackLink');
@@ -70,15 +69,6 @@ function buildFilterChips() {
         });
         typeFiltersEl.appendChild(btn);
     });
-
-    const projects = [...new Set(allItems.map(i => i.project).filter(Boolean))].sort();
-    projects.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p;
-        opt.textContent = p;
-        projectFilterEl.appendChild(opt);
-    });
-    projectFilterEl.addEventListener('change', runSearch);
 }
 
 // ===== SEARCH + RENDER =====
@@ -86,7 +76,6 @@ function applyFilters(items) {
     return items.filter(item => {
         if (dismissed.has(item.id)) return false;
         if (activeTypes.size && !activeTypes.has(item.type)) return false;
-        if (projectFilterEl.value && item.project !== projectFilterEl.value) return false;
         return true;
     });
 }
@@ -96,11 +85,11 @@ let lastQuery = '';
 
 function runSearch(pushUrl = true) {
     const query = input.value.trim();
-    // A type/project filter counts as deliberate search intent too, same as
-    // typing something — but with neither, the results panel should stay
-    // empty rather than dumping the 20 most recent items with nothing
-    // actually searched for.
-    const hasFilter = activeTypes.size > 0 || !!projectFilterEl.value;
+    // A type filter counts as deliberate search intent too, same as typing
+    // something — but with neither, the results panel should stay empty
+    // rather than dumping the 20 most recent items with nothing actually
+    // searched for.
+    const hasFilter = activeTypes.size > 0;
     let results;
     if (query || hasFilter) {
         if (query) {
@@ -162,7 +151,12 @@ function renderResults(results, query) {
             showItem(item.id);
         });
 
-        const thumbSrc = item.type === 'download' ? '' : (item.thumbnail || (item.type !== 'audio' ? item.url : ''));
+        // item.url is only ever safe as an <img src> for photo items — for
+        // video/3d/audio/download it's a non-image file (.mp4, .glb, etc.),
+        // and falling back to it for a missing thumbnail just renders a
+        // permanently-broken image instead of the type-icon fallback below.
+        // (A video item with no thumbnail recorded was doing exactly this.)
+        const thumbSrc = item.thumbnail || (item.type === 'photo' ? item.url : '');
         if (thumbSrc) {
             const img = document.createElement('img');
             img.className = 'acc-result-thumb';
@@ -223,7 +217,6 @@ function updateSearchUrl(query) {
     const params = new URLSearchParams();
     if (query) params.set('q', query);
     if (activeTypes.size) params.set('type', [...activeTypes].join(','));
-    if (projectFilterEl.value) params.set('project', projectFilterEl.value);
     const url = 'accessible.html' + (params.toString() ? `?${params}` : '');
     history.pushState({ view: 'search' }, '', url);
 }
@@ -232,7 +225,6 @@ function restoreSearchStateFromUrl() {
     const params = new URLSearchParams(location.search);
     input.value = params.get('q') || '';
     (params.get('type') || '').split(',').filter(Boolean).forEach(t => activeTypes.add(t));
-    if (params.get('project')) projectFilterEl.value = params.get('project');
 
     [...typeFiltersEl.children].forEach(btn => {
         const type = Object.keys(TYPE_LABELS).find(k => (TYPE_LABELS[k] || k) === btn.textContent) || btn.textContent.toLowerCase();
