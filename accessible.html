@@ -25,40 +25,43 @@
     <main class="acc-main">
 
         <!-- ===== SEARCH VIEW ===== -->
-        <section id="accSearchView" class="acc-view">
-            <p class="shell-kicker">Downtown Pompey</p>
-            <h1 class="shell-title">Accessible Archive</h1>
-            <p class="shell-text acc-intro">
-                Search the whole archive in plain text. Describe what you remember —
-                exact titles aren't needed, and small typos are fine.
-            </p>
+        <section id="accSearchView" class="acc-view acc-search-view">
+            <div class="acc-search-panel">
+                <p class="shell-kicker">Downtown Pompey</p>
+                <h1 class="shell-title">Accessible Archive</h1>
+                <p class="shell-text acc-intro">
+                    Search the whole archive in plain text. Describe what you remember —
+                    exact titles aren't needed, and small typos are fine.
+                </p>
 
-            <form id="accSearchForm" class="acc-search-form" role="search">
-                <label for="accSearchInput" class="acc-search-label">Search the archive</label>
-                <div class="acc-search-row">
-                    <input type="search" id="accSearchInput" class="acc-search-input"
-                        placeholder="e.g. &quot;a collage about gender&quot; or &quot;pink writing on faces&quot;"
-                        autocomplete="off">
-                    <button type="submit" class="acc-search-btn">Search</button>
-                </div>
-            </form>
+                <form id="accSearchForm" class="acc-search-form" role="search">
+                    <label for="accSearchInput" class="acc-search-label">Search the archive</label>
+                    <div class="acc-search-row">
+                        <input type="search" id="accSearchInput" class="acc-search-input"
+                            placeholder="e.g. &quot;a collage about gender&quot; or &quot;pink writing on faces&quot;"
+                            autocomplete="off">
+                        <button type="submit" class="acc-search-btn">Search</button>
+                    </div>
+                </form>
 
-            <div class="acc-filters">
-                <div class="acc-filter-group">
-                    <span class="acc-filter-label">Type</span>
-                    <div id="accTypeFilters" class="acc-chip-row"></div>
-                </div>
-                <div class="acc-filter-group">
-                    <label for="accProjectFilter" class="acc-filter-label">Project / workshop</label>
-                    <select id="accProjectFilter" class="acc-select">
-                        <option value="">All projects</option>
-                    </select>
+                <div class="acc-filters">
+                    <div class="acc-filter-group">
+                        <span class="acc-filter-label">Type</span>
+                        <div id="accTypeFilters" class="acc-chip-row"></div>
+                    </div>
+                    <div class="acc-filter-group">
+                        <label for="accProjectFilter" class="acc-filter-label">Project / workshop</label>
+                        <select id="accProjectFilter" class="acc-select">
+                            <option value="">All projects</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <p id="accStatus" class="acc-status" role="status" aria-live="polite"></p>
-
-            <ul id="accResults" class="acc-results" aria-label="Search results"></ul>
+            <div class="acc-results-panel">
+                <p id="accStatus" class="acc-status" role="status" aria-live="polite"></p>
+                <ul id="accResults" class="acc-results" aria-label="Search results"></ul>
+            </div>
         </section>
 
         <!-- ===== ITEM DETAIL VIEW ===== -->

@@ -96,15 +96,24 @@ let lastQuery = '';
 
 function runSearch(pushUrl = true) {
     const query = input.value.trim();
+    // A type/project filter counts as deliberate search intent too, same as
+    // typing something — but with neither, the results panel should stay
+    // empty rather than dumping the 20 most recent items with nothing
+    // actually searched for.
+    const hasFilter = activeTypes.size > 0 || !!projectFilterEl.value;
     let results;
-    if (query) {
-        results = search(searchIndex, query, { maxResults: 60 }).map(r => ({ item: r.item, reason: r.reason }));
-        results = results.filter(r => applyFilters([r.item]).length);
+    if (query || hasFilter) {
+        if (query) {
+            results = search(searchIndex, query, { maxResults: 60 }).map(r => ({ item: r.item, reason: r.reason }));
+            results = results.filter(r => applyFilters([r.item]).length);
+        } else {
+            results = applyFilters(allItems)
+                .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+                .slice(0, 60)
+                .map(item => ({ item, reason: '' }));
+        }
     } else {
-        results = applyFilters(allItems)
-            .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-            .slice(0, 60)
-            .map(item => ({ item, reason: '' }));
+        results = null; // distinct from [] — "nothing searched yet" vs "searched, found nothing"
     }
 
     visibleCount = RESULTS_PAGE_SIZE; // a new search/filter always starts back at one page
@@ -114,12 +123,20 @@ function runSearch(pushUrl = true) {
 }
 
 function renderResults(results, query) {
-    lastResults = results;
+    lastResults = results || [];
     lastQuery = query;
     resultsEl.innerHTML = '';
 
     if (!allItems.length) {
         statusEl.textContent = 'Could not reach the archive — try refreshing.';
+        return;
+    }
+    if (results === null) {
+        statusEl.textContent = 'Type something, or pick a filter, to search the archive.';
+        const li = document.createElement('li');
+        li.className = 'acc-empty-state';
+        li.textContent = 'Results will appear here once you search or filter.';
+        resultsEl.appendChild(li);
         return;
     }
     if (!results.length) {
