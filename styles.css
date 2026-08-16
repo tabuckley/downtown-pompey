@@ -1891,15 +1891,26 @@ body.landing {
     box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #a3175c;
 }
 
-#room-canvas {
-    display: block;
+/* A real frame edge around the 3D scene — pink window face visible as a
+   mat border, plus a sunken (inset) bevel on the canvas itself, the
+   opposite direction from the window's own raised outer bevel, so the
+   scene reads as a recessed "display" set into the frame rather than
+   just bleeding to the window's inner edge. */
+.room-window-content {
     flex: 1 1 auto;
-    width: 100%;
     /* Without this a flex item refuses to shrink below its content's
        intrinsic size — a canvas's intrinsic size is its drawing-buffer
        resolution, which would otherwise force the window taller than the
        frame actually allows. */
     min-height: 0;
+    padding: 0.9rem;
+    box-shadow: inset 1px 1px 0 #a3175c, inset -1px -1px 0 #fff;
+}
+
+#room-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
     /* The renderer draws at a reduced internal resolution (three-scene.js's
        RETRO_RENDER_SCALE) and relies on this element's CSS size stretching
        it back up — pixelated (nearest-neighbour) instead of the browser's
