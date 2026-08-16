@@ -174,6 +174,14 @@ function buildHelper() {
         if (hasFloPhotos) {
             floImageIndex = (floImageIndex + 1) % floImages.length;
             figureImg.src = floImages[floImageIndex];
+            // Remove-reflow-readd, not just re-add — a CSS animation
+            // doesn't restart just because the class is already present,
+            // and it's already present from the previous line of dialogue
+            // by the second image onward. Reading offsetWidth forces the
+            // browser to apply the removal before the class goes back on.
+            figureImg.classList.remove('flo-pop');
+            void figureImg.offsetWidth;
+            figureImg.classList.add('flo-pop');
         }
         fitTextToBubble();
         bubble.classList.add('open');
