@@ -122,11 +122,15 @@ function shuffle(arr) {
 // comes from `row['low poly url']` instead.)
 // x/z pushed out ~15% from their original 0.72/0.72/0.85 to give the
 // (now also 15% smaller) models a bit more breathing room between them;
-// y (height) untouched since that's not part of the spacing.
+// y (height) untouched since that's not part of the spacing. x is the
+// room's actual depth axis toward the camera (confirmed against the live
+// camera/lookAt values, which sit at z=0 throughout) — z is screen
+// left/right — so x was pulled back by 0.2 to sit the trio a little
+// further from camera.
 const LOW_POLY_SLOTS = [
-    [0.83, 0.28, 0.83],
-    [0.83, 0.28, -0.83],
-    [0.98, 0.28, 0],
+    [0.63, 0.28, 0.83],
+    [0.63, 0.28, -0.83],
+    [0.78, 0.28, 0],
 ];
 // Per-model rotation corrections some scans need (a flat diorama that reads
 // sideways by default, a mesh that faces away from camera, etc.) — most
