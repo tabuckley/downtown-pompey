@@ -2,7 +2,7 @@
 // accessible.js (search refinement chips), split out so the two views can't
 // silently drift apart into two different tag lists.
 export const TAGS = [
-    'Event', 'Drag', 'Capture', 'Landmarks', 'Medium', 'Identity', 'Haunted',
+    'Event', 'Drag', 'Capture', 'Landmarks', 'Identity', 'Haunted',
     'Seaside', 'Non-Gendered', 'View', 'Island', 'Journey', 'Bubbles',
     'Wandering', 'Personal', 'Closeup', 'Change', 'Found', 'Leisure',
     'Message', 'Trade', 'Going Out-Out', 'Movements', 'Uniform',
