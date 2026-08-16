@@ -53,15 +53,19 @@
             </div>
 
             <div class="acc-results-panel">
-                <p id="accStatus" class="acc-status" role="status" aria-live="polite"></p>
-                <ul id="accResults" class="acc-results" aria-label="Search results"></ul>
+                <!-- Clicking a result swaps this pane out for accDetailPane
+                     below, in place -- the search panel to the left stays
+                     put and this panel just grows to fit, rather than
+                     navigating to a whole separate full-page view. -->
+                <div id="accResultsPane">
+                    <p id="accStatus" class="acc-status" role="status" aria-live="polite"></p>
+                    <ul id="accResults" class="acc-results" aria-label="Search results"></ul>
+                </div>
+                <div id="accDetailPane" hidden>
+                    <a href="accessible.html" id="accBackLink" class="acc-back-link">&larr; Back to results</a>
+                    <article id="accDetailContent" class="acc-detail"></article>
+                </div>
             </div>
-        </section>
-
-        <!-- ===== ITEM DETAIL VIEW ===== -->
-        <section id="accDetailView" class="acc-view" hidden>
-            <a href="accessible.html" id="accBackLink" class="acc-back-link">&larr; Back to search</a>
-            <article id="accDetailContent" class="acc-detail"></article>
         </section>
 
     </main>

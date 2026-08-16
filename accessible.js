@@ -22,8 +22,13 @@ const TYPE_ICONS = {
 };
 const RESULTS_PAGE_SIZE = 20;
 
-const searchView = document.getElementById('accSearchView');
-const detailView = document.getElementById('accDetailView');
+// Renamed from the old searchView/detailView pair — these two now swap
+// places WITHIN the results panel (see accessible.html) so the search
+// panel to its left never disappears, instead of the whole search view
+// (search panel included) getting hidden in favour of a separate full-page
+// detail view.
+const resultsPane = document.getElementById('accResultsPane');
+const detailPane = document.getElementById('accDetailPane');
 const form = document.getElementById('accSearchForm');
 const input = document.getElementById('accSearchInput');
 const typeFiltersEl = document.getElementById('accTypeFilters');
@@ -239,6 +244,19 @@ form.addEventListener('submit', (e) => {
     runSearch();
 });
 
+// In-place, not a real navigation — the results list is still sitting in
+// the DOM under detailPane (just hidden), so there's nothing to re-render,
+// only to reveal again. Keeps history/back-button working right via
+// pushState, without a full page reload resetting scroll and re-fetching
+// the whole archive for what's just a "go back" click.
+backLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    history.pushState({ view: 'search' }, '', lastSearchUrl);
+    resultsPane.hidden = false;
+    detailPane.hidden = true;
+    document.title = 'Accessible | Alternative Archiving';
+});
+
 // ===== ITEM DETAIL =====
 function buildDetailMedia(item) {
     if (item.type === 'video') {
@@ -309,8 +327,8 @@ function showItem(id, pushUrl = true) {
         return;
     }
 
-    searchView.hidden = true;
-    detailView.hidden = false;
+    resultsPane.hidden = true;
+    detailPane.hidden = false;
     backLink.href = lastSearchUrl;
     window.scrollTo(0, 0);
 
@@ -338,8 +356,8 @@ function showItem(id, pushUrl = true) {
 }
 
 function showNotFound(id) {
-    searchView.hidden = true;
-    detailView.hidden = false;
+    resultsPane.hidden = true;
+    detailPane.hidden = false;
     backLink.href = lastSearchUrl;
     detailContent.innerHTML = `
         <div class="acc-detail-info">
@@ -449,8 +467,8 @@ function buildRefinementBlock(item) {
     notThis.addEventListener('click', () => {
         dismissed.add(item.id);
         history.pushState({ view: 'search' }, '', lastSearchUrl);
-        searchView.hidden = false;
-        detailView.hidden = true;
+        resultsPane.hidden = false;
+        detailPane.hidden = true;
         runSearch(false);
     });
 
@@ -460,8 +478,8 @@ function buildRefinementBlock(item) {
     moreLike.textContent = 'Show more like this';
     moreLike.addEventListener('click', () => {
         input.value = likeQueryFor(item);
-        searchView.hidden = false;
-        detailView.hidden = true;
+        resultsPane.hidden = false;
+        detailPane.hidden = true;
         runSearch();
         input.focus();
     });
@@ -553,8 +571,8 @@ function route(pushUrl = false) {
     if (itemId) {
         showItem(itemId, pushUrl);
     } else {
-        searchView.hidden = false;
-        detailView.hidden = true;
+        resultsPane.hidden = false;
+        detailPane.hidden = true;
         document.title = 'Accessible | Alternative Archiving';
         restoreSearchStateFromUrl();
         runSearch(false);
