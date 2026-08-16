@@ -31,9 +31,12 @@
     <div class="room-window">
         <div class="room-window-titlebar">
             <span class="room-window-title">Editorial_Room.exe</span>
-            <span class="room-window-controls" aria-hidden="true">
-                <span>&#8211;</span><span>&#9633;</span><span>&times;</span>
-            </span>
+            <div class="room-window-titlebar-actions">
+                <button type="button" class="room-window-refresh" id="roomRefreshBtn" title="Get 3 new objects">&#8635;</button>
+                <span class="room-window-controls" aria-hidden="true">
+                    <span>&#8211;</span><span>&#9633;</span><span>&times;</span>
+                </span>
+            </div>
         </div>
         <div class="room-window-content">
             <canvas id="room-canvas"></canvas>

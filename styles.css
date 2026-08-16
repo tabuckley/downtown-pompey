@@ -1956,6 +1956,46 @@ body.landing {
     letter-spacing: 0.02em;
 }
 
+.room-window-titlebar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Real refresh reroll button, distinguished from the row of decorative
+   window-control squares next to it (which are aria-hidden — those don't
+   do anything). Same square-control sizing/bevel as those, but as an
+   actual <button> with hover/active states and a visible focus ring, since
+   this one is genuinely interactive. */
+.room-window-refresh {
+    width: 1.4rem;
+    height: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffe3f0;
+    color: #4a0e28;
+    font-size: 0.85rem;
+    line-height: 1;
+    border: none;
+    box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #a3175c;
+    cursor: pointer;
+    padding: 0;
+}
+
+.room-window-refresh:hover {
+    background: #ffd0e7;
+}
+
+.room-window-refresh:active {
+    box-shadow: inset -1px -1px 0 #fff, inset 1px 1px 0 #a3175c;
+}
+
+.room-window-refresh:focus-visible {
+    outline: 2px solid #4a0e28;
+    outline-offset: 2px;
+}
+
 .room-window-controls {
     display: flex;
     gap: 0.3rem;

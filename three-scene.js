@@ -71,6 +71,11 @@ const spinners = [];
 // { obj, baseY, baseRotY, phase }.
 const floaters = [];
 const floaterObjects = new Set(); // mirrors floaters' .obj values, for O(1) exclusion lookup in animate()
+// { group, shadow } per low-poly collectible — separate from clickables/
+// floaters/floaterObjects above (which track ALL clickable types, not just
+// these) so clearLowPolyModels() can undo exactly and only what
+// addLowPolyModel() did, for the room window's refresh button.
+const lowPolyEntries = [];
 let clickCb = null;
 let hoverCb = null;
 // Scales whatever's currently hovered up slightly (see animate()) as a
@@ -724,8 +729,9 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
             );
             shadowRay.layers.set(0);
             const floorHit = shadowRay.intersectObjects(scene.children, true)[0];
+            let shadow = null;
             if (floorHit) {
-                const shadow = buildDropShadow(Math.max(size.x, size.z) * scale * 0.42);
+                shadow = buildDropShadow(Math.max(size.x, size.z) * scale * 0.42);
                 shadow.position.set(position[0], floorHit.point.y + 0.005, position[2]);
                 scene.add(shadow);
             }
@@ -751,6 +757,7 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
             clickables.push(group);
             floaters.push({ obj: group, baseY: group.position.y, baseRotY, phase: Math.random() * Math.PI * 2 });
             floaterObjects.add(group);
+            lowPolyEntries.push({ group, shadow });
             // Resolves with the item's data (like addFramedPhoto/addModel
             // do), not the Three.js group itself, so callers can treat every
             // clickable type the same way — e.g. passing it straight to a
@@ -761,6 +768,37 @@ export function addLowPolyModel(url, data = {}, position = [0.55, 0.28, 0.55], m
             resolve(null);
         });
     });
+}
+
+// Undoes exactly what addLowPolyModel() did for every collectible currently
+// in the room — for the room window's refresh button (editorial.js), which
+// needs the old 3 gone before the newly-picked 3 arrive, not just added on
+// top of them. Disposes geometry/textures too since this can be triggered
+// repeatedly in one session, unlike everything else in this file which
+// only ever runs once per page load.
+export function clearLowPolyModels() {
+    if (!scene) return;
+    lowPolyEntries.forEach(({ group, shadow }) => {
+        scene.remove(group);
+        if (shadow) scene.remove(shadow);
+        const ci = clickables.indexOf(group);
+        if (ci !== -1) clickables.splice(ci, 1);
+        const fi = floaters.findIndex(f => f.obj === group);
+        if (fi !== -1) floaters.splice(fi, 1);
+        floaterObjects.delete(group);
+        if (hoverTarget === group) hoverTarget = null;
+        if (focusedObject === group) focusedObject = null;
+        group.traverse((obj) => {
+            if (!obj.isMesh) return;
+            obj.geometry?.dispose();
+            if (obj.material) {
+                obj.material.map?.dispose();
+                obj.material.dispose();
+            }
+        });
+    });
+    lowPolyEntries.length = 0;
+    updateOutlineSelection();
 }
 
 export function addPlaceholders() {

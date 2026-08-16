@@ -1,5 +1,5 @@
 import { fetchSheet, yearFrom } from './sheet.js';
-import { initRoom, addFramedPhoto, addModel, addPlaceholders, addLowPolyModel, onObjectClick, focusOnObject, clearFocus } from './three-scene.js';
+import { initRoom, addFramedPhoto, addModel, addPlaceholders, addLowPolyModel, clearLowPolyModels, onObjectClick, focusOnObject, clearFocus } from './three-scene.js';
 
 const MAX_PHOTOS = 6;
 const MAX_MODELS = 2;
@@ -171,9 +171,17 @@ const LOW_POLY_ROTATION_OVERRIDES = {
     'promonade photo.glb': { rotationZ: 0, baseRotY: Math.PI / 2 }, // confirmed upright + correctly oriented against the source photo
 };
 
+let lowPolyRefreshing = false;
+
 async function populateLowPoly() {
+    if (lowPolyRefreshing) return; // ignore a second click while one refresh is still in flight
+    lowPolyRefreshing = true;
     try {
         const rows = (await fetchSheet('low-poly')).filter(r => r['low poly url']);
+        // Cleared only once the fetch has actually succeeded — a failed
+        // fetch (see catch below) should leave whatever's already on
+        // display alone rather than wiping it for nothing.
+        clearLowPolyModels();
         const picks = shuffle([...rows]).slice(0, LOW_POLY_SLOTS.length);
         const attempts = picks.map((row, i) => {
             const modelUrl = row['low poly url'];
@@ -198,10 +206,14 @@ async function populateLowPoly() {
         await Promise.all(attempts);
     } catch (err) {
         console.warn('Low-poly models failed to load:', err.message);
+    } finally {
+        lowPolyRefreshing = false;
     }
 }
 
 populateLowPoly();
+
+document.getElementById('roomRefreshBtn')?.addEventListener('click', populateLowPoly);
 
 async function populate() {
     try {
