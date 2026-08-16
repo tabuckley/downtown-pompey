@@ -1917,7 +1917,6 @@ body.landing {
        frame actually allows. */
     min-height: 0;
     padding: 0.9rem;
-    box-shadow: inset 1px 1px 0 #a3175c, inset -1px -1px 0 #fff;
 }
 
 #room-canvas {
