@@ -1057,7 +1057,7 @@ body.landing {
        titlebar strip, Win98-style. */
     margin: 0 -0.7rem 0.7rem;
     padding: 0.4rem 0.5rem;
-    background: linear-gradient(90deg, #7a0a35 0%, #d01359 55%, #ff5fa2 100%);
+    background: #d01359;
     color: #fff;
     font-size: 0.68rem;
     font-weight: 700;
