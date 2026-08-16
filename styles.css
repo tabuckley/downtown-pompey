@@ -3057,10 +3057,37 @@ body.landing {
 }
 
 .acc-share,
-.acc-refine {
+.acc-refine,
+.acc-credit {
     border-top: 1px solid var(--border);
     padding-top: 1.4rem;
     margin-top: 1.4rem;
+}
+
+.acc-credit-intro {
+    font-size: 0.9rem;
+    color: var(--muted);
+    max-width: 50ch;
+    margin-bottom: 1rem;
+}
+
+.acc-credit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    max-width: 420px;
+}
+
+.acc-credit-form label:not(:first-child) { margin-top: 0.6rem; }
+
+.acc-credit-textarea {
+    resize: vertical;
+    font-family: var(--font-body);
+}
+
+.acc-credit-form .acc-btn {
+    align-self: flex-start;
+    margin-top: 0.9rem;
 }
 
 .acc-share-heading {

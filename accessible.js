@@ -331,6 +331,7 @@ function showItem(id, pushUrl = true) {
     detailContent.appendChild(info);
     detailContent.appendChild(buildShareBlock(item));
     detailContent.appendChild(buildRefinementBlock(item));
+    detailContent.appendChild(buildCreditRequestBlock(item));
 
     if (pushUrl) history.pushState({ view: 'item', id }, '', `accessible.html?item=${encodeURIComponent(id)}`);
     document.title = `${item.title || 'Archive item'} | Downtown Pompey`;
@@ -469,6 +470,79 @@ function buildRefinementBlock(item) {
     row.className = 'acc-share-row';
     row.append(isYours, notThis, moreLike);
     wrap.append(row, confirmMsg);
+    return wrap;
+}
+
+// ===== "ASK TO BE CREDITED" =====
+// No backend on this site (static files only), so this reuses the same
+// mailto: approach buildShareBlock's "Email to a friend" already relies on
+// — just addressed to the archive maintainer instead of a friend, with the
+// item's own link and the visitor's answers pre-filled in the body. Opens
+// their own email client; nothing is sent or recorded until they hit send
+// there themselves.
+const CREDIT_REQUEST_EMAIL = 'Thomas@Thomas-Buckley.com';
+
+function buildCreditRequestBlock(item) {
+    const wrap = document.createElement('div');
+    wrap.className = 'acc-credit';
+
+    const heading = document.createElement('h2');
+    heading.className = 'acc-share-heading';
+    heading.textContent = 'Are you in this, or did you make it?';
+    wrap.appendChild(heading);
+
+    const intro = document.createElement('p');
+    intro.className = 'acc-credit-intro';
+    intro.textContent = 'Ask to be credited as a contributor — this opens an email with your answer already filled in, ready to send.';
+    wrap.appendChild(intro);
+
+    const form = document.createElement('form');
+    form.className = 'acc-credit-form';
+
+    const nameLabel = document.createElement('label');
+    nameLabel.className = 'acc-search-label';
+    nameLabel.htmlFor = 'accCreditName';
+    nameLabel.textContent = "Your name (how you'd like to be credited)";
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.id = 'accCreditName';
+    nameInput.className = 'acc-search-input';
+    nameInput.required = true;
+
+    const noteLabel = document.createElement('label');
+    noteLabel.className = 'acc-search-label';
+    noteLabel.htmlFor = 'accCreditNote';
+    noteLabel.textContent = 'How are you connected to this item?';
+    const noteInput = document.createElement('textarea');
+    noteInput.id = 'accCreditNote';
+    noteInput.className = 'acc-search-input acc-credit-textarea';
+    noteInput.rows = 3;
+    noteInput.placeholder = 'e.g. "I\'m the person on the left" or "I made this piece"';
+    noteInput.required = true;
+
+    const submitBtn = document.createElement('button');
+    submitBtn.type = 'submit';
+    submitBtn.className = 'acc-btn';
+    submitBtn.textContent = 'Send credit request';
+
+    const confirmMsg = document.createElement('p');
+    confirmMsg.className = 'acc-refine-msg';
+    confirmMsg.hidden = true;
+    confirmMsg.setAttribute('role', 'status');
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const url = `${location.origin}${location.pathname}?item=${encodeURIComponent(item.id)}`;
+        const subject = `Credit request — ${item.title || 'Untitled item'}`;
+        const body = `Item: ${item.title || 'Untitled'}\nLink: ${url}\n\nName: ${nameInput.value.trim()}\nConnection: ${noteInput.value.trim()}`;
+        const mailto = `mailto:${CREDIT_REQUEST_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = mailto;
+        confirmMsg.textContent = 'Opening your email app with this filled in — just hit send.';
+        confirmMsg.hidden = false;
+    });
+
+    form.append(nameLabel, nameInput, noteLabel, noteInput, submitBtn);
+    wrap.append(form, confirmMsg);
     return wrap;
 }
 
