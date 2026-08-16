@@ -866,19 +866,23 @@ body.landing {
 }
 
 /* Retro bouncy pop-in — toggled by helper.js on every image swap (each
-   line of Flo's dialogue), not just the first appearance. Overshoots past
-   100% then settles slightly under before landing, all baked into the
-   keyframe stops themselves rather than a timing-function bounce, so a
-   plain ease-out between stops is enough. */
+   line of Flo's dialogue), not just the first appearance. Fast and mostly
+   scale-driven (a "blink" between poses) rather than a smooth fade —
+   opacity only dips partway, never to 0. Every stop keeps the same
+   translateX(1.4rem) as .helper-figure-img--photo's own static transform
+   (the flush-against-the-edge offset) baked in — an animated `transform`
+   fully replaces the element's transform for its duration rather than
+   composing with the static one, so without this Flo visibly snapped to
+   her un-shifted position for the whole animation and only jumped back
+   into place once it ended. */
 .helper-figure-img.flo-pop {
-    animation: flo-pop-in 0.5s ease-out;
+    animation: flo-pop-in 0.18s ease-out;
 }
 
 @keyframes flo-pop-in {
-    0% { transform: scale(0.6); opacity: 0; }
-    60% { transform: scale(1.08); opacity: 1; }
-    80% { transform: scale(0.96); }
-    100% { transform: scale(1); }
+    0% { transform: translateX(1.4rem) scale(0.5); opacity: 0.5; }
+    55% { transform: translateX(1.4rem) scale(1.15); opacity: 1; }
+    100% { transform: translateX(1.4rem) scale(1); opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
