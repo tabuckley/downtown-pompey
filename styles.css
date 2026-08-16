@@ -1047,6 +1047,9 @@ body.landing {
     padding: 0 0.7rem 0.7rem;
     margin-bottom: 0;
     font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
+    /* Slower than the shared 0.25s default — makes the reveal read as
+       Flo's own action rather than an instant popup. */
+    transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;
 }
 
 /* Sits the dialog box closer to Flo than the shared widget gap allows.
@@ -1059,8 +1062,32 @@ body.landing {
     gap: 0.25rem;
 }
 
+/* A proper triangle tail (not the base rule's rotated-square blob), built
+   from two stacked border-triangles so it still reads as Win98 chrome — a
+   1px-ish dark outline (::before, larger) behind a pink fill (::after,
+   2px smaller all round), same colours as the bubble's own bevel. */
+[data-mode="editorial"] .helper-bubble::before {
+    content: '';
+    position: absolute;
+    bottom: -11px;
+    right: 30px;
+    width: 0;
+    height: 0;
+    border-left: 11px solid transparent;
+    border-right: 11px solid transparent;
+    border-top: 11px solid #4a0e28;
+}
+
 [data-mode="editorial"] .helper-bubble::after {
-    display: none;
+    content: '';
+    position: absolute;
+    bottom: -9px;
+    right: 30px;
+    width: 0;
+    height: 0;
+    border-left: 9px solid transparent;
+    border-right: 9px solid transparent;
+    border-top: 9px solid #ffe3f0;
 }
 
 [data-mode="editorial"] .helper-bubble-name {
