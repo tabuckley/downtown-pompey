@@ -117,7 +117,6 @@ function buildHelper() {
     const script = { ...(DEFAULT_SCRIPTS[page] || DEFAULT_SCRIPTS.landing) };
     applyArchieOverrides(page, script);
     let tipIndex = -1;
-    let floImageIndex = -1;
     const floImages = FLO_IMAGES[page];
     const hasFloPhotos = !!(floImages && floImages.length);
 
@@ -169,11 +168,16 @@ function buildHelper() {
         }
     }
 
-    function say(text) {
+    // imageIndex is which floImages entry belongs to THIS text, not a
+    // rolling counter — intro is always floImages[0], tip N is always
+    // floImages[(N+1) % length]. Re-showing the same line of dialogue (e.g.
+    // closing and reopening Flo, which re-says the intro) always lands on
+    // the same image that way, instead of an ever-advancing index drifting
+    // the pairing apart from whatever text is actually on screen.
+    function say(text, imageIndex) {
         textEl.textContent = text;
         if (hasFloPhotos) {
-            floImageIndex = (floImageIndex + 1) % floImages.length;
-            figureImg.src = floImages[floImageIndex];
+            figureImg.src = floImages[imageIndex % floImages.length];
             // Remove-reflow-readd, not just re-add — a CSS animation
             // doesn't restart just because the class is already present,
             // and it's already present from the previous line of dialogue
@@ -196,12 +200,12 @@ function buildHelper() {
 
     function nextTip() {
         tipIndex = (tipIndex + 1) % script.tips.length;
-        say(script.tips[tipIndex]);
+        say(script.tips[tipIndex], tipIndex + 1);
     }
 
     btn.addEventListener('click', () => {
         if (bubble.classList.contains('open')) close();
-        else say(script.intro);
+        else say(script.intro, 0);
     });
 
     bubble.addEventListener('click', (e) => {
