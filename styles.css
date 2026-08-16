@@ -1934,11 +1934,6 @@ body.landing {
     box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #a3175c;
 }
 
-/* A real frame edge around the 3D scene — pink window face visible as a
-   mat border, plus a sunken (inset) bevel on the canvas itself, the
-   opposite direction from the window's own raised outer bevel, so the
-   scene reads as a recessed "display" set into the frame rather than
-   just bleeding to the window's inner edge. */
 .room-window-content {
     flex: 1 1 auto;
     /* Without this a flex item refuses to shrink below its content's
@@ -1946,7 +1941,10 @@ body.landing {
        resolution, which would otherwise force the window taller than the
        frame actually allows. */
     min-height: 0;
-    padding: 0.9rem;
+    /* No padding — the mat border tried here earlier used the window's
+       own pale face colour, which at that size read as a plain white
+       margin rather than a subtle frame. The scene now fills the window
+       right up to its (already-thickened) outer border instead. */
 }
 
 #room-canvas {
