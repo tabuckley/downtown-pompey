@@ -32,6 +32,7 @@ const detailPane = document.getElementById('accDetailPane');
 const form = document.getElementById('accSearchForm');
 const input = document.getElementById('accSearchInput');
 const typeFiltersEl = document.getElementById('accTypeFilters');
+const projectFiltersEl = document.getElementById('accProjectFilters');
 const statusEl = document.getElementById('accStatus');
 const resultsEl = document.getElementById('accResults');
 const backLink = document.getElementById('accBackLink');
@@ -41,6 +42,7 @@ let allItems = [];
 let searchIndex = [];
 let itemsById = new Map();
 const activeTypes = new Set();
+const activeProjects = new Set();
 let lastSearchUrl = 'accessible.html';
 // Reset to one page's worth on every new search/filter change (see
 // runSearch) — otherwise "show more" state from a previous, longer result
@@ -54,29 +56,45 @@ function esc(str) {
 }
 
 // ===== FILTER UI =====
-function buildFilterChips() {
-    const typesPresent = [...new Set(allItems.map(i => i.type).filter(Boolean))];
-    typesPresent.sort();
-    typesPresent.forEach(type => {
+// Shared by both chip rows below — type and project filters behave
+// identically (toggle membership in a Set, re-run search), so one function
+// builds either given the values to show and the Set backing it.
+function buildChipGroup(container, values, activeSet, labelFor = (v) => v) {
+    values.forEach(value => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'acc-chip';
-        btn.textContent = TYPE_LABELS[type] || type;
+        btn.textContent = labelFor(value);
+        btn.dataset.value = value;
         btn.setAttribute('aria-pressed', 'false');
         btn.addEventListener('click', () => {
-            if (activeTypes.has(type)) activeTypes.delete(type); else activeTypes.add(type);
-            btn.classList.toggle('active', activeTypes.has(type));
-            btn.setAttribute('aria-pressed', String(activeTypes.has(type)));
+            if (activeSet.has(value)) activeSet.delete(value); else activeSet.add(value);
+            btn.classList.toggle('active', activeSet.has(value));
+            btn.setAttribute('aria-pressed', String(activeSet.has(value)));
             runSearch();
         });
-        typeFiltersEl.appendChild(btn);
+        container.appendChild(btn);
     });
+}
+
+function buildFilterChips() {
+    const typesPresent = [...new Set(allItems.map(i => i.type).filter(Boolean))].sort();
+    buildChipGroup(typeFiltersEl, typesPresent, activeTypes, (type) => TYPE_LABELS[type] || type);
+
+    // Every project gets a chip so its full contents are always one click
+    // away, even for items whose title/tags/description are too sparse for
+    // lexical search to ever surface them (many of the archival newspaper
+    // clippings have empty tags — the project name is the only reliable
+    // handle on those).
+    const projectsPresent = [...new Set(allItems.map(i => i.project).filter(Boolean))].sort();
+    buildChipGroup(projectFiltersEl, projectsPresent, activeProjects);
 }
 
 // ===== SEARCH + RENDER =====
 function applyFilters(items) {
     return items.filter(item => {
         if (activeTypes.size && !activeTypes.has(item.type)) return false;
+        if (activeProjects.size && !activeProjects.has(item.project)) return false;
         return true;
     });
 }
@@ -86,20 +104,26 @@ let lastQuery = '';
 
 function runSearch(pushUrl = true) {
     const query = input.value.trim();
-    // A type filter counts as deliberate search intent too, same as typing
-    // something — but with neither, the results panel should stay empty
-    // rather than dumping the 20 most recent items with nothing actually
-    // searched for.
-    const hasFilter = activeTypes.size > 0;
+    // A type or project filter counts as deliberate search intent too, same
+    // as typing something — but with none of the three, the results panel
+    // should stay empty rather than dumping the 20 most recent items with
+    // nothing actually searched for.
+    const hasFilter = activeTypes.size > 0 || activeProjects.size > 0;
     let results;
     if (query || hasFilter) {
         if (query) {
-            results = search(searchIndex, query, { maxResults: 60 }).map(r => ({ item: r.item, reason: r.reason }));
+            // No maxResults cap here — "Show N more" (see renderResults)
+            // already paginates the display, so capping the underlying
+            // result set too just silently drops real matches once a
+            // project's items pass 60 (Drag Files alone has 91).
+            results = search(searchIndex, query, { maxResults: allItems.length }).map(r => ({ item: r.item, reason: r.reason }));
             results = results.filter(r => applyFilters([r.item]).length);
         } else {
+            // Same reasoning: type/project browsing with no text query
+            // should surface every matching item (a project can run to 190+
+            // photos), not just the 60 most recent.
             results = applyFilters(allItems)
                 .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-                .slice(0, 60)
                 .map(item => ({ item, reason: '' }));
         }
     } else {
@@ -218,6 +242,7 @@ function updateSearchUrl(query) {
     const params = new URLSearchParams();
     if (query) params.set('q', query);
     if (activeTypes.size) params.set('type', [...activeTypes].join(','));
+    if (activeProjects.size) params.set('project', [...activeProjects].join(','));
     const url = 'accessible.html' + (params.toString() ? `?${params}` : '');
     history.pushState({ view: 'search' }, '', url);
 }
@@ -226,10 +251,15 @@ function restoreSearchStateFromUrl() {
     const params = new URLSearchParams(location.search);
     input.value = params.get('q') || '';
     (params.get('type') || '').split(',').filter(Boolean).forEach(t => activeTypes.add(t));
+    (params.get('project') || '').split(',').filter(Boolean).forEach(p => activeProjects.add(p));
 
     [...typeFiltersEl.children].forEach(btn => {
-        const type = Object.keys(TYPE_LABELS).find(k => (TYPE_LABELS[k] || k) === btn.textContent) || btn.textContent.toLowerCase();
-        const active = activeTypes.has(type);
+        const active = activeTypes.has(btn.dataset.value);
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-pressed', String(active));
+    });
+    [...projectFiltersEl.children].forEach(btn => {
+        const active = activeProjects.has(btn.dataset.value);
         btn.classList.toggle('active', active);
         btn.setAttribute('aria-pressed', String(active));
     });
