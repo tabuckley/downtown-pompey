@@ -210,8 +210,14 @@ function buildHelper() {
         if (action === 'close') close();
     });
 
-    // Auto-introduce once per page per session
-    if (!sessionStorage.getItem('aa-helper-seen-' + page)) {
+    // Auto-introduce once per page per session — skipped specifically on
+    // accessible's narrow viewports, where the search form + type/project
+    // filters already fill the whole first screen and Flo's own
+    // auto-opening bubble would land right on top of the filters instead
+    // of below them like on every other page. Still fully available via
+    // click either way.
+    const skipAutoIntro = page === 'accessible' && window.matchMedia('(max-width: 480px)').matches;
+    if (!skipAutoIntro && !sessionStorage.getItem('aa-helper-seen-' + page)) {
         setTimeout(() => say(script.intro), 1400);
     }
 }

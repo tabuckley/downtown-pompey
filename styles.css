@@ -2762,16 +2762,21 @@ body.landing {
 
 .acc-chip {
     font-family: var(--font-mono);
-    font-size: 0.8rem;
+    font-weight: 700;
+    font-size: 0.85rem;
     background: #ffffff;
-    border: 1px solid var(--border);
+    border: 2px solid var(--border);
     border-radius: 999px;
-    padding: 0.4rem 0.9rem;
+    /* ~42px tall — a real touch target, not just a label. The 1px/0.4rem
+       original was easy to miss as clickable at all, let alone tap
+       precisely on mobile. */
+    padding: 0.55rem 1.1rem;
     color: var(--text);
     cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
-.acc-chip:hover { border-color: var(--accent); }
+.acc-chip:hover { border-color: var(--accent); color: var(--accent); }
 
 .acc-chip.active {
     background: var(--accent);
@@ -2813,13 +2818,25 @@ body.landing {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 0.7rem;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
 
 .acc-result-link:hover,
 .acc-result-link:focus-visible {
     border-color: var(--accent);
     box-shadow: 0 0 0 2px rgba(208, 19, 89, 0.15);
+    transform: translateY(-1px);
+}
+
+.acc-show-more-wrap {
+    display: flex;
+    justify-content: center;
+    padding-top: 0.6rem;
+}
+
+.acc-show-more {
+    font-weight: 700;
+    padding: 0.7rem 1.6rem;
 }
 
 .acc-result-thumb {
@@ -2831,16 +2848,28 @@ body.landing {
     background: #e8e8e8;
 }
 
+/* Background/colour set inline per item (see TYPE_ICONS in accessible.js)
+   — a flat grey box with a tiny caption made every non-photo result
+   (audio, documents) look identical in the list bar its label. */
 .acc-result-thumb--none {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 0.2rem;
     text-align: center;
     font-family: var(--font-mono);
-    font-size: 0.68rem;
-    color: var(--muted);
+    font-weight: 700;
+    font-size: 0.62rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
     padding: 0.4rem;
     box-sizing: border-box;
+}
+
+.acc-result-thumb-glyph {
+    font-size: 1.7rem;
+    line-height: 1;
 }
 
 .acc-result-meta {
@@ -2892,6 +2921,13 @@ body.landing {
 .acc-detail-media--audio { max-height: none; }
 
 .acc-detail-download { margin-bottom: 1.6rem; }
+
+/* Wraps the detail photo + its "View full size" link when a thumbnail is
+   shown instead of the (often several-MB) original — see buildDetailMedia
+   in accessible.js. */
+.acc-detail-photo-wrap { margin-bottom: 1.6rem; }
+.acc-detail-photo-wrap .acc-detail-media { margin-bottom: 0.6rem; }
+.acc-detail-photo-wrap .acc-open-link { margin-top: 0; }
 
 .acc-open-link {
     display: inline-block;

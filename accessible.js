@@ -9,6 +9,18 @@ import { buildSearchIndex, search, likeQueryFor } from './search.js';
 import { yearFrom } from './sheet.js';
 
 const TYPE_LABELS = { photo: 'Photo', video: 'Video', audio: 'Audio', '3d': '3D object', download: 'Document' };
+// Small icon + accent per type, for results with no real thumbnail (audio,
+// documents) — a plain grey box for every one of those made the list hard
+// to scan, since visually nothing distinguished a "Photo" search result
+// from an "Audio" one except a tiny caption.
+const TYPE_ICONS = {
+    photo: { glyph: '▣', bg: '#ffe1ee', color: '#d01359' },
+    video: { glyph: '▶', bg: '#d6ecff', color: '#1c6fb0' },
+    audio: { glyph: '♫', bg: '#ece0ff', color: '#6b3fbf' },
+    '3d': { glyph: '◈', bg: '#d7f7e3', color: '#1a8f5c' },
+    download: { glyph: '☷', bg: '#ffe3d1', color: '#c05a1f' },
+};
+const RESULTS_PAGE_SIZE = 20;
 
 const searchView = document.getElementById('accSearchView');
 const detailView = document.getElementById('accDetailView');
@@ -26,6 +38,10 @@ let searchIndex = [];
 let itemsById = new Map();
 const activeTypes = new Set();
 let lastSearchUrl = 'accessible.html';
+// Reset to one page's worth on every new search/filter change (see
+// runSearch) — otherwise "show more" state from a previous, longer result
+// set would carry over and dump everything from a new one at once.
+let visibleCount = RESULTS_PAGE_SIZE;
 // Session-only — "not this one" hides a result from THIS visitor's current
 // browsing without recording anything server-side or requiring an account.
 const dismissed = new Set();
@@ -75,6 +91,9 @@ function applyFilters(items) {
     });
 }
 
+let lastResults = [];
+let lastQuery = '';
+
 function runSearch(pushUrl = true) {
     const query = input.value.trim();
     let results;
@@ -88,12 +107,15 @@ function runSearch(pushUrl = true) {
             .map(item => ({ item, reason: '' }));
     }
 
+    visibleCount = RESULTS_PAGE_SIZE; // a new search/filter always starts back at one page
     renderResults(results, query);
     if (pushUrl) updateSearchUrl(query);
     lastSearchUrl = location.pathname.split('/').pop() + location.search;
 }
 
 function renderResults(results, query) {
+    lastResults = results;
+    lastQuery = query;
     resultsEl.innerHTML = '';
 
     if (!allItems.length) {
@@ -106,9 +128,11 @@ function renderResults(results, query) {
             : 'Nothing matches the current filters.';
         return;
     }
-    statusEl.textContent = `${results.length} item${results.length === 1 ? '' : 's'}${query ? ` for "${query}"` : ''}.`;
 
-    results.forEach(({ item, reason }) => {
+    const visible = results.slice(0, visibleCount);
+    statusEl.textContent = `Showing ${visible.length} of ${results.length} item${results.length === 1 ? '' : 's'}${query ? ` for "${query}"` : ''}.`;
+
+    visible.forEach(({ item, reason }) => {
         const li = document.createElement('li');
         li.className = 'acc-result';
 
@@ -130,9 +154,15 @@ function renderResults(results, query) {
             img.loading = 'lazy';
             link.appendChild(img);
         } else {
+            // Distinct icon + colour per type instead of a flat grey box —
+            // otherwise every non-photo result (audio, documents) looked
+            // identical in the list bar its caption.
+            const icon = TYPE_ICONS[item.type] || { glyph: '?', bg: '#eee', color: 'var(--muted)' };
             const ph = document.createElement('div');
             ph.className = 'acc-result-thumb acc-result-thumb--none';
-            ph.textContent = TYPE_LABELS[item.type] || item.type || '';
+            ph.style.background = icon.bg;
+            ph.style.color = icon.color;
+            ph.innerHTML = `<span class="acc-result-thumb-glyph" aria-hidden="true">${icon.glyph}</span>${esc(TYPE_LABELS[item.type] || item.type || '')}`;
             link.appendChild(ph);
         }
 
@@ -148,6 +178,28 @@ function renderResults(results, query) {
         li.appendChild(link);
         resultsEl.appendChild(li);
     });
+
+    if (results.length > visible.length) {
+        const moreLi = document.createElement('li');
+        moreLi.className = 'acc-show-more-wrap';
+        const moreBtn = document.createElement('button');
+        moreBtn.type = 'button';
+        moreBtn.className = 'acc-btn acc-show-more';
+        const remaining = results.length - visible.length;
+        moreBtn.textContent = `Show ${Math.min(remaining, RESULTS_PAGE_SIZE)} more`;
+        moreBtn.addEventListener('click', () => {
+            visibleCount += RESULTS_PAGE_SIZE;
+            renderResults(lastResults, lastQuery);
+            // renderResults rebuilds the whole list (innerHTML = ''), so
+            // the moreBtn this closure captured is already detached by the
+            // time this runs — re-query the fresh one (still present if
+            // there's yet another page left) rather than focus() on a
+            // stale, removed element.
+            resultsEl.querySelector('.acc-show-more')?.focus();
+        });
+        moreLi.appendChild(moreBtn);
+        resultsEl.appendChild(moreLi);
+    }
 }
 
 function updateSearchUrl(query) {
@@ -216,11 +268,29 @@ function buildDetailMedia(item) {
     }
     // photo / 3d — 3d has no browser-native viewer here, so its thumbnail is
     // the whole picture, same as scrapbook's own treatment of these.
+    // Photos prefer the thumbnail too now (~800px, not the multi-megabyte
+    // original) — it was taking several seconds to appear otherwise, for a
+    // page whose whole point is being fast and easy to use. Falls back to
+    // the full original for any item with no thumbnail recorded, and links
+    // to the original either way for anyone who wants the full resolution.
+    const useThumb = item.thumbnail && item.type !== '3d';
     const img = document.createElement('img');
-    img.src = item.type === '3d' ? (item.thumbnail || item.url) : item.url;
+    img.src = useThumb ? item.thumbnail : (item.type === '3d' ? (item.thumbnail || item.url) : item.url);
     img.alt = item.title || 'Archive item';
     img.className = 'acc-detail-media';
-    return img;
+    if (!useThumb || item.type === '3d') return img;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'acc-detail-photo-wrap';
+    wrap.appendChild(img);
+    const link = document.createElement('a');
+    link.href = item.url;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.className = 'acc-open-link';
+    link.textContent = 'View full size ↗';
+    wrap.appendChild(link);
+    return wrap;
 }
 
 function showItem(id, pushUrl = true) {
