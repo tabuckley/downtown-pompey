@@ -1045,7 +1045,13 @@ body.landing {
         inset -2px -2px 0 #a3175c,
         6px 6px 0 rgba(0, 0, 0, 0.7);
     padding: 0 0.7rem 0.7rem;
+    margin-bottom: 0;
     font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
+}
+
+/* Sits the dialog box closer to Flo than the shared widget gap allows. */
+[data-mode="editorial"] .helper-widget {
+    gap: 0.25rem;
 }
 
 [data-mode="editorial"] .helper-bubble::after {
@@ -1145,6 +1151,14 @@ body.landing {
     transform: translateX(1.4rem);
 }
 
+/* Editorial only, per the extension note above — 20% bigger than the
+   shared default at every breakpoint (see the matching mobile/landscape
+   overrides further down). */
+[data-mode="editorial"] .helper-figure-img--photo {
+    max-height: 443px;
+    max-width: 368px;
+}
+
 /* Mode switcher gets the exact same pixel-chip treatment as .helper-chip
    above, so it reads as the same control in this room. */
 [data-mode="editorial"] .mode-btn {
@@ -1177,6 +1191,10 @@ body.landing {
         max-height: 164px;
         max-width: 143px;
     }
+    [data-mode="editorial"] .helper-figure-img--photo {
+        max-height: 197px;
+        max-width: 172px;
+    }
     .helper-bubble {
         width: min(180px, calc(100vw - 5.5rem));
         padding: 0.75rem 0.85rem;
@@ -1201,6 +1219,10 @@ body.landing {
         min-height: 0;
         max-height: 143px;
         max-width: 123px;
+    }
+    [data-mode="editorial"] .helper-figure-img--photo {
+        max-height: 172px;
+        max-width: 148px;
     }
 }
 

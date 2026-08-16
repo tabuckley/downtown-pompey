@@ -33,12 +33,14 @@ const ARCHIE_IMAGE_URL = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
 // showing the placeholder SVG.
 const FLO_IMAGES = {
     editorial: [
-        // Matching pink duotone/halftone treatment across all three —
-        // shrug, thoughtful, pointing — each resized to 480x480 to match
-        // the set's existing footprint.
-        'images/flo-editorial-1.png',
-        'images/flo-editorial-2.png',
-        'images/flo-editorial-3.png',
+        // Matching pink duotone/halftone treatment across all three.
+        // Display order (pointing/intro, shrug, thoughtful) doesn't match
+        // the filenames' own numbering (shrug, thoughtful, pointing) —
+        // ordered here to line up with the intro + specific tip lines
+        // they're meant to land on.
+        'images/flo-editorial-3.png', // pointing — intro
+        'images/flo-editorial-1.png', // shrug — "don't be a din"
+        'images/flo-editorial-2.png', // thoughtful — "makes you think"
     ],
 };
 
