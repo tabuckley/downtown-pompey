@@ -1890,10 +1890,13 @@ body.landing {
     /* A few pixels thicker than the other Win98 boxes' 1px+2px bevel
        (Flo's bubble, readme.txt) — at this box's much larger size, that
        same thickness read as comparatively thin/negligible, where it's
-       clearly visible as a real border on the smaller boxes. */
+       clearly visible as a real border on the smaller boxes. Highlight
+       side is a light pink rather than the other boxes' literal white —
+       at this box's scale a full-width/height white line read as its own
+       distinct "white frame" rather than a subtle bevel. */
     box-shadow:
         0 0 0 2px #4a0e28,
-        inset 3px 3px 0 #fff,
+        inset 3px 3px 0 #ffb6d9,
         inset -3px -3px 0 #a3175c,
         8px 8px 0 rgba(0, 0, 0, 0.7);
 }
