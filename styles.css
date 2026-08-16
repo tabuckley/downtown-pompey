@@ -1353,26 +1353,59 @@ body.landing {
     padding: 0.24rem 0 0.6rem;
 }
 
+/* CSS-only sticker look — no image assets. Each tag cycles through one of
+   8 colour/tilt/corner combinations (:nth-child below) rather than one
+   uniform pill, so the ~46-tag bar reads as a mixed sheet of stickers
+   rather than a repeated shape. --variant-bg/--variant-color carry each
+   pill's own colour pair through to :hover/.active below without those
+   needing 8 separate overrides of their own. --tilt/--lift compose into
+   one shared `transform` (rather than each state setting its own
+   transform outright) so hovering or activating a pill doesn't cancel out
+   its individual rotation — the same bug already hit once this session
+   with Flo's pop-in animation fighting her static translateX offset. */
 .tag-pill {
+    --variant-bg: #ffffff;
+    --variant-color: var(--accent);
+    --tilt: 0deg;
+    --lift: 0px;
     flex-shrink: 0;
-    background: #ffffff;
-    border: 1px solid var(--accent);
-    border-radius: 999px;
+    background: var(--variant-bg);
+    border: 2px solid var(--variant-color);
+    border-radius: 14px 6px 16px 8px;
     padding: 0.384rem 1.02rem;
     font-family: var(--font-mono);
     font-size: 0.816rem;
-    color: var(--accent);
+    color: var(--variant-color);
     cursor: pointer;
     white-space: nowrap;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.15);
+    transform: rotate(var(--tilt)) translateY(var(--lift));
+    transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s;
 }
 
-.tag-pill:hover { background: rgba(208, 19, 89, 0.1); }
+.tag-pill:nth-child(8n+1) { --variant-bg: #ffe1ee; --variant-color: #d01359; --tilt: -3deg; border-radius: 14px 6px 16px 8px; }
+.tag-pill:nth-child(8n+2) { --variant-bg: #fff3c4; --variant-color: #a6790a; --tilt: 2deg; border-radius: 8px 16px 6px 14px; }
+.tag-pill:nth-child(8n+3) { --variant-bg: #d6ecff; --variant-color: #1c6fb0; --tilt: -1.5deg; border-radius: 16px 8px 12px 10px; }
+.tag-pill:nth-child(8n+4) { --variant-bg: #d7f7e3; --variant-color: #1a8f5c; --tilt: 3deg; border-radius: 10px 14px 8px 16px; }
+.tag-pill:nth-child(8n+5) { --variant-bg: #ece0ff; --variant-color: #6b3fbf; --tilt: -2.5deg; border-radius: 12px 6px 14px 10px; }
+.tag-pill:nth-child(8n+6) { --variant-bg: #ffe3d1; --variant-color: #c05a1f; --tilt: 1deg; border-radius: 6px 14px 10px 8px; }
+.tag-pill:nth-child(8n+7) { --variant-bg: #ffd9d9; --variant-color: #c53030; --tilt: -4deg; border-radius: 14px 10px 6px 16px; }
+.tag-pill:nth-child(8n+8) { --variant-bg: #d0f5f0; --variant-color: #157b74; --tilt: 2.5deg; border-radius: 10px 8px 16px 6px; }
 
+.tag-pill:hover {
+    --lift: -3px;
+    box-shadow: 3px 5px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Comes after the :nth-child block so --tilt:0 (a "pressed flat and
+   highlighted" read) reliably wins the cascade tie regardless of which
+   variant a given pill landed on — same specificity as the nth-child
+   rules above, so source order is what decides it. */
 .tag-pill.active {
-    background: var(--accent);
+    --tilt: 0deg;
+    background: var(--variant-color);
     color: #ffffff;
-    border-color: var(--accent);
+    box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.3);
 }
 
 /* Sits as the first item in the tag row — the actual way keyboard/screen-
@@ -1956,46 +1989,6 @@ body.landing {
     letter-spacing: 0.02em;
 }
 
-.room-window-titlebar-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-/* Real refresh reroll button, distinguished from the row of decorative
-   window-control squares next to it (which are aria-hidden — those don't
-   do anything). Same square-control sizing/bevel as those, but as an
-   actual <button> with hover/active states and a visible focus ring, since
-   this one is genuinely interactive. */
-.room-window-refresh {
-    width: 1.4rem;
-    height: 1.4rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #ffe3f0;
-    color: #4a0e28;
-    font-size: 0.85rem;
-    line-height: 1;
-    border: none;
-    box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #a3175c;
-    cursor: pointer;
-    padding: 0;
-}
-
-.room-window-refresh:hover {
-    background: #ffd0e7;
-}
-
-.room-window-refresh:active {
-    box-shadow: inset -1px -1px 0 #fff, inset 1px 1px 0 #a3175c;
-}
-
-.room-window-refresh:focus-visible {
-    outline: 2px solid #4a0e28;
-    outline-offset: 2px;
-}
-
 .room-window-controls {
     display: flex;
     gap: 0.3rem;
@@ -2016,6 +2009,7 @@ body.landing {
 }
 
 .room-window-content {
+    position: relative; /* containing block for .room-desktop-icon below */
     flex: 1 1 auto;
     /* Without this a flex item refuses to shrink below its content's
        intrinsic size — a canvas's intrinsic size is its drawing-buffer
@@ -2026,6 +2020,61 @@ body.landing {
        own pale face colour, which at that size read as a plain white
        margin rather than a subtle frame. The scene now fills the window
        right up to its (already-thickened) outer border instead. */
+}
+
+/* The refresh button as a classic Windows desktop icon (icon square +
+   label underneath) sitting directly on the 3D scene, top-left — more
+   noticeable there than folded into the small titlebar controls it used
+   to share space with. White text with a black outline on the label
+   (rather than a solid plate behind it) is the actual Win98 desktop-icon
+   technique for staying legible over any wallpaper — here, over whatever
+   colour the room itself happens to be showing behind it. */
+.room-desktop-icon {
+    position: absolute;
+    top: 0.9rem;
+    left: 0.9rem;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    width: 4.4rem;
+    background: none;
+    border: none;
+    padding: 0.3rem;
+    cursor: pointer;
+}
+
+.room-desktop-icon-glyph {
+    width: 2.6rem;
+    height: 2.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    background: #ffe3f0;
+    color: #4a0e28;
+    box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #a3175c, 0 0 0 1px #4a0e28;
+}
+
+.room-desktop-icon:hover .room-desktop-icon-glyph { background: #ffd0e7; }
+
+.room-desktop-icon:active .room-desktop-icon-glyph {
+    box-shadow: inset -1px -1px 0 #fff, inset 1px 1px 0 #a3175c, 0 0 0 1px #4a0e28;
+}
+
+.room-desktop-icon-label {
+    font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 1px 0 #000, -1px 0 #000, 0 1px #000, 0 -1px #000;
+    line-height: 1.2;
+}
+
+.room-desktop-icon:focus-visible .room-desktop-icon-label {
+    outline: 1px dotted #fff;
+    outline-offset: 2px;
 }
 
 #room-canvas {

@@ -31,14 +31,15 @@
     <div class="room-window">
         <div class="room-window-titlebar">
             <span class="room-window-title">Editorial_Room.exe</span>
-            <div class="room-window-titlebar-actions">
-                <button type="button" class="room-window-refresh" id="roomRefreshBtn" title="Get 3 new objects">&#8635;</button>
-                <span class="room-window-controls" aria-hidden="true">
-                    <span>&#8211;</span><span>&#9633;</span><span>&times;</span>
-                </span>
-            </div>
+            <span class="room-window-controls" aria-hidden="true">
+                <span>&#8211;</span><span>&#9633;</span><span>&times;</span>
+            </span>
         </div>
         <div class="room-window-content">
+            <button type="button" class="room-desktop-icon" id="roomRefreshBtn" title="Get 3 new objects">
+                <span class="room-desktop-icon-glyph" aria-hidden="true">&#8635;</span>
+                <span class="room-desktop-icon-label">Refresh</span>
+            </button>
             <canvas id="room-canvas"></canvas>
         </div>
     </div>
