@@ -93,6 +93,19 @@ body {
     border-color: var(--text);
 }
 
+/* The shared base rule has no background at all — fine floating over a
+   plain hero on other pages, but scrapbook scrolls a full grid of photo
+   tiles directly underneath the fixed topbar, and a see-through nav
+   button over a busy tile is hard to read. Solid white instead, just for
+   this page. */
+[data-mode="scrapbook"] .mode-btn {
+    background: #ffffff;
+}
+
+[data-mode="scrapbook"] .mode-btn.active {
+    background: var(--text);
+}
+
 /* ===== HERO ===== */
 .hero {
     position: relative;
