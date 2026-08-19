@@ -32,6 +32,20 @@ body[data-mode="scrapbook"] {
     background: #ffffff;
 }
 
+/* ===== PROCESS PAGE ===== */
+/* process.html has no data-mode of its own, so it was falling through to
+   the root's dark default (tuned for editorial's 3D room) — much too dark
+   for a long-form reading page. A light, warm palette instead, distinct
+   from scrapbook's more saturated cream and accessible's stark white. */
+[data-page="process"] {
+    --bg:           #faf7f2;
+    --text:         #1a1512;
+    --muted:        #6b6258;
+    --accent:       #d01359;
+    --border:       #e4ddd0;
+    --card-bg:      #ffffff;
+}
+
 /* ===== ACCESSIBLE MODE ===== */
 [data-mode="accessible"] {
     --bg:           #ffffff;
@@ -2349,7 +2363,7 @@ body.landing {
    this page only, rather than changing the shared rule everyone else
    already looks fine without. */
 [data-page="process"] .page-topbar {
-    background: rgba(13, 13, 13, 0.85);
+    background: rgba(250, 247, 242, 0.85);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
