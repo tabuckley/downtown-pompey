@@ -478,13 +478,11 @@ function openLightbox(index) {
         .filter(Boolean).join(' · ');
     const tags = itemTags(item);
     lightboxInfo.innerHTML = `
-        <div class="lightbox-title-row">
-            <h3>${esc(item.title)}</h3>
-            <div class="lb-tags">${tags.map(t => `<span class="lb-tag">${esc(t)}</span>`).join('')}</div>
-        </div>
+        <h3>${esc(item.title)}</h3>
         <p class="lb-meta">${esc(meta)}</p>
         <p class="lb-desc">${esc(item.description)}</p>
         ${item.type === '3d' && !item._placeholder ? '<p class="lb-desc">3D object — see it in the Editorial room.</p>' : ''}
+        <div class="lb-tags">${tags.map(t => `<span class="lb-tag">${esc(t)}</span>`).join('')}</div>
     `;
     lightbox.classList.add('open');
 
