@@ -2293,6 +2293,23 @@ body.landing {
     padding: 9rem 10vw 6rem;
 }
 
+/* Second column for the AAG team photo stack (#teamStack — moved here from
+   its old spot down in .team-section, see process.html) sitting beside the
+   process intro instead of buried at the bottom of the page. */
+.shell-main-grid {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 3rem;
+    /* Not space-between across the full width — on a wide viewport that
+       pushes the team column flush into the bottom-right corner where
+       Flo's fixed widget lives, covering the last bio link behind her
+       bubble. Capped so the pair sits together left of that corner. */
+    max-width: 1000px;
+}
+
+.shell-main-text { min-width: 0; }
+
 .shell-kicker {
     font-family: var(--font-mono);
     font-size: 0.7rem;
@@ -2502,8 +2519,7 @@ body.landing {
 .team-layout {
     display: flex;
     align-items: center;
-    gap: 4rem;
-    margin-top: 2rem;
+    gap: 2.5rem;
     /* Never wraps — the photo stack stays beside the bios at every
        viewport width; both shrink together on narrow screens instead
        (see the mobile override below) rather than stacking vertically. */
@@ -2698,6 +2714,9 @@ body.landing {
        landscape phones — can still see Flo's bubble brush the last
        line of the paragraph. Known, accepted residual, not a full fix. */
     .shell-main { justify-content: flex-start; padding: 9rem 8vw 4rem; }
+    /* Team photo stack has no room for a real second column at this width
+       — drops below the intro text instead of squeezing beside it. */
+    .shell-main-grid { flex-direction: column; align-items: flex-start; gap: 2rem; }
 
     .process-content { padding: 1rem 6vw 6rem; }
     /* Two-up cards only make sense with real width to share — back to a
