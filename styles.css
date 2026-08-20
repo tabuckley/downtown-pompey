@@ -800,9 +800,7 @@ body.landing {
 .landing-topbar-badge:hover { transform: rotate(0deg) scale(1.05); background: #d01359; }
 
 .landing-hero {
-    padding: clamp(1rem, 2vw, 1.4rem) clamp(1.2rem, 4vw, 3rem);
-    max-width: 1280px;
-    margin: 0 auto;
+    padding: clamp(1rem, 2vw, 1.4rem) 0;
 }
 
 /* Three pre-composed 1240x400 layers (background texture, a torn photo
@@ -810,11 +808,21 @@ body.landing {
    stacked at a locked aspect-ratio so they scale together and never drift
    out of alignment with each other, regardless of viewport width. The
    open band between the two edge graphics (roughly the middle third) is
-   where .landing-hero-text sits. */
+   where .landing-hero-text sits.
+
+   Full-bleed (no max-width/side padding on .landing-hero above) rather
+   than inset like the rest of the page's content — max-height caps how
+   tall that makes it on wide viewports: aspect-ratio alone would put it
+   at ~620px on a 1920px-wide screen, well past the source art's own
+   400px, so object-fit:cover crops in from the sides instead of the
+   banner just growing to match the full aspect-ratio math. Safe to crop
+   this much — .landing-hero-layer--bg is a seamless texture and the two
+   edge layers' actual content sits well clear of their own true edges. */
 .landing-hero-banner {
     position: relative;
     width: 100%;
     aspect-ratio: 1240 / 400;
+    max-height: 380px;
     overflow: hidden;
 }
 
