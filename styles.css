@@ -1211,6 +1211,12 @@ body.landing {
     transform: rotate(-1.5deg);
     position: relative;
     overflow: visible;
+    /* Wider than the shared 220px default — the page's own left padding
+       (2.5rem, for the punched-hole margin) eats more of the box than a
+       plain bubble's padding does, so at the shared width a normal line
+       of dialogue was wrapping into three-plus short lines instead of
+       reading as a page. */
+    width: min(270px, calc(100vw - 2.8rem));
 }
 
 [data-mode="scrapbook"] .helper-bubble.open {
@@ -1238,24 +1244,49 @@ body.landing {
         84% 97%, 69% 100%, 54% 97%, 39% 100%, 24% 97%, 11% 100%, 0% 95%,
         0% 5%
     );
-    /* Four punched holes, evenly spaced down the left margin. A single
-       evenodd path (outer rect + four circles, opposite winding) rather
-       than separately-coloured shapes — Chromium reads a plain SVG image
-       used as mask-image by alpha, not luminance, so a black circle on a
-       white rect (same alpha, different colour) masked nothing at all.
-       evenodd actually cuts the circles out of the rect's own paint,
-       leaving them genuinely transparent (alpha 0) regardless of colour.
-       Stretched to the box's real size via mask-size below rather than
-       relying on percentage units inside the SVG itself — and the SVG
-       needs explicit width/height matching its viewBox, or mask-size:100%
-       100% computes against the wrong intrinsic size once the box's real
-       aspect ratio (e.g. narrower/taller on mobile) diverges from it. */
-    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='224' height='200' viewBox='0 0 224 200'%3E%3Cpath fill-rule='evenodd' fill='white' d='M0,0 H224 V200 H0 Z M9,24 A6,6 0 1,0 21,24 A6,6 0 1,0 9,24 Z M9,75 A6,6 0 1,0 21,75 A6,6 0 1,0 9,75 Z M9,126 A6,6 0 1,0 21,126 A6,6 0 1,0 9,126 Z M9,177 A6,6 0 1,0 21,177 A6,6 0 1,0 9,177 Z'/%3E%3C/svg%3E");
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='224' height='200' viewBox='0 0 224 200'%3E%3Cpath fill-rule='evenodd' fill='white' d='M0,0 H224 V200 H0 Z M9,24 A6,6 0 1,0 21,24 A6,6 0 1,0 9,24 Z M9,75 A6,6 0 1,0 21,75 A6,6 0 1,0 9,75 Z M9,126 A6,6 0 1,0 21,126 A6,6 0 1,0 9,126 Z M9,177 A6,6 0 1,0 21,177 A6,6 0 1,0 9,177 Z'/%3E%3C/svg%3E");
-    mask-size: 100% 100%;
-    -webkit-mask-size: 100% 100%;
+    /* Four punched holes, evenly spaced down the left margin. Built from
+       plain CSS radial-gradients at fixed pixel positions/radii, not a
+       stretched SVG image — an earlier version used one evenodd-path SVG
+       (outer rect + four circles cut out) stretched to the box's size via
+       mask-size:100% 100%, which worked fine while the box's aspect ratio
+       stayed close to the SVG's own 224x200 reference, but broke (silently
+       eating a chunk of the left side, cutting into real text) once a
+       short line of dialogue made the box wide-and-short enough to diverge
+       from that reference — a raster/vector image mask has its own
+       intrinsic size for mask-size:100% 100% to stretch, and Chromium's
+       compositing of that stretch isn't reliable at extreme ratios.
+       Gradients have no intrinsic size to mismatch, so the holes stay
+       fixed, round, and correctly placed at any box width or height (a
+       box short enough to clip a hole below its own bottom edge just
+       quietly loses that hole rather than distorting it). add/subtract
+       here means "start fully visible, then punch out each circle". */
+    mask-image:
+        radial-gradient(circle 6px at 20px 24px, black 0 6px, transparent 6px),
+        radial-gradient(circle 6px at 20px 75px, black 0 6px, transparent 6px),
+        radial-gradient(circle 6px at 20px 126px, black 0 6px, transparent 6px),
+        radial-gradient(circle 6px at 20px 177px, black 0 6px, transparent 6px),
+        linear-gradient(black, black);
+    -webkit-mask-image:
+        radial-gradient(circle 6px at 20px 24px, black 0 6px, transparent 6px),
+        radial-gradient(circle 6px at 20px 75px, black 0 6px, transparent 6px),
+        radial-gradient(circle 6px at 20px 126px, black 0 6px, transparent 6px),
+        radial-gradient(circle 6px at 20px 177px, black 0 6px, transparent 6px),
+        linear-gradient(black, black);
     mask-repeat: no-repeat;
     -webkit-mask-repeat: no-repeat;
+    /* Standard and -webkit- composite keywords aren't just prefix/value
+       aliases of each other — -webkit-mask-composite predates the
+       standard property and only understands the old Porter-Duff names
+       (destination-out/source-over), not add/subtract. Giving it the
+       standard keywords doesn't get ignored as unsupported the way an
+       unrecognised value normally would; Chromium appears to share
+       internal storage between the two properties, so an invalid
+       -webkit-mask-composite value here clobbered the valid mask-composite
+       one instead of being discarded, making all four holes (and
+       everything they were supposed to leave alone) render as fully
+       masked out. */
+    mask-composite: subtract, subtract, subtract, subtract, add;
+    -webkit-mask-composite: destination-out, destination-out, destination-out, destination-out, source-over;
 }
 
 [data-mode="scrapbook"] .helper-bubble-name {
@@ -1486,22 +1517,32 @@ body.landing {
    else is a tall, narrow SVG figure — the base rule's fixed height:25vh
    + width:auto would make a photo like this render ~500px wide at the
    max-height end, easily wide enough to overlap the bubble or run off a
-   narrow viewport. height:auto plus a max-width cap (instead of a fixed
-   height) lets the browser scale the whole image to fit inside both
-   bounds at once, whichever is tighter, same idea as a standard
-   responsive img — no distortion, no overflow. These exact numbers were
-   tuned for editorial's photos specifically — if another page's turn
-   out to need different sizing, override with a
-   `[data-page="x"].helper-figure-img--photo` rule rather than changing
-   this shared default. */
+   narrow viewport.
+
+   A fixed height+width box with object-fit:contain (rather than height:
+   auto + a max-width cap) — the per-page photo sets don't all share one
+   aspect ratio (scrapbook's three poses were cropped independently, each
+   a slightly different ratio), so a shrink-to-fit box sized to whichever
+   dimension is tighter made Flo visibly change size/footprint every time
+   the dialogue advanced to a different pose. A fixed box scales each
+   photo to fit inside the same footprint every time, undistorted, same
+   idea as a responsive img but with a locked box instead of one that
+   also resizes to the image. These exact numbers were tuned for
+   editorial's photos specifically — if another page's turn out to need
+   different sizing, override with a `[data-page="x"].helper-figure-img
+   --photo` rule rather than changing this shared default. */
 .helper-figure-img--photo {
-    height: auto;
+    height: 369px;
+    width: 307px;
     min-height: 0;
-    max-height: 369px;
-    max-width: 307px;
+    object-fit: contain;
+    /* Bottom-right, not centered — keeps Flo's feet and the widget's
+       flush-right edge consistent even when a narrower photo leaves
+       letterboxing space inside the fixed box. */
+    object-position: bottom right;
     /* Flush against the right edge (no overflow past it, unlike the
        previous 20%-off-screen treatment) — this cancels out
-       .helper-widget's own right:1.4rem offset exactly, so the image's
+       .helper-widget's own right:1.4rem offset exactly, so the box's
        own right edge lands right on the viewport edge. Flush against the
        bottom needs no equivalent rule: .helper-widget already sits at
        bottom:0 with display:block on the image (no inline-baseline gap
@@ -1513,8 +1554,8 @@ body.landing {
    shared default at every breakpoint (see the matching mobile/landscape
    overrides further down). */
 [data-mode="editorial"] .helper-figure-img--photo {
-    max-height: 443px;
-    max-width: 368px;
+    height: 443px;
+    width: 368px;
     /* transform is inherited unchanged from the shared base rule — Flo
        stays flush against the real viewport edge, not the room window's. */
 }
@@ -1559,19 +1600,21 @@ body.landing {
         max-height: 160px;
     }
     .helper-figure-img--photo {
-        height: auto;
+        height: 164px;
+        width: 143px;
         min-height: 0;
-        max-height: 164px;
-        max-width: 143px;
     }
     [data-mode="editorial"] .helper-figure-img--photo {
-        max-height: 197px;
-        max-width: 172px;
+        height: 197px;
+        width: 172px;
     }
     .helper-bubble {
         width: min(180px, calc(100vw - 5.5rem));
         padding: 0.75rem 0.85rem;
         font-size: 0.7rem;
+    }
+    [data-mode="scrapbook"] .helper-bubble {
+        width: min(230px, calc(100vw - 4.5rem));
     }
 }
 
@@ -1588,14 +1631,13 @@ body.landing {
         max-height: 140px;
     }
     .helper-figure-img--photo {
-        height: auto;
+        height: 143px;
+        width: 123px;
         min-height: 0;
-        max-height: 143px;
-        max-width: 123px;
     }
     [data-mode="editorial"] .helper-figure-img--photo {
-        max-height: 172px;
-        max-width: 148px;
+        height: 172px;
+        width: 148px;
     }
 }
 
