@@ -49,7 +49,6 @@ const FLO_IMAGES = {
     ],
     scrapbook: [
         'images/flo-scrapbook-1.webp', // holding up a note — intro
-        'images/flo-scrapbook-2.webp', // pointing
         {
             // Eating chips, holding the pose, while a small doodle in the
             // corner wiggles through three variants on a loop — a flipbook
