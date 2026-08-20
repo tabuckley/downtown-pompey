@@ -15,6 +15,14 @@
     --hero-size:    clamp(4rem, 10vw, 9rem);
     --radius:       0px;
     --transition:   0.25s ease;
+
+    /* Motion tokens (transitions.dev scale) — used by the lightbox's
+       modal-style open/close, see .lightbox below. */
+    --modal-open-dur:    250ms;
+    --modal-close-dur:   150ms;
+    --modal-scale:       0.96;
+    --modal-scale-close: 0.96;
+    --modal-ease:        cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ===== SCRAPBOOK MODE ===== */
@@ -1825,15 +1833,45 @@ body.landing {
 }
 
 /* ===== LIGHTBOX ===== */
+/* Modal open/close (transitions.dev) instead of a hard display:none/flex
+   cut — always display:flex (an invisible fixed-position overlay costs
+   nothing while closed, same reasoning as .helper-bubble), gated by
+   opacity/visibility/pointer-events so it's out of the tab order and hit-
+   testing while closed. Asymmetric timing on purpose: opening is slower
+   (250ms) so the reveal reads as deliberate, closing is quicker (150ms)
+   so dismissal feels snappy, not sluggish. */
 .lightbox {
     position: fixed;
     inset: 0;
     background: rgba(10, 8, 5, 0.93);
     z-index: 600;
-    display: none;
+    display: flex;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: scale(var(--modal-scale));
+    transition: opacity var(--modal-open-dur) var(--modal-ease),
+                transform var(--modal-open-dur) var(--modal-ease),
+                visibility var(--modal-open-dur);
 }
 
-.lightbox.open { display: flex; }
+.lightbox.open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: scale(1);
+}
+
+.lightbox.closing {
+    transform: scale(var(--modal-scale-close));
+    transition: opacity var(--modal-close-dur) var(--modal-ease),
+                transform var(--modal-close-dur) var(--modal-ease),
+                visibility var(--modal-close-dur);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lightbox { transition: none !important; }
+}
 
 .lightbox-media {
     flex: 1;

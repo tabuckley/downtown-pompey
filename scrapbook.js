@@ -146,6 +146,12 @@ const lightboxInfo = document.getElementById('lightboxInfo');
 const lightboxClose = document.getElementById('lightboxClose');
 let lightboxIndex = -1;
 let lastFocused = null;
+let lightboxCloseTimeout = null;
+// Read once — the modal-close-dur token (styles.css :root) drives both the
+// CSS transition and this timeout, so they can't drift apart.
+const LIGHTBOX_CLOSE_MS = parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue('--modal-close-dur')
+) || 150;
 
 // ===== TAG BAR =====
 TAGS.forEach(tag => {
@@ -467,6 +473,12 @@ const panCanvas = initPanCanvas(canvasEl, {
 function openLightbox(index) {
     if (index < 0 || index >= filtered.length) return;
     const wasOpen = lightbox.classList.contains('open');
+    // A rapid re-open mid-close (tile clicked again right after closing)
+    // would otherwise still fire closeLightbox's delayed cleanup and wipe
+    // out the media this call is about to set — cancel it and drop the
+    // closing state immediately.
+    clearTimeout(lightboxCloseTimeout);
+    lightbox.classList.remove('closing');
     lightboxIndex = index;
     const item = filtered[index];
 
@@ -494,8 +506,19 @@ function openLightbox(index) {
 }
 
 function closeLightbox() {
+    // Plays the quicker close transition (styles.css .lightbox.closing)
+    // before actually tearing anything down — clearing lightboxMedia
+    // synchronously used to cut the photo/video instantly while the box
+    // around it was still trying to fade, so the close never actually read
+    // as an animation. Cleanup now waits for the transition to finish.
     lightbox.classList.remove('open');
-    lightboxMedia.innerHTML = '';
+    lightbox.classList.add('closing');
+    clearTimeout(lightboxCloseTimeout);
+    lightboxCloseTimeout = setTimeout(() => {
+        lightbox.classList.remove('closing');
+        lightboxMedia.innerHTML = '';
+    }, LIGHTBOX_CLOSE_MS);
+
     lightboxIndex = -1;
     document.body.style.overflow = '';
     // onActivate() fades every other tile out and scales the clicked one up
