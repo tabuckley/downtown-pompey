@@ -1155,54 +1155,120 @@ body.landing {
     transform: rotate(45deg);
 }
 
-/* Scrapbook mode — a CSS-only pink sticky note, matching .postit-note's
-   own look (the PDF-thumbnail placeholders elsewhere on this page) instead
-   of a photographed torn-paper speech bubble.
+/* Scrapbook mode — a torn notebook page: ring-binder holes punched down
+   the left edge, faint blue ruled lines, a ragged torn edge everywhere
+   else, a strip of real washi tape holding it down, and a speech-bubble
+   tail at the bottom pointing at Flo. Replaces a CSS-only pink post-it —
+   read as a plain pink box rather than an actual sticky note, since a
+   post-it's whole visual identity is the small stuck-on square of paper,
+   not the colour alone.
 
-   Third and fourth attempts at the torn-paper image approach each traded
-   one problem for another: a box that grew with content stretched the
-   image until the tail distorted; locking to size tiers fixed that but
-   introduced flat-cut crop edges, dead gaps under short tips, and tiers
-   tall enough to cover most of a phone screen. The image's fixed aspect
-   ratio was the root problem each time — however the box was sized, the
-   art had to be forced to match it. A flat colour note has no art to
-   distort: the box is free to size to its content like the base
-   .helper-bubble already does everywhere else, which is what actually
-   fixes the small-text complaint that sank the last version (that one
-   reserved 24%/20%/42% padding just to keep text inside the paper's torn
-   safe zone, leaving very little room for the text itself). */
+   Two earlier photographed-image attempts before that were abandoned for
+   the same root problem: a fixed-aspect-ratio image forces the box into
+   that same fixed shape, so however the box was sized the art had to be
+   stretched or cropped to fit. Nothing here is a raster image except the
+   tape (::before, a real washi-tape PNG already used elsewhere on this
+   page) — the torn silhouette is a clip-path, the punched holes are an
+   SVG mask, so the box still sizes to its content like the base
+   .helper-bubble does everywhere else. */
 [data-mode="scrapbook"] .helper-bubble {
-    background: #ffc2e2;
-    color: #4a1030;
+    background:
+        repeating-linear-gradient(to bottom, transparent 0 27px, rgba(60, 110, 210, 0.32) 27px 28px),
+        #f2ead8;
+    background-position: 0 2.4rem;
+    color: #332b1e;
     border: none;
-    border-radius: 3px;
-    box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.3);
+    border-radius: 0;
+    box-shadow: 3px 6px 14px rgba(0, 0, 0, 0.35);
     transform: rotate(-1.5deg);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    padding: 2.5rem 1.2rem 1.8rem 2.5rem;
+    /* Straight left edge (0% x) for the punched holes; torn everywhere
+       else. Percentages, not fixed px, so the tear pattern holds its
+       shape as the box grows/shrinks with content. */
+    clip-path: polygon(
+        6% 0%, 17% 3%, 29% 0%, 41% 4%, 53% 0%, 65% 3%, 77% 0%, 89% 4%, 100% 1%,
+        97% 13%, 100% 24%, 96% 35%, 100% 46%, 97% 57%, 100% 68%, 96% 79%, 100% 90%, 98% 100%,
+        84% 97%, 69% 100%, 54% 97%, 39% 100%, 24% 97%, 11% 100%, 0% 95%,
+        0% 5%
+    );
+    /* Four punched holes, evenly spaced down the left margin. A single
+       evenodd path (outer rect + four circles, opposite winding) rather
+       than separately-coloured shapes — Chromium reads a plain SVG image
+       used as mask-image by alpha, not luminance, so a black circle on a
+       white rect (same alpha, different colour) masked nothing at all.
+       evenodd actually cuts the circles out of the rect's own paint,
+       leaving them genuinely transparent (alpha 0) regardless of colour.
+       Stretched to the box's real size via mask-size below rather than
+       relying on percentage units inside the SVG itself. */
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='224' height='200' viewBox='0 0 224 200'%3E%3Cpath fill-rule='evenodd' fill='white' d='M0,0 H224 V200 H0 Z M9,24 A6,6 0 1,0 21,24 A6,6 0 1,0 9,24 Z M9,75 A6,6 0 1,0 21,75 A6,6 0 1,0 9,75 Z M9,126 A6,6 0 1,0 21,126 A6,6 0 1,0 9,126 Z M9,177 A6,6 0 1,0 21,177 A6,6 0 1,0 9,177 Z'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='224' height='200' viewBox='0 0 224 200'%3E%3Cpath fill-rule='evenodd' fill='white' d='M0,0 H224 V200 H0 Z M9,24 A6,6 0 1,0 21,24 A6,6 0 1,0 9,24 Z M9,75 A6,6 0 1,0 21,75 A6,6 0 1,0 9,75 Z M9,126 A6,6 0 1,0 21,126 A6,6 0 1,0 9,126 Z M9,177 A6,6 0 1,0 21,177 A6,6 0 1,0 9,177 Z'/%3E%3C/svg%3E");
+    mask-size: 100% 100%;
+    -webkit-mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
 }
 
 [data-mode="scrapbook"] .helper-bubble.open {
     /* The base rule's transform:none on .open would otherwise cancel the
-       note's resting tilt above — composing them here keeps the tilt
+       page's resting tilt above — composing them here keeps the tilt
        through the open/close transition instead of snapping flat. */
     transform: rotate(-1.5deg);
 }
 
 [data-mode="scrapbook"] .helper-bubble-name {
-    color: #4a1030;
+    color: #a3175c;
 }
 
-/* Folded-corner shadow — the exact .postit-note::after treatment, so this
-   reads as the same physical object as the PDF notes elsewhere. */
+/* Washi tape (the same asset used on scrapbook photo tiles, see
+   scrapbook.js's TAPE_IMAGES) holding the top-left corner down. A real
+   image here, not a CSS gradient — the printed "Downtown Pompey" text is
+   the whole point, matching the tape elsewhere on this page exactly. */
+[data-mode="scrapbook"] .helper-bubble::before {
+    content: '';
+    position: absolute;
+    /* Would read better hanging above the torn top edge (like the
+       reference photo), but clip-path on the bubble itself clips its own
+       pseudo-elements too — anything positioned outside the 0-100% box
+       the polygon is defined against just disappears. Sitting just inside
+       the top edge instead still reads as "holding the tear down". */
+    top: 0.3rem;
+    left: 0.6rem;
+    width: 92px;
+    height: 30px;
+    background-image: url('images/tape/tape-1.png');
+    background-size: cover;
+    transform: rotate(-7deg);
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+    pointer-events: none;
+}
+
+/* Speech-bubble tail, pointing down toward Flo's head — a small torn
+   triangular flap rather than the base rule's clean rotated square, so it
+   still reads as paper. */
 [data-mode="scrapbook"] .helper-bubble::after {
     content: '';
     position: absolute;
-    top: 0;
-    right: 0;
-    width: 20px;
-    height: 20px;
-    background: linear-gradient(135deg, transparent 50%, rgba(0, 0, 0, 0.18) 50%);
+    /* Same constraint as ::before above — clip-path on the bubble itself
+       clips its own pseudo-elements, so a negative bottom (hanging below
+       the box) just disappears. Sitting flush with the inside of the
+       bottom edge instead. */
+    bottom: 2px;
+    right: 38px;
+    width: 22px;
+    height: 18px;
+    /* Slightly deeper than the page's own #f2ead8 — flush against paper
+       the exact same shade turned out completely invisible (confirmed by
+       swapping it red mid-build: the shape and position were always
+       right, it just had zero contrast against its own backdrop). A real
+       border, not another drop-shadow attempt — border is clipped to the
+       triangle along with the fill, giving a crisp fitted outline instead
+       of a soft shadow that was too faint to register at normal size. */
+    background: #e6dabb;
+    border: 1.5px solid rgba(51, 43, 30, 0.4);
+    clip-path: polygon(0% 0%, 100% 0%, 35% 100%);
+    filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.25));
     border: none;
     transform: none;
 }
