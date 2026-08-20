@@ -417,10 +417,10 @@ body {
     padding: 1.8rem 0;
     border-bottom: 1px solid var(--border);
     cursor: pointer;
-    transition: background var(--transition), padding-left var(--transition);
+    transition: background var(--transition), transform var(--transition);
 }
 
-.archive-row:hover { background: var(--card-bg); padding-left: 0.8rem; }
+.archive-row:hover { background: var(--card-bg); transform: translateX(0.8rem); }
 
 .archive-year {
     font-family: var(--font-mono);
