@@ -2801,6 +2801,23 @@ body.landing {
     min-width: 0; /* grid children don't shrink below content size by default, which would overflow a long title/thumb row */
 }
 
+/* Results <-> item detail reveal — see revealPane() in accessible.js for
+   why this only animates the incoming pane rather than a full crossfade. */
+@keyframes acc-pane-in {
+    from { opacity: 0; transform: translateY(6px); filter: blur(3px); }
+    to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+#accResultsPane.acc-pane-enter,
+#accDetailPane.acc-pane-enter {
+    animation: acc-pane-in 250ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #accResultsPane.acc-pane-enter,
+    #accDetailPane.acc-pane-enter { animation: none; }
+}
+
 .acc-empty-state {
     font-family: var(--font-mono);
     color: var(--muted);

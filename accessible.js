@@ -29,6 +29,22 @@ const RESULTS_PAGE_SIZE = 20;
 // detail view.
 const resultsPane = document.getElementById('accResultsPane');
 const detailPane = document.getElementById('accDetailPane');
+
+// Results <-> detail used to be a hard hidden-attribute cut with no
+// transition — the whole panel instantly teleported to new content. A full
+// crossfade (both panes overlapping) would need position:absolute on both,
+// which drops them out of normal flow and collapses .acc-results-panel's
+// height (this page scrolls to fit variable content, it isn't a fixed-
+// height app shell) — so this only animates the pane being revealed, via
+// the same class + forced-reflow replay pattern as .flo-pop/.tile-in
+// elsewhere on the site.
+function revealPane(el) {
+    el.hidden = false;
+    el.classList.remove('acc-pane-enter');
+    void el.offsetWidth;
+    el.classList.add('acc-pane-enter');
+}
+
 const form = document.getElementById('accSearchForm');
 const input = document.getElementById('accSearchInput');
 const typeFiltersEl = document.getElementById('accTypeFilters');
@@ -278,7 +294,7 @@ form.addEventListener('submit', (e) => {
 backLink.addEventListener('click', (e) => {
     e.preventDefault();
     history.pushState({ view: 'search' }, '', lastSearchUrl);
-    resultsPane.hidden = false;
+    revealPane(resultsPane);
     detailPane.hidden = true;
     document.title = 'Accessible | Alternative Archiving';
 });
@@ -354,7 +370,7 @@ function showItem(id, pushUrl = true) {
     }
 
     resultsPane.hidden = true;
-    detailPane.hidden = false;
+    revealPane(detailPane);
     backLink.href = lastSearchUrl;
     window.scrollTo(0, 0);
 
@@ -382,7 +398,7 @@ function showItem(id, pushUrl = true) {
 
 function showNotFound(id) {
     resultsPane.hidden = true;
-    detailPane.hidden = false;
+    revealPane(detailPane);
     backLink.href = lastSearchUrl;
     detailContent.innerHTML = `
         <div class="acc-detail-info">
@@ -539,7 +555,7 @@ function route(pushUrl = false) {
     if (itemId) {
         showItem(itemId, pushUrl);
     } else {
-        resultsPane.hidden = false;
+        revealPane(resultsPane);
         detailPane.hidden = true;
         document.title = 'Accessible | Alternative Archiving';
         restoreSearchStateFromUrl();
