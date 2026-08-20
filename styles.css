@@ -1403,10 +1403,23 @@ body.landing {
     color: var(--accent);
     cursor: pointer;
     white-space: nowrap;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    /* Distance-falloff hover lift (transitions.dev avatar-group-hover) —
+       --shift/--scale-active are written per-pill by scrapbook.js on
+       mouseenter, so hovering one pill also gently lifts its neighbours.
+       transition-timing-function is set inline too (ease-in on the way up,
+       a bouncy overshoot on the way back), so it's deliberately left out
+       of this shorthand rather than duplicated here. */
+    transform: translateY(var(--shift, 0px)) scale(var(--scale-active, 1));
+    transition: background 0.15s, color 0.15s, border-color 0.15s,
+                transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
 }
 
 .tag-pill:hover { background: rgba(208, 19, 89, 0.1); }
+
+@media (prefers-reduced-motion: reduce) {
+    .tag-pill { transform: none !important; }
+}
 
 .tag-pill.active {
     background: var(--accent);

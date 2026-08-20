@@ -170,6 +170,42 @@ TAGS.forEach(tag => {
     tagBar.appendChild(pill);
 });
 
+// Distance-falloff hover lift (transitions.dev avatar-group-hover) —
+// hovering one pill also gently lifts its neighbours, strongest right next
+// to the hovered one and fading out with distance. The CSS only owns the
+// transform (see .tag-pill); this writes --shift/--scale-active per pill
+// and sets the timing-function inline right before each write, since a
+// single fixed transition-timing-function in CSS can't give the hover-in
+// and the mouseleave-return two different curves (clean ease-in going up,
+// a springy overshoot coming back).
+{
+    const pills = [...tagBar.querySelectorAll('.tag-pill')];
+    const AVATAR_LIFT = -4;
+    const AVATAR_FALLOFF = 0.45;
+    const AVATAR_SCALE = 1.05;
+    const AVATAR_EASE_IN = 'cubic-bezier(0.22, 1, 0.36, 1)';
+    const AVATAR_EASE_OUT = 'cubic-bezier(0.34, 3.85, 0.64, 1)';
+
+    function setPillShifts(activeIndex, easing) {
+        pills.forEach((el, i) => {
+            el.style.transitionTimingFunction = easing;
+            if (activeIndex == null) {
+                el.style.setProperty('--shift', '0px');
+                el.style.setProperty('--scale-active', '1');
+                return;
+            }
+            const distance = Math.abs(i - activeIndex);
+            el.style.setProperty('--shift', `${(AVATAR_LIFT * Math.pow(AVATAR_FALLOFF, distance)).toFixed(3)}px`);
+            el.style.setProperty('--scale-active', i === activeIndex ? String(AVATAR_SCALE) : '1');
+        });
+    }
+
+    pills.forEach((el, i) => {
+        el.addEventListener('mouseenter', () => setPillShifts(i, AVATAR_EASE_IN));
+    });
+    tagBar.addEventListener('mouseleave', () => setPillShifts(null, AVATAR_EASE_OUT));
+}
+
 clearBtn.addEventListener('click', () => {
     activeTags.clear();
     tagBar.querySelectorAll('.tag-pill.active').forEach(p => {
