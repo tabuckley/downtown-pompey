@@ -31,6 +31,11 @@ const ARCHIE_IMAGE_URL = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
 // styles.css (.helper-figure-img--photo) both key off this same object
 // and need no changes. Pages with no entry (or an empty array) keep
 // showing the placeholder SVG.
+// A FLO_IMAGES entry is normally a plain URL string, but can instead be a
+// { frames, durations } object — a tiny flipbook that plays on a loop for
+// as long as that line of dialogue is showing (see playFrames() below).
+// durations[i] pairs with frames[i]; the last duration repeats for any
+// extra frames beyond it.
 const FLO_IMAGES = {
     editorial: [
         // Matching pink duotone/halftone treatment across all three.
@@ -41,6 +46,26 @@ const FLO_IMAGES = {
         'images/flo-editorial-3.png', // pointing — intro
         'images/flo-editorial-1.png', // shrug — "don't be a din"
         'images/flo-editorial-2.png', // thoughtful — "makes you think"
+    ],
+    scrapbook: [
+        'images/flo-scrapbook-1.webp', // holding up a note — intro
+        'images/flo-scrapbook-2.webp', // pointing
+        {
+            // Eating chips, holding the pose, while a small doodle in the
+            // corner wiggles through three variants on a loop — a flipbook
+            // cut from a photo set, not a hand-drawn animation, so the
+            // wiggle is the only thing that moves; everything else in the
+            // frame is pixel-aligned (see the shared crop rectangle used
+            // when these were cut from the originals).
+            frames: [
+                'images/flo-scrapbook-3.webp',
+                'images/flo-scrapbook-4.webp',
+                'images/flo-scrapbook-4-1.webp',
+                'images/flo-scrapbook-4-2.webp',
+                'images/flo-scrapbook-4-3.webp',
+            ],
+            durations: [1000, 300, 300, 300, 300],
+        },
     ],
 };
 
@@ -146,6 +171,13 @@ function buildHelper() {
         </div>
     `;
 
+    // A FLO_IMAGES entry is a plain URL, or a { frames, durations } flipbook
+    // (see the comment above FLO_IMAGES) — this resolves either down to the
+    // single URL that should be showing right now/first.
+    function firstSrc(entry) {
+        return typeof entry === 'string' ? entry : entry.frames[0];
+    }
+
     const btn = document.createElement('button');
     btn.className = 'helper-figure-btn';
     btn.setAttribute('aria-label', 'Site helper — Flo');
@@ -154,7 +186,7 @@ function buildHelper() {
     // sizing override keys off — real photos are a different aspect ratio
     // (landscape, waist-up with gesturing arms) than the tall narrow
     // placeholder SVG, regardless of which page they end up on.
-    btn.innerHTML = `<img class="helper-figure-img${hasFloPhotos ? ' helper-figure-img--photo' : ''}" src="${hasFloPhotos ? floImages[0] : ARCHIE_IMAGE_URL}" alt="">`;
+    btn.innerHTML = `<img class="helper-figure-img${hasFloPhotos ? ' helper-figure-img--photo' : ''}" src="${hasFloPhotos ? firstSrc(floImages[0]) : ARCHIE_IMAGE_URL}" alt="">`;
 
     widget.appendChild(bubble);
     widget.appendChild(btn);
@@ -162,6 +194,27 @@ function buildHelper() {
 
     const textEl = bubble.querySelector('.helper-bubble-text');
     const figureImg = btn.querySelector('.helper-figure-img');
+
+    // Runs a { frames, durations } entry on a loop — frames[i] shows for
+    // durations[i] (the last duration repeats for any frames past the end
+    // of the durations array), wrapping back to frame 0 forever. Not tied
+    // to the pop-in bounce (see say() below) — that plays once per line of
+    // dialogue, not once per frame, or the wiggle would fight it.
+    let frameTimer = null;
+    function stopFrameLoop() {
+        clearTimeout(frameTimer);
+        frameTimer = null;
+    }
+    function playFrames(entry) {
+        let i = 0;
+        const step = () => {
+            figureImg.src = entry.frames[i];
+            const duration = entry.durations[i] ?? entry.durations[entry.durations.length - 1];
+            i = (i + 1) % entry.frames.length;
+            frameTimer = setTimeout(step, duration);
+        };
+        step();
+    }
 
     // Scrapbook's bubble is a fixed-size photo, not a box that grows with
     // content (see styles.css) — so a tip too long for its safe area at
@@ -188,7 +241,13 @@ function buildHelper() {
     function say(text, imageIndex) {
         textEl.textContent = text;
         if (hasFloPhotos) {
-            figureImg.src = floImages[imageIndex % floImages.length];
+            // Always stop any running flipbook first — otherwise a leftover
+            // timer from the previous line keeps overwriting figureImg.src
+            // in the background after we've already moved on to this one.
+            stopFrameLoop();
+            const entry = floImages[imageIndex % floImages.length];
+            if (typeof entry === 'string') figureImg.src = entry;
+            else playFrames(entry);
             // Remove-reflow-readd, not just re-add — a CSS animation
             // doesn't restart just because the class is already present,
             // and it's already present from the previous line of dialogue
