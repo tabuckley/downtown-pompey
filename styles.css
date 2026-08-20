@@ -800,110 +800,93 @@ body.landing {
 .landing-topbar-badge:hover { transform: rotate(0deg) scale(1.05); background: #d01359; }
 
 .landing-hero {
-    display: flex;
-    align-items: center;
-    gap: clamp(1.5rem, 4vw, 3rem);
-    padding: clamp(1.2rem, 3vw, 2.2rem) clamp(1.2rem, 4vw, 3rem);
+    padding: clamp(1rem, 2vw, 1.4rem) clamp(1.2rem, 4vw, 3rem);
     max-width: 1280px;
     margin: 0 auto;
 }
 
-.landing-hero-text { flex: 1 1 380px; min-width: 0; }
+/* Three pre-composed 1240x400 layers (background texture, a torn photo
+   anchored to the left edge, a pink collage anchored to the right) —
+   stacked at a locked aspect-ratio so they scale together and never drift
+   out of alignment with each other, regardless of viewport width. The
+   open band between the two edge graphics (roughly the middle third) is
+   where .landing-hero-text sits. */
+.landing-hero-banner {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1240 / 400;
+    overflow: hidden;
+}
+
+.landing-hero-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    user-select: none;
+}
+
+.landing-hero-layer--left,
+.landing-hero-layer--right {
+    z-index: 1;
+}
+
+.landing-hero-text {
+    position: absolute;
+    inset: 0;
+    /* The open band between the two edge layers is roughly x=17%-49% of
+       the 1240px source canvas (measured against the actual art, not
+       eyeballed from the raw layer files — that guess put this at
+       left:21%/right:24%, which is nowhere near the collage's real left
+       edge and had the headline running straight into it). */
+    left: 18%;
+    right: 51%;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0.5rem;
+}
 
 .landing-hero-title {
     font-family: var(--font-display);
-    font-size: clamp(2rem, 4.2vw, 3.2rem);
+    font-size: clamp(1.3rem, 2.6vw, 2rem);
     font-weight: 800;
     letter-spacing: -0.02em;
-    line-height: 1.05;
-    margin-bottom: 0.8rem;
+    line-height: 1.08;
+    color: #f5f0e6;
+    margin-bottom: 0.5rem;
 }
 
 .landing-hero-sub {
-    font-size: 1rem;
-    line-height: 1.55;
-    color: #4a453d;
-    max-width: 38ch;
-    margin-bottom: 1.2rem;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: #cec5b0;
+    margin-bottom: 0.9rem;
 }
 
 .landing-hero-cta {
     display: inline-flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
     background: #d01359;
     color: #ffffff;
     text-decoration: none;
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 0.95rem;
-    padding: 0.7rem 1.4rem;
-    box-shadow: 4px 4px 0 #1a1512;
+    font-size: 0.85rem;
+    padding: 0.6rem 1.1rem;
+    box-shadow: 3px 3px 0 #f5f0e6;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .landing-hero-cta:hover {
     transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0 #1a1512;
-}
-
-.landing-hero-photo-wrap {
-    position: relative;
-    flex: 1 1 380px;
-    min-width: 0;
-    max-width: 520px;
-}
-
-.landing-hero-photo {
-    display: block;
-    width: 100%;
-    height: clamp(200px, 22vw, 300px);
-    object-fit: cover;
-    /* Torn-edge silhouette instead of a plain rectangle — a jagged clip-path
-       reads as a physically torn photograph without needing a separate mask
-       image asset. */
-    clip-path: polygon(2% 4%, 18% 0%, 34% 3%, 52% 0%, 68% 2%, 86% 0%, 100% 5%,
-                        98% 22%, 100% 40%, 97% 58%, 100% 76%, 98% 95%, 82% 100%,
-                        64% 97%, 46% 100%, 28% 98%, 10% 100%, 0% 82%, 3% 60%,
-                        0% 38%, 4% 18%);
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
-    transform: rotate(2deg);
-}
-
-.landing-hero-badge {
-    position: absolute;
-    top: -1.6rem;
-    left: -1.6rem;
-    width: 92px;
-    height: 92px;
-    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.3));
-    animation: landing-badge-spin 22s linear infinite;
-}
-
-@keyframes landing-badge-spin {
-    to { transform: rotate(360deg); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .landing-hero-badge { animation: none; }
-}
-
-.landing-hero-tape {
-    position: absolute;
-    bottom: -0.9rem;
-    /* Left, not right — Flo's fixed-position widget lives bottom-right of
-       the viewport and her auto-opened bubble reaches into this corner of
-       the hero photo at common viewport heights. */
-    left: 1.2rem;
-    background: #ffc2e2;
-    color: #4a1030;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    padding: 0.45rem 0.8rem;
-    transform: rotate(-2deg);
-    box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.2);
+    box-shadow: 5px 5px 0 #f5f0e6;
 }
 
 .landing-grid {
@@ -912,7 +895,7 @@ body.landing {
     gap: 1.2rem;
     max-width: 1280px;
     margin: 0 auto;
-    padding: 0 clamp(1.2rem, 4vw, 3rem) clamp(1.6rem, 3vw, 2.4rem);
+    padding: 0 clamp(1.2rem, 4vw, 3rem) clamp(1.2rem, 2.4vw, 1.8rem);
     scroll-margin-top: 2rem;
 }
 
@@ -1020,9 +1003,15 @@ body.landing {
    up; the topbar and footer are already close to their practical floor. */
 @media (max-height: 820px) {
     .landing-hero { padding-top: 0.8rem; padding-bottom: 0.8rem; }
-    .landing-hero-photo { height: clamp(170px, 20vw, 240px); }
-    .landing-hero-title { font-size: clamp(1.8rem, 3.6vw, 2.6rem); margin-bottom: 0.6rem; }
-    .landing-hero-sub { margin-bottom: 0.9rem; }
+    /* The banner's aspect-ratio locks its height to its width, not to
+       viewport height — on a short-but-wide screen it can still render
+       tall enough to blow the no-scroll budget below, so it gets a real
+       max-height cap here (object-fit:cover crops in evenly from the
+       sides, which stays fine since the layers' own content already
+       hugs each edge). */
+    .landing-hero-banner { max-height: 190px; }
+    .landing-hero-title { font-size: clamp(1.1rem, 2vw, 1.6rem); margin-bottom: 0.35rem; }
+    .landing-hero-sub { margin-bottom: 0.5rem; }
     .landing-grid { padding-bottom: 1rem; }
     .landing-card { padding: 1rem 1.2rem; }
 }
@@ -2899,14 +2888,19 @@ body.landing {
     .landing-topbar { padding: 1rem 1.2rem; }
     .landing-topbar-tag { display: none; } /* the hero repeats this same line moments later, below the fold it's just clutter at this width */
     .landing-topbar-nav { gap: 1.1rem; font-size: 0.85rem; }
-    .landing-hero { flex-direction: column; text-align: left; }
-    /* flex: 1 1 380px on both children was written for the desktop ROW
-       layout (380px preferred width, grow to fill). Stacked into a COLUMN
-       here, that same basis becomes a preferred HEIGHT instead — leaving a
-       ~120px empty gap under the photo, which is only ~260px tall at this
-       width. auto lets each child size to its own content again. */
-    .landing-hero-text,
-    .landing-hero-photo-wrap { flex: 0 1 auto; max-width: 100%; }
+    /* The banner's 1240:400 (~3.1:1) aspect-ratio was designed to be wide
+       — at mobile widths that leaves so little actual height that the two
+       edge layers (a torn photo, a text collage — both fairly detailed)
+       would render as near-illegible slivers, and the open text band
+       between them would be too short for the headline/sub/CTA stack to
+       fit without a tiny, cramped font. Simpler mobile treatment instead:
+       keep just the dark background layer at a real fixed height, drop
+       the two side layers, and let the text sit centred over it. */
+    .landing-hero-banner { aspect-ratio: auto; height: 200px; }
+    .landing-hero-layer--left,
+    .landing-hero-layer--right { display: none; }
+    .landing-hero-text { left: 6%; right: 6%; }
+    .landing-hero-title { font-size: clamp(1.5rem, 7vw, 2rem); }
     /* Flo auto-opens on load and sits fixed bottom-right — enough room for
        her ~195px figure + open bubble not to land on the last card/footer. */
     .landing-grid { padding-bottom: 8rem; }
