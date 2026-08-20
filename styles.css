@@ -1159,6 +1159,10 @@ body.landing {
     transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
 }
 
+/* Structural no-op by default — see the comment in helper.js where this
+   wrapper is created. Scrapbook mode turns it into a real box. */
+.helper-bubble-page { display: contents; }
+
 .helper-bubble.open {
     opacity: 1;
     visibility: visible;
@@ -1197,18 +1201,37 @@ body.landing {
    SVG mask, so the box still sizes to its content like the base
    .helper-bubble does everywhere else. */
 [data-mode="scrapbook"] .helper-bubble {
-    background:
-        repeating-linear-gradient(to bottom, transparent 0 27px, rgba(60, 110, 210, 0.32) 27px 28px),
-        #f2ead8;
-    background-position: 0 2.4rem;
-    color: #332b1e;
+    /* Outer shell only — position + resting tilt. All paper styling lives
+       on .helper-bubble-page (below) instead, specifically so this
+       element stays unclipped and its own ::before/::after (tape, tail)
+       can hang past the page's torn edge rather than being cut off by a
+       clip-path/mask sitting on the same element they belong to. */
+    background: none;
     border: none;
     border-radius: 0;
-    box-shadow: 3px 6px 14px rgba(0, 0, 0, 0.35);
+    box-shadow: none;
+    padding: 0;
     transform: rotate(-1.5deg);
     position: relative;
     overflow: visible;
-    padding: 2.5rem 1.2rem 1.8rem 2.5rem;
+}
+
+[data-mode="scrapbook"] .helper-bubble.open {
+    /* The base rule's transform:none on .open would otherwise cancel the
+       resting tilt above — composing them here keeps the tilt through the
+       open/close transition instead of snapping flat. */
+    transform: rotate(-1.5deg);
+}
+
+[data-mode="scrapbook"] .helper-bubble-page {
+    display: block;
+    background:
+        repeating-linear-gradient(to bottom, transparent 0 27px, rgba(60, 110, 210, 0.16) 27px 28px),
+        #f2ead8;
+    background-position: 0 2.4rem;
+    color: #332b1e;
+    box-shadow: 3px 6px 14px rgba(0, 0, 0, 0.35);
+    padding: 1.8rem 1.2rem 1.8rem 2.5rem;
     /* Straight left edge (0% x) for the punched holes; torn everywhere
        else. Percentages, not fixed px, so the tear pattern holds its
        shape as the box grows/shrinks with content. */
@@ -1226,7 +1249,10 @@ body.landing {
        evenodd actually cuts the circles out of the rect's own paint,
        leaving them genuinely transparent (alpha 0) regardless of colour.
        Stretched to the box's real size via mask-size below rather than
-       relying on percentage units inside the SVG itself. */
+       relying on percentage units inside the SVG itself — and the SVG
+       needs explicit width/height matching its viewBox, or mask-size:100%
+       100% computes against the wrong intrinsic size once the box's real
+       aspect ratio (e.g. narrower/taller on mobile) diverges from it. */
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='224' height='200' viewBox='0 0 224 200'%3E%3Cpath fill-rule='evenodd' fill='white' d='M0,0 H224 V200 H0 Z M9,24 A6,6 0 1,0 21,24 A6,6 0 1,0 9,24 Z M9,75 A6,6 0 1,0 21,75 A6,6 0 1,0 9,75 Z M9,126 A6,6 0 1,0 21,126 A6,6 0 1,0 9,126 Z M9,177 A6,6 0 1,0 21,177 A6,6 0 1,0 9,177 Z'/%3E%3C/svg%3E");
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='224' height='200' viewBox='0 0 224 200'%3E%3Cpath fill-rule='evenodd' fill='white' d='M0,0 H224 V200 H0 Z M9,24 A6,6 0 1,0 21,24 A6,6 0 1,0 9,24 Z M9,75 A6,6 0 1,0 21,75 A6,6 0 1,0 9,75 Z M9,126 A6,6 0 1,0 21,126 A6,6 0 1,0 9,126 Z M9,177 A6,6 0 1,0 21,177 A6,6 0 1,0 9,177 Z'/%3E%3C/svg%3E");
     mask-size: 100% 100%;
@@ -1235,31 +1261,21 @@ body.landing {
     -webkit-mask-repeat: no-repeat;
 }
 
-[data-mode="scrapbook"] .helper-bubble.open {
-    /* The base rule's transform:none on .open would otherwise cancel the
-       page's resting tilt above — composing them here keeps the tilt
-       through the open/close transition instead of snapping flat. */
-    transform: rotate(-1.5deg);
-}
-
 [data-mode="scrapbook"] .helper-bubble-name {
     color: #a3175c;
 }
 
 /* Washi tape (the same asset used on scrapbook photo tiles, see
-   scrapbook.js's TAPE_IMAGES) holding the top-left corner down. A real
-   image here, not a CSS gradient — the printed "Downtown Pompey" text is
-   the whole point, matching the tape elsewhere on this page exactly. */
+   scrapbook.js's TAPE_IMAGES) holding the top-left corner down — now on
+   the unclipped outer shell, so it genuinely overlaps the page's torn top
+   edge instead of being confined inside it. A real image, not a CSS
+   gradient — the printed "Downtown Pompey" text is the whole point,
+   matching the tape elsewhere on this page exactly. */
 [data-mode="scrapbook"] .helper-bubble::before {
     content: '';
     position: absolute;
-    /* Would read better hanging above the torn top edge (like the
-       reference photo), but clip-path on the bubble itself clips its own
-       pseudo-elements too — anything positioned outside the 0-100% box
-       the polygon is defined against just disappears. Sitting just inside
-       the top edge instead still reads as "holding the tear down". */
-    top: 0.3rem;
-    left: 0.6rem;
+    top: -0.7rem;
+    left: 0.5rem;
     width: 92px;
     height: 30px;
     background-image: url('images/tape/tape-1.png');
@@ -1267,19 +1283,18 @@ body.landing {
     transform: rotate(-7deg);
     filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
     pointer-events: none;
+    z-index: 1;
 }
 
 /* Speech-bubble tail, pointing down toward Flo's head — a small torn
    triangular flap rather than the base rule's clean rotated square, so it
-   still reads as paper. */
+   still reads as paper. Also on the unclipped outer shell now, so it can
+   hang below the page's torn bottom edge instead of sitting flush inside
+   it. */
 [data-mode="scrapbook"] .helper-bubble::after {
     content: '';
     position: absolute;
-    /* Same constraint as ::before above — clip-path on the bubble itself
-       clips its own pseudo-elements, so a negative bottom (hanging below
-       the box) just disappears. Sitting flush with the inside of the
-       bottom edge instead. */
-    bottom: 2px;
+    bottom: -13px;
     right: 38px;
     width: 22px;
     height: 18px;
@@ -1287,15 +1302,13 @@ body.landing {
        the exact same shade turned out completely invisible (confirmed by
        swapping it red mid-build: the shape and position were always
        right, it just had zero contrast against its own backdrop). A real
-       border, not another drop-shadow attempt — border is clipped to the
+       border, not a drop-shadow attempt — border is clipped to the
        triangle along with the fill, giving a crisp fitted outline instead
        of a soft shadow that was too faint to register at normal size. */
     background: #e6dabb;
     border: 1.5px solid rgba(51, 43, 30, 0.4);
     clip-path: polygon(0% 0%, 100% 0%, 35% 100%);
     filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.25));
-    border: none;
-    transform: none;
 }
 
 .helper-bubble-name {

@@ -126,12 +126,23 @@ function buildHelper() {
     const bubble = document.createElement('div');
     bubble.className = 'helper-bubble';
     bubble.setAttribute('role', 'status');
+    // .helper-bubble-page is a plain, unstyled wrapper on every page except
+    // scrapbook (display:contents there — structurally invisible, doesn't
+    // affect layout at all). Scrapbook needs it as a real box: its bubble
+    // is clipped to a torn-paper shape, and clip-path/mask on an element
+    // clips that element's OWN pseudo-elements too — so the tape and tail
+    // (::before/::after on .helper-bubble) can't hang past the torn edge
+    // if the clip-path lives on that same element. Moving the paper's
+    // clip-path/mask onto this inner wrapper instead leaves .helper-bubble
+    // itself unclipped, free for its tape/tail to overlap the page edge.
     bubble.innerHTML = `
-        <div class="helper-bubble-name">Flo</div>
-        <div class="helper-bubble-text"></div>
-        <div class="helper-bubble-actions">
-            <button class="helper-chip" data-action="tip">Next</button>
-            <button class="helper-chip" data-action="close">close ×</button>
+        <div class="helper-bubble-page">
+            <div class="helper-bubble-name">Flo</div>
+            <div class="helper-bubble-text"></div>
+            <div class="helper-bubble-actions">
+                <button class="helper-chip" data-action="tip">Next</button>
+                <button class="helper-chip" data-action="close">close ×</button>
+            </div>
         </div>
     `;
 
