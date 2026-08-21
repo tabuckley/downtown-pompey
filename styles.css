@@ -806,13 +806,13 @@ body.landing {
    through never feels like a jump cut. Deliberately NOT a uniform set of
    white cards: "don't make every panel look the same" was the one hard
    rule carried over from the original brief for this section. */
+/* Full-bleed, no gap — the three colours/textures butt straight up
+   against each other rather than sitting as separated cards, so the
+   panel's own background IS the divider. */
 .panels {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    max-width: 1320px;
-    margin: 0 auto;
-    padding: clamp(1.6rem, 3vw, 2.6rem) clamp(1.2rem, 4vw, 3rem) 0;
+    width: 100%;
     scroll-margin-top: 2rem;
 }
 
@@ -821,16 +821,16 @@ body.landing {
     display: flex;
     flex-direction: column;
     min-height: 640px;
-    padding: 1.8rem;
-    border: 1.5px solid #1a1512;
-    box-shadow: 6px 6px 0 rgba(26, 21, 18, 0.14);
+    padding: clamp(1.8rem, 3vw, 3rem);
     overflow: hidden;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: filter 0.2s ease;
 }
 
+/* A lift/shadow hover reads fine on a separated card but opens an ugly
+   gap between touching panels — brightening in place instead keeps the
+   "still responds to hover" feedback without breaking the seam. */
 .panel:hover {
-    transform: translateY(-5px);
-    box-shadow: 8px 11px 0 rgba(26, 21, 18, 0.18);
+    filter: brightness(1.05);
 }
 
 .panel-title {
