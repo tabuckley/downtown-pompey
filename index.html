@@ -16,7 +16,7 @@
         <a href="index.html" class="landing-topbar-logo">
             <img src="https://media.downtownpompey.online/Downtown-Pompey-logo.png" alt="Downtown Pompey">
         </a>
-        <p class="landing-topbar-tag">An alternative archive of Portsmouth city centre</p>
+        <h1 class="landing-topbar-tag">An alternative archive of Portsmouth city centre</h1>
         <nav class="landing-topbar-nav">
             <a href="editorial.html">Editorial</a>
             <a href="scrapbook.html">Scrapbook</a>
@@ -29,49 +29,74 @@
         <a href="mailto:Thomas@Thomas-Buckley.com?subject=Sharing%20a%20Downtown%20Pompey%20memory" class="landing-topbar-badge">Share your<br>memory <span aria-hidden="true">&rarr;</span></a>
     </header>
 
-    <section class="landing-hero">
-        <div class="landing-hero-banner">
-            <img class="landing-hero-layer landing-hero-layer--bg" src="images/header-bg.webp" alt="">
-            <img class="landing-hero-layer landing-hero-layer--left" src="images/header-left.webp" alt="">
-            <img class="landing-hero-layer landing-hero-layer--right" src="images/header-right.webp" alt="">
-            <div class="landing-hero-text">
-                <h1 class="landing-hero-title">Downtown is online babes!</h1>
-                <p class="landing-hero-sub">An alternative archive of the city centre — five years of material, told in three different ways.</p>
-                <a href="#explore" class="landing-hero-cta">Explore Downtown <span aria-hidden="true">&rarr;</span></a>
+    <section class="panels" id="explore">
+
+        <!-- Three ways in, each panel styled to match the page it leads to
+             — cream/tape for the archive-as-scrapbook, dark Win98 pink for
+             the 3D room, calm white for the plain-text view — so clicking
+             through never feels like a jump cut. -->
+
+        <article class="panel panel--scrapbook">
+            <span class="panel-tag panel-tag--scrapbook">P01</span>
+            <div class="panel-photo">
+                <img src="images/header-right.webp" alt="A collage of torn photos and cut-out lettering from the archive, including a shot of Portsmouth Central Library.">
+                <span class="panel-tape"></span>
             </div>
-        </div>
+            <h2 class="panel-title panel-title--scrapbook">Scrapbook</h2>
+            <p class="panel-copy">Scroll forever. Pan around a whole wall of photos, flyers, tickets and zines — filter by tag, and see the city the way everyone else pinned it up.</p>
+            <div class="panel-stickers" aria-hidden="true">
+                <span class="panel-sticker panel-sticker--1">Drag</span>
+                <span class="panel-sticker panel-sticker--2">Seaside</span>
+            </div>
+            <a href="scrapbook.html" class="panel-cta panel-cta--scrapbook">Browse the archive <span aria-hidden="true">&rarr;</span></a>
+        </article>
+
+        <article class="panel panel--web00">
+            <div class="panel-browser">
+                <div class="panel-browser-titlebar">
+                    <span class="panel-browser-dot"></span>
+                    <span class="panel-browser-dot"></span>
+                    <span class="panel-browser-dot"></span>
+                    <span class="panel-browser-titletext">editorial.html</span>
+                </div>
+                <div class="panel-browser-address">downtownpompey.online/editorial.html</div>
+                <div class="panel-browser-body">
+                    <img class="panel-browser-tile" src="images/dtp-glow-tile.gif" alt="">
+                    <h2 class="panel-title panel-title--web00">00s Web</h2>
+                    <p class="panel-copy panel-copy--web00">Step inside a 3D room built from the archive itself — move to look around, click what catches your eye, read the story behind it.</p>
+                    <span class="panel-badge">Best viewed with the sound on</span>
+                </div>
+            </div>
+            <a href="editorial.html" class="panel-cta panel-cta--web00">Step inside <span aria-hidden="true">&rarr;</span></a>
+        </article>
+
+        <article class="panel panel--accessible">
+            <span class="panel-tag panel-tag--accessible" aria-hidden="true">&#128065;</span>
+            <h2 class="panel-title panel-title--accessible">Accessible</h2>
+            <p class="panel-copy">The clear, fast, plain-text way in — built for researchers, screen readers, and anyone who just wants an answer.</p>
+            <ul class="panel-feature-list">
+                <li>Plain-language search</li>
+                <li>Type &amp; project filters</li>
+                <li>Every item has its own link</li>
+                <li>Built for screen readers</li>
+            </ul>
+            <a href="accessible.html" class="panel-cta panel-cta--accessible">Search the archive <span aria-hidden="true">&rarr;</span></a>
+        </article>
+
     </section>
 
-    <section class="landing-grid" id="explore">
-
-        <a href="editorial.html" class="landing-card landing-card--editorial">
-            <span class="landing-card-tag">Featured</span>
-            <h2>Editorial</h2>
-            <p>The full art experience — a 3D room you can look around, built from the archive itself.</p>
-            <span class="landing-card-cta">Step inside <span aria-hidden="true">&rarr;</span></span>
-        </a>
-
-        <a href="scrapbook.html" class="landing-card landing-card--scrapbook">
-            <span class="landing-card-tag">P01</span>
-            <h2>Scrapbook</h2>
-            <p>The fun one: scroll forever, filter by tag, pan around a whole wall of photos, flyers and zines.</p>
-            <span class="landing-card-cta">Browse the archive <span aria-hidden="true">&rarr;</span></span>
-        </a>
-
-        <a href="accessible.html" class="landing-card landing-card--accessible">
-            <span class="landing-card-tag" aria-hidden="true">&#128065;</span>
-            <h2>Accessible</h2>
-            <p>The clear, fast, plain-text version — built for researchers, screen readers, and anyone who just wants an answer.</p>
-            <span class="landing-card-cta">Search the archive <span aria-hidden="true">&rarr;</span></span>
-        </a>
-
-        <a href="process.html" class="landing-card landing-card--process">
-            <span class="landing-card-tag">How it was made</span>
-            <h2>The Process</h2>
-            <p>The thinking, the tools, and the five people behind this archive — documented, not hidden.</p>
-            <span class="landing-card-cta">Read the process <span aria-hidden="true">&rarr;</span></span>
-        </a>
-
+    <section class="process-strip">
+        <div class="process-strip-text">
+            <span class="process-strip-eyebrow">How it was made</span>
+            <p>Five years of material, digitised and catalogued by five people — the tools, the choices, and the thinking behind it are part of the archive too.</p>
+            <a href="process.html" class="process-strip-cta">Read the process <span aria-hidden="true">&rarr;</span></a>
+        </div>
+        <ol class="process-steps">
+            <li><span class="process-step-num">01</span><span class="process-step-label">From the archive</span></li>
+            <li><span class="process-step-num">02</span><span class="process-step-label">Scan &amp; capture</span></li>
+            <li><span class="process-step-num">03</span><span class="process-step-label">Label &amp; preserve</span></li>
+            <li><span class="process-step-num">04</span><span class="process-step-label">Share &amp; remember</span></li>
+        </ol>
     </section>
 
     <footer class="landing-footer">
