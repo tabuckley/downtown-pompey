@@ -83,20 +83,25 @@
             <a href="accessible.html" class="panel-cta panel-cta--accessible">Search the archive <span aria-hidden="true">&rarr;</span></a>
         </article>
 
-    </section>
+        <!-- A grid child of .panels itself (not a separate section below
+             it) so it can be placed into the same row as the three panels
+             above and float over them on desktop — see .process-strip's
+             desktop rule in styles.css — rather than adding its own extra
+             row of document height underneath. -->
+        <section class="process-strip">
+            <div class="process-strip-text">
+                <span class="process-strip-eyebrow">How it was made</span>
+                <p>Five years of material, digitised and catalogued by five people — the tools, the choices, and the thinking behind it are part of the archive too.</p>
+                <a href="process.html" class="process-strip-cta">Read the process <span aria-hidden="true">&rarr;</span></a>
+            </div>
+            <ol class="process-steps">
+                <li><span class="process-step-num">01</span><span class="process-step-label">From the archive</span></li>
+                <li><span class="process-step-num">02</span><span class="process-step-label">Scan &amp; capture</span></li>
+                <li><span class="process-step-num">03</span><span class="process-step-label">Label &amp; preserve</span></li>
+                <li><span class="process-step-num">04</span><span class="process-step-label">Share &amp; remember</span></li>
+            </ol>
+        </section>
 
-    <section class="process-strip">
-        <div class="process-strip-text">
-            <span class="process-strip-eyebrow">How it was made</span>
-            <p>Five years of material, digitised and catalogued by five people — the tools, the choices, and the thinking behind it are part of the archive too.</p>
-            <a href="process.html" class="process-strip-cta">Read the process <span aria-hidden="true">&rarr;</span></a>
-        </div>
-        <ol class="process-steps">
-            <li><span class="process-step-num">01</span><span class="process-step-label">From the archive</span></li>
-            <li><span class="process-step-num">02</span><span class="process-step-label">Scan &amp; capture</span></li>
-            <li><span class="process-step-num">03</span><span class="process-step-label">Label &amp; preserve</span></li>
-            <li><span class="process-step-num">04</span><span class="process-step-label">Share &amp; remember</span></li>
-        </ol>
     </section>
 
     <footer class="landing-footer">

@@ -827,21 +827,47 @@ body.landing {
 }
 
 /* Desktop only (single row of 3) — the row fills the rest of the first
-   screen below the topbar, so the panels' own colour reaches the bottom
-   of the page rather than stopping partway down it. Scoped to the
-   single-row layout specifically: at tablet's 2-column-plus-a-full-width-
-   third-panel arrangement, giving every panel this same height would
-   stack two viewport-heights' worth of colour before the page even gets
-   to the footer. 103px is the topbar's own real height at this width. */
+   screen below the topbar, so the whole page (topbar + panels + footer)
+   fits one screen with no scroll, the panels' own colour reaching the
+   very bottom of the page. Scoped to the single-row layout specifically:
+   at tablet's 2-column-plus-a-full-width-third-panel arrangement, giving
+   every panel this same height would stack two viewport-heights' worth
+   of colour before the page even got to the footer.
+   227px is the topbar's real rendered height (~116px, border included)
+   plus the footer's (~111px) — .process-strip doesn't factor in since it
+   no longer adds any height of its own (see below), sharing the panels'
+   row instead of sitting in a row of its own underneath them. */
 @media (min-width: 1001px) {
-    .panel { min-height: calc(100vh - 103px); }
-    /* Pulled up to float over the panels' own bottom edge rather than
-       sitting below them in normal flow — only makes sense once the
-       panels are actually tall enough (the rule above) for there to be
-       panel colour left to overlap; below this width the strip stays in
-       normal flow underneath them instead. */
-    .process-strip { margin-top: -170px; }
+    .panel { min-height: calc(100vh - 227px); padding-bottom: 185px; }
+    /* .process-strip is ~171px tall, floating over the last ~171px of
+       whichever panel it overlaps — without real clearance reserved
+       below their own content, that lands right on top of each panel's
+       CTA button, not empty background, at ordinary heights like
+       1440x900 (not just short ones). 185px covers the strip plus a
+       small margin; padding rather than a bigger min-height because
+       box-sizing is border-box, so this doesn't change the panel's own
+       outer height or the no-scroll budget above, just how much of it
+       is reserved. Doesn't reach .panel--web00 — its own padding:0
+       override further down wins that fight on source order, so it gets
+       an equivalent padding-bottom of its own next to that rule instead. */
+    /* Fully explicit row AND column for every item sharing this row,
+       .process-strip included (see its own min-width:1001px rule further
+       down) — mixing that with auto column placement on these three
+       (leaving column to fall out naturally left-to-right) is what
+       actually caused the bug this replaced: an item with BOTH axes
+       explicit (.process-strip, spanning 1/-1) is placed before any
+       auto-placed item even gets a turn, so by the time these three came
+       up for placement every explicit column in row 1 already read as
+       "occupied" — Grid's answer to that wasn't to overlap them (which
+       is what explicit-on-explicit placement allows) but to invent new
+       implicit columns to slot them into instead, which also shifted
+       what line -1 on .process-strip resolved to. Giving every item in
+       the row a real, explicit column removes the ambiguity entirely. */
+    .panel--scrapbook  { grid-row: 1; grid-column: 1; }
+    .panel--web00      { grid-row: 1; grid-column: 2; }
+    .panel--accessible { grid-row: 1; grid-column: 3; }
 }
+
 
 /* A lift/shadow hover reads fine on a separated card but opens an ugly
    gap between touching panels — brightening in place instead keeps the
@@ -915,6 +941,27 @@ body.landing {
     box-shadow: 3px 5px 10px rgba(0, 0, 0, 0.25);
 }
 
+/* Desktop only — smaller than the 78% used everywhere else (tablet,
+   mobile-with-photo-visible n/a since mobile drops it entirely). Without
+   this, the photo alone pushes scrapbook's content tall enough that,
+   combined with .panel's own bottom clearance for .process-strip's
+   overlap (see .panel's min-width:1001px rule), content stops fitting
+   the no-scroll budget at ordinary heights like 1440x900 — not just
+   unusually short ones. */
+@media (min-width: 1001px) {
+    .panel-photo { width: 58%; }
+}
+
+/* Short-but-wide desktop viewports (1366x768, 1280x800 and similar) —
+   900/1080's no-scroll budget above already accounts for a 58% photo,
+   but 768/800's tighter budget can't fit even that without also giving
+   up the photo entirely (still ~130px short at 768 otherwise). Same
+   simplify-the-decoration-rather-than-shrink-it-to-illegibility call
+   the mobile breakpoint already makes for this exact photo. */
+@media (min-width: 1001px) and (max-height: 850px) {
+    .panel-photo { display: none; }
+}
+
 .panel-photo img {
     position: absolute;
     inset: 0;
@@ -986,6 +1033,19 @@ body.landing {
     background: #0d0d0d;
     padding: 0;
     color: #f0ece4;
+}
+
+/* Reserves the same clearance below the CTA as the other two panels'
+   own padding-bottom (see .panel's min-width:1001px rule) — placed on
+   the panel itself, after all its content including the CTA, rather
+   than as a margin-bottom on .panel-browser above it. That was the
+   first attempt here and it was wrong: margin-bottom on the flex-grown
+   browser box just redistributes the SAME total space, opening a gap
+   between the browser and the CTA instead of one below the CTA — the
+   CTA itself barely moved. Padding after everything is what actually
+   holds it clear of .process-strip's overlap. */
+@media (min-width: 1001px) {
+    .panel--web00 { padding-bottom: 185px; }
 }
 
 .panel-browser {
@@ -1146,19 +1206,43 @@ body.landing {
 }
 
 /* ===== PROCESS STRIP ===== */
+/* A grid child of .panels (see index.html) spanning every column, so it
+   can share the panels' own row instead of adding a new one below them —
+   on tablet/mobile that just means it flows naturally under the panels
+   like any other row; on desktop (min-width:1001px below) it's pinned to
+   the bottom of that same row instead, floating over the panels rather
+   than pushing the page taller. */
 .process-strip {
+    grid-column: 1 / -1;
     display: grid;
     grid-template-columns: 1fr 1.4fr;
     align-items: center;
     gap: 2.5rem;
     max-width: 1320px;
+    width: 100%;
     margin: 1.8rem auto 0;
-    padding: 2rem clamp(1.4rem, 3vw, 2.4rem);
+    padding: 1.3rem clamp(1.4rem, 3vw, 2.4rem);
     background: #ffffff;
     border: 1.5px solid #1a1512;
     box-shadow: 6px 6px 0 rgba(26, 21, 18, 0.14);
     position: relative;
     z-index: 2;
+}
+
+/* Desktop only (matches .panel's own min-width:1001px rule) — pinned to
+   the same grid row as the three panels and to the bottom of it, so it
+   floats over their lower portion instead of flowing below them in its
+   own row. Placed after the base rule above (rather than inside that
+   other min-width:1001px block) specifically so its margin-top:0 beats
+   the base rule's own margin shorthand on source order — same media
+   query, but the base rule's plain margin:1.8rem auto 0 would otherwise
+   win over an earlier, equal-specificity margin-top:0. */
+@media (min-width: 1001px) {
+    .process-strip {
+        grid-row: 1;
+        align-self: end;
+        margin-top: 0;
+    }
 }
 
 .process-strip-text p {
