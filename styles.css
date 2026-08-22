@@ -1220,7 +1220,7 @@ body.landing {
     max-width: 1320px;
     width: 100%;
     margin: 1.8rem auto 0;
-    padding: 1rem clamp(1.2rem, 2.5vw, 1.8rem);
+    padding: 0.65rem clamp(1.2rem, 2.5vw, 1.8rem);
     background: #ffffff;
     border: 1.5px solid #1a1512;
     box-shadow: 6px 6px 0 rgba(26, 21, 18, 0.14);
@@ -1241,12 +1241,17 @@ body.landing {
    happened to sit over) while still leaving panel colour visible on
    both sides, rather than the full page width; tablet/mobile keep the
    1320px box from the base rule, since the panels below it are no
-   longer three touching columns for it to visually bridge. */
+   longer three touching columns for it to visually bridge.
+   margin-bottom lifts it clear of the panels' own bottom edge — without
+   it, align-self:end put the strip's bottom flush against the same line
+   the panels end on, so it read as sitting on the columns' base rather
+   than floating over them. */
 @media (min-width: 1001px) {
     .process-strip {
         grid-row: 1;
         align-self: end;
         margin-top: 0;
+        margin-bottom: 2.5rem;
         max-width: 60vw;
     }
 }
@@ -1265,9 +1270,9 @@ body.landing {
 
 .process-strip-text p {
     font-size: 0.82rem;
-    line-height: 1.5;
+    line-height: 1.4;
     color: #4a453d;
-    margin: 0.4rem 0 0.7rem;
+    margin: 0.3rem 0 0.5rem;
 }
 
 .process-strip-eyebrow {
