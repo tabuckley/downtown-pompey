@@ -818,14 +818,13 @@ body.landing {
    any height of its own (see below), sharing the panels' row instead of
    sitting in a row of its own underneath them. */
 @media (min-width: 1001px) {
-    .panel { min-height: calc(100vh - 214px); padding-top: 1.4rem; padding-bottom: 222px; }
-    /* .process-strip is ~205px tall as a narrow stacked box, floating
-       over the last ~205px of whichever panel it overlaps — without
-       real clearance reserved below their own content, that lands right
-       on top of each panel's CTA button, not empty background, at
-       ordinary heights like 1440x900 (not just short ones). 225px
-       covers the strip plus a small margin; padding rather than a
-       bigger min-height because
+    .panel { min-height: calc(100vh - 214px); padding-top: 1.4rem; padding-bottom: 180px; }
+    /* .process-strip is thin now (~158px, a wide strip rather than a
+       narrow stacked box) but still floats over whichever panel it
+       overlaps — without real clearance reserved below their own
+       content, that lands right on top of each panel's CTA button, not
+       empty background. 180px covers the strip plus a comfortable
+       margin; padding rather than a bigger min-height because
        box-sizing is border-box, so this doesn't change the panel's own
        outer height or the no-scroll budget above, just how much of it
        is reserved. Doesn't reach .panel--web00 — its own padding:0
@@ -930,7 +929,18 @@ body.landing {
    the no-scroll budget at ordinary heights like 1440x900 — not just
    unusually short ones. */
 @media (min-width: 1001px) {
-    .panel-photo { width: 50%; }
+    .panel-photo { width: 70%; }
+}
+
+/* Short-but-wide desktop viewports (1366x768, 1280x800 and similar) —
+   900/1080's no-scroll budget above already accounts for a 70% photo,
+   but 768/800's tighter budget can't fit even that. Same simplify-the-
+   decoration-rather-than-shrink-it-to-illegibility call the mobile
+   breakpoint already makes for this exact photo — the process strip is
+   thin enough now (60vw wide but short) that this alone is enough; 00s
+   Web's "best viewed with the sound on" badge no longer needs to go too. */
+@media (min-width: 1001px) and (max-height: 850px) {
+    .panel-photo { display: none; }
 }
 
 /* Short-but-wide desktop viewports (1366x768, 1280x800 and similar) —
@@ -942,9 +952,6 @@ body.landing {
    the tallest panel (its browser chrome doesn't shrink the way a photo
    can) — dropping its "best viewed with the sound on" badge closes that
    gap the same way. */
-@media (min-width: 1001px) and (max-height: 850px) {
-    .panel-photo { display: none; }
-}
 
 .panel-photo img {
     position: absolute;
@@ -1029,7 +1036,7 @@ body.landing {
    CTA itself barely moved. Padding after everything is what actually
    holds it clear of .process-strip's overlap. */
 @media (min-width: 1001px) {
-    .panel--web00 { padding-bottom: 222px; }
+    .panel--web00 { padding-bottom: 180px; }
 }
 
 .panel-browser {
@@ -1128,9 +1135,6 @@ body.landing {
    display:none actually wins — same equal-specificity/source-order fight
    as .process-strip's margin-top and .panel--web00's padding-bottom
    elsewhere in this file. */
-@media (min-width: 1001px) and (max-height: 850px) {
-    .panel-badge { display: none; }
-}
 
 .panel-cta--web00 {
     align-self: flex-start;
@@ -1210,11 +1214,13 @@ body.landing {
 .process-strip {
     grid-column: 1 / -1;
     display: grid;
-    gap: 0.75rem;
+    grid-template-columns: 1fr 1.4fr;
+    align-items: center;
+    gap: 1.5rem;
     max-width: 1320px;
     width: 100%;
     margin: 1.8rem auto 0;
-    padding: 0.9rem clamp(1.2rem, 2.5vw, 1.8rem);
+    padding: 1rem clamp(1.2rem, 2.5vw, 1.8rem);
     background: #ffffff;
     border: 1.5px solid #1a1512;
     box-shadow: 6px 6px 0 rgba(26, 21, 18, 0.14);
@@ -1230,16 +1236,18 @@ body.landing {
    the base rule's own margin shorthand on source order — same media
    query, but the base rule's plain margin:1.8rem auto 0 would otherwise
    win over an earlier, equal-specificity margin-top:0.
-   max-width:33.34vw — "2/6ths of the page width" — only at this width;
-   tablet/mobile keep the wider 1320px box from the base rule, since a
-   third-of-the-page box would be unreadably narrow once the panels
-   above it are no longer three touching columns. */
+   max-width:60vw — spans across all three panels (a narrower, one-
+   column-wide box read as belonging to just the middle panel it
+   happened to sit over) while still leaving panel colour visible on
+   both sides, rather than the full page width; tablet/mobile keep the
+   1320px box from the base rule, since the panels below it are no
+   longer three touching columns for it to visually bridge. */
 @media (min-width: 1001px) {
     .process-strip {
         grid-row: 1;
         align-self: end;
         margin-top: 0;
-        max-width: 33.34vw;
+        max-width: 60vw;
     }
 }
 
@@ -1290,15 +1298,9 @@ body.landing {
     box-shadow: 5px 5px 0 #f5f0e6;
 }
 
-/* Two-by-two rather than a single connected row of four — this box is
-   narrow by design now (see .process-strip's own max-width:33.34vw),
-   too narrow for four steps to sit side by side without wrapping labels
-   into a squeeze. Also why there's no connecting line between steps here
-   any more (it only read cleanly as one continuous line along a single
-   row). */
 .process-steps {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(4, 1fr);
     gap: 0.6rem;
     list-style: none;
 }
@@ -3300,8 +3302,12 @@ body.landing {
 
     /* Flo auto-opens on load and sits fixed bottom-right — the margin-bottom
        here is her clearance, enough room for her ~195px figure + open
-       bubble not to land on the last panel/footer. */
-    .process-strip { padding: 1.6rem; margin-bottom: 8rem; }
+       bubble not to land on the last panel/footer. Stacked back to a
+       single column (both here and .process-steps below) — the desktop
+       side-by-side text|steps split needs real width to not squeeze
+       either half illegibly, which a 390px screen doesn't have. */
+    .process-strip { grid-template-columns: 1fr; gap: 1.2rem; padding: 1.6rem; margin-bottom: 8rem; }
+    .process-steps { grid-template-columns: 1fr 1fr; }
 
     .page-topbar { padding: 0.6rem 0.7rem; flex-wrap: wrap; row-gap: 0.4rem; }
     .page-topbar .home-logo { height: 60px; }
