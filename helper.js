@@ -230,12 +230,18 @@ function buildHelper() {
     });
 
     // Auto-introduce on every visit to the page — skipped specifically on
-    // accessible's narrow viewports, where the search form + type/project
-    // filters already fill the whole first screen and Flo's own
-    // auto-opening bubble would land right on top of the filters instead
-    // of below them like on every other page. Still fully available via
-    // click either way.
-    const skipAutoIntro = page === 'accessible' && window.matchMedia('(max-width: 480px)').matches;
+    // narrow viewports for two pages: accessible, where the search form +
+    // type/project filters already fill the whole first screen and Flo's
+    // own auto-opening bubble would land right on top of the filters
+    // instead of below them like on every other page; and process, whose
+    // team bio list can scroll to sit exactly in Flo's fixed bottom-right
+    // corner (confirmed: with her bubble open, the longer names' tails
+    // land underneath it, unclickable until she's closed). Neither case
+    // is about the bubble's position at open time — it's a fixed corner
+    // that can end up over arbitrary content once the page scrolls — so
+    // not auto-opening is what actually avoids it for most visits; Flo
+    // is still fully available via click either way.
+    const skipAutoIntro = (page === 'accessible' || page === 'process') && window.matchMedia('(max-width: 480px)').matches;
     if (!skipAutoIntro) {
         setTimeout(() => say(script.intro, 0), 1400);
     }

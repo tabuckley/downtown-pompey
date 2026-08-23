@@ -1924,7 +1924,7 @@ body.landing {
 /* Short viewports (landscape phones) — Flo's normal 195px min-height
    figure eats over half of a ~375px-tall screen regardless of width, which
    no reasonable amount of page-content padding can reliably out-pad (see
-   process.html's .shell-main below, which needs both this AND its own
+   process.html's .pr-intro below, which needs both this AND its own
    padding bump). Keyed on height, not width, so this also covers portrait
    phones with an unusually short viewport (address bar expanded, etc). */
 @media (max-height: 480px) {
@@ -2968,88 +2968,94 @@ body.landing {
     -webkit-backdrop-filter: blur(8px);
 }
 
-/* ===== PROCESS PAGE CONTENT =====
-   A contained, centred column of distinct cards — not one long
-   continuous scroll of grey paragraphs. Each process step is its own
-   card with a slight alternating tilt (borrowing the same "scattered
-   instant photos" tilt already used for the team photo-stack elsewhere
-   on this page, and the tape/tilt language scrapbook.html uses), a
-   round sticker-style number badge instead of a subtle watermark, and
-   its pull-quote styled as a real pink sticky note — reusing the exact
-   look .postit-note already established for PDF thumbnails elsewhere,
-   so this page reads as part of the same site instead of a separate,
-   more serious "editorial" page bolted on. */
-.process-content {
-    /* Matches .shell-main's own padding formula (10vw, no real max-width
-       cap) exactly, so the cards line up with "OUR PROCESS" above them
-       instead of sitting in a narrower, separately-centred column — the
-       previous 1040px cap plus its own 6vw padding was compounding into
-       ~250px narrower than the hero text at a typical desktop width. */
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 2rem 10vw 8rem;
-}
-
-/* The 4 numbered process cards sit two-up so they actually use the
-   page's width, rather than one long single-file column of cards —
-   read in the usual left-to-right, top-to-bottom order (01/02 top row,
-   03/04 bottom row), which still matches their real chronological
-   sequence. */
-.process-cards-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2.5rem;
-    margin-bottom: 3rem;
-    /* Grid rows stretch every cell to match the tallest by default — the
-       4 cards hold very different amounts of text, so that left a big
-       dead gap inside whichever card was shorter. align-items:start lets
-       each card just be its own natural height instead. */
-    align-items: start;
-}
-
-.process-card {
+/* Full-bleed real photo of the group — establishes "these are real
+   people" early, before the interactive stack below asks the reader to
+   engage with each of them individually. Same aspect-ratio-locked,
+   object-fit:cover, capped-height banner technique the old landing hero
+   used, not a copy of its actual CSS (that page dropped its own hero
+   entirely in an earlier redesign). */
+.pr-group-photo {
     position: relative;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 2.6rem 2.4rem;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+    width: 100%;
+    aspect-ratio: 2100 / 1400;
+    max-height: 520px;
+    overflow: hidden;
 }
 
-.process-card--video { margin-bottom: 3rem; }
-
-/* A tiny, deliberately imperfect tilt per card — alternating left/right
-   so consecutive cards don't lean the same way — for a "handmade,
-   scattered" feel rather than a stack of identical corporate tiles.
-   Small enough (<1deg) that body text stays comfortably readable. */
-.process-card:nth-of-type(odd) { transform: rotate(-0.5deg); }
-.process-card:nth-of-type(even) { transform: rotate(0.5deg); }
-
-/* The team card already has its own tilted photo-stack inside it, and
-   the video card is just a placeholder — an extra tilt on top of either
-   would compete rather than add character. */
-.process-card--video,
-.process-card.team-section {
-    transform: none;
+.pr-group-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
-.process-card-badge {
+.pr-group-photo figcaption {
     position: absolute;
-    top: -1.1rem;
-    left: -1.1rem;
-    width: 3rem;
-    height: 3rem;
-    border-radius: 50%;
-    background: var(--accent);
+    left: 10vw;
+    bottom: 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
     color: #fff;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* ===== MEET THE TEAM ===== */
+/* The interactive photo-stack (#teamStack, see process.js) gets its own
+   beat here instead of being squeezed beside the intro paragraph — it's
+   a real feature (hover a name, its photo jumps to the front), not a
+   decorative afterthought, so it earns room to breathe. */
+.pr-team {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 4.5rem 10vw 5rem;
+}
+
+.pr-team-kicker {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.8rem;
+}
+
+/* ===== PROCESS CHAPTERS =====
+   A single editorial column, not a symmetric 2x2 grid of identical
+   cards — each of the 4 steps is its own "chapter": a giant pale numeral
+   as a real typographic device (not a small sticker badge), a heading,
+   body text in a comfortable reading measure, and its pull-quote styled
+   as the same pink sticky note .postit-note already established for PDF
+   thumbnails elsewhere (kept from the previous design — one of its few
+   details worth carrying forward), now floated beside the text like a
+   magazine pull-quote instead of sitting inline mid-paragraph. */
+.pr-chapters {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 10vw 6rem;
+}
+
+.pr-chapter {
+    position: relative;
+    padding-top: 2.5rem;
+    margin-top: 3rem;
+    border-top: 1px solid var(--border);
+}
+
+.pr-chapter:first-child {
+    margin-top: 0;
+    border-top: none;
+}
+
+.pr-chapter-num {
+    display: block;
     font-family: var(--font-display);
-    font-size: 1.15rem;
     font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transform: rotate(-8deg);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    font-size: clamp(3.5rem, 9vw, 6rem);
+    line-height: 1;
+    color: rgba(208, 19, 89, 0.14);
+    margin-bottom: -1.2rem;
 }
 
 .process-heading {
@@ -3059,34 +3065,50 @@ body.landing {
     letter-spacing: -0.01em;
     margin-bottom: 1.3rem;
     color: var(--text);
+    position: relative;
 }
 
-.process-card p {
+.pr-chapter-body p {
     color: var(--muted);
     line-height: 1.75;
     font-size: 1.02rem;
+    max-width: 62ch;
 }
 
-.process-card p + p { margin-top: 1.1rem; }
+.pr-chapter-body p + p { margin-top: 1.1rem; }
 
 /* Same visual language as .postit-note (scrapbook's PDF-thumbnail
-   sticky note) — a real pink paper note dropped into the reading flow,
-   not a magazine-style blockquote. */
+   sticky note) — a real pink paper note dropped into the layout, not a
+   magazine-style blockquote. Floated beside the reading column (left on
+   even chapters, right on odd — see the modifiers below) rather than
+   inline mid-paragraph, so text wraps around it like a real pull-quote
+   instead of interrupting the sentence it sits next to. */
 .process-note {
     position: relative;
     font-family: var(--font-mono);
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     font-weight: 700;
     line-height: 1.5;
     color: #4a1030;
     background: #ffc2e2;
-    max-width: 32ch;
-    margin: 1.6rem 0.3rem;
+    width: 15em;
+    margin-bottom: 1rem;
     padding: 1.1rem 1.2rem;
     border-radius: 3px;
     box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.3);
-    transform: rotate(-1.5deg);
     overflow: hidden;
+}
+
+.process-note--right {
+    float: right;
+    margin-left: 2rem;
+    transform: rotate(1.5deg);
+}
+
+.process-note--left {
+    float: left;
+    margin-right: 2rem;
+    transform: rotate(-1.5deg);
 }
 
 /* A folded-corner shadow, matching .postit-note's own real paper-note
@@ -3101,35 +3123,51 @@ body.landing {
     background: linear-gradient(135deg, transparent 50%, rgba(0, 0, 0, 0.18) 50%);
 }
 
-.video-placeholder {
+/* ===== WATCH THE PROCESS =====
+   A dark "screening" frame rather than a plain dashed placeholder box —
+   there's still no real video to show yet, but it reads as an
+   intentional moment being held for one, not an unfinished corner of
+   the page. The heading sits below the frame, not above it, so the
+   frame itself is the first thing read here. */
+.pr-watch {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 10vw 6rem;
+}
+
+.pr-watch-frame {
+    position: relative;
     aspect-ratio: 16 / 9;
-    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    background: #14100e;
+    border-radius: 10px;
+    margin-bottom: 1.6rem;
+}
+
+.pr-watch-play {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg);
-    border: 1px dashed var(--border);
-    border-radius: 8px;
-    margin-top: 1rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: #f0ece4;
 }
 
-.video-placeholder-text {
+.pr-watch-text {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
-    letter-spacing: 0.15em;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: #a89e93;
 }
 
 /* ===== TEAM SECTION ===== */
-.team-logo {
-    display: block;
-    width: 90px;
-    height: 90px;
-    object-fit: contain;
-    margin-bottom: 1.2rem;
-}
-
 .team-layout {
     display: flex;
     align-items: center;
@@ -3212,6 +3250,62 @@ body.landing {
     text-transform: uppercase;
     color: var(--muted);
     margin-top: 0.2rem;
+}
+
+/* ===== COLOPHON =====
+   Closing signature — replaces the old bottom "team-section" card, which
+   had gone mostly empty (just the logo + a repeated heading) once the
+   real team photos/bios moved up into .pr-team. Reuses the same AAG
+   starburst badge and rotate+scale hover already established on the
+   homepage's own process strip, so clicking through from there to here
+   feels like the same object followed to its source rather than two
+   unrelated badges that happen to share artwork. */
+.pr-colophon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+    padding: 5rem 10vw 6rem;
+    border-top: 1px solid var(--border);
+}
+
+.pr-colophon-badge {
+    width: 84px;
+    height: 84px;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pr-colophon-badge:hover {
+    transform: rotate(14deg) scale(1.12);
+}
+
+.pr-colophon-text {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text);
+}
+
+.pr-colophon-links {
+    display: flex;
+    gap: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+}
+
+.pr-colophon-links a {
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.pr-colophon-links a:hover {
+    color: var(--accent);
+    border-color: var(--accent);
 }
 
 /* Tablet: 2 columns, with Accessible (the calmest/least decorated panel)
@@ -3353,26 +3447,40 @@ body.landing {
        viewport — old iPhone SE-class devices (~568-667px tall) or
        landscape phones — can still see Flo's bubble brush the last
        line of the paragraph. Known, accepted residual, not a full fix. */
-    .shell-main { justify-content: flex-start; padding: 9rem 8vw 4rem; }
-    /* Team photo stack has no room for a real second column at this width
-       — drops below the intro text instead of squeezing beside it. */
-    .shell-main-grid { flex-direction: column; align-items: flex-start; gap: 2rem; }
-
-    .process-content { padding: 1rem 6vw 6rem; }
-    /* Two-up cards only make sense with real width to share — back to a
-       single column on narrow screens, matching the site's other
-       nowrap/reflow patterns (never a squeezed half-width card). */
-    .process-cards-grid { grid-template-columns: 1fr; gap: 2.2rem; margin-bottom: 2.2rem; }
-    .process-card { padding: 2.2rem 1.5rem 1.8rem; }
-    .process-card--video { margin-bottom: 2.2rem; }
-    .process-card-badge { width: 2.4rem; height: 2.4rem; font-size: 0.95rem; top: -0.9rem; left: -0.7rem; }
-    .process-note { font-size: 0.85rem; max-width: 100%; }
-    /* Stack + bios still never wrap to separate rows on mobile (see
-       .team-layout's flex-wrap:nowrap) — both just get smaller instead. */
-    .team-layout { gap: 1.1rem; align-items: flex-start; }
-    .team-stack { width: 108px; height: 142px; flex-shrink: 0; }
-    .team-bio { font-size: 0.82rem; }
-    .team-pronouns { font-size: 0.56rem; }
+    .pr-intro { padding: 9rem 8vw 2.5rem; }
+    .pr-group-photo { max-height: 280px; }
+    .pr-team { padding: 3rem 8vw 3.5rem; }
+    .pr-chapters { padding: 1rem 8vw 4rem; }
+    .pr-chapter-num { font-size: 3.2rem; margin-bottom: -0.6rem; }
+    /* Pull-quotes float beside the text column on wider viewports — no
+       room to spare for that here, so they go back to a plain full-width
+       block sitting in the normal reading flow instead. */
+    .process-note,
+    .process-note--left,
+    .process-note--right {
+        float: none;
+        width: auto;
+        max-width: 100%;
+        margin: 0 0 1.2rem;
+        transform: none;
+    }
+    .pr-watch { padding: 0 8vw 4rem; }
+    .pr-colophon { padding: 3.5rem 8vw 4rem; }
+    /* Was side-by-side (stack + bios shrinking together) when this lived
+       as a compact aside next to the hero — reasonable there since it
+       never had a bottom-right corner to spare. Now that it's its own
+       full section, a bio list squeezed into the narrow leftover column
+       next to the stack sits at almost exactly the width and position
+       Flo's fixed bottom-right bubble occupies, hiding whichever bio
+       links land in that corner behind her (confirmed with her bubble
+       open — Hannah's and Ines's links were unclickable without closing
+       her first). Full-width stacking gives the bio list the whole
+       column instead of a narrow strip that happens to line up with her
+       corner. */
+    .team-layout { flex-direction: column; align-items: flex-start; gap: 1.4rem; }
+    .team-stack { width: 150px; height: 197px; }
+    .team-bio { font-size: 0.95rem; }
+    .team-pronouns { font-size: 0.6rem; }
 }
 
 /* ===== ACCESSIBLE ARCHIVE ===== */
