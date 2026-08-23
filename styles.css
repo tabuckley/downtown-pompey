@@ -744,22 +744,6 @@ body.landing {
 
 .landing-topbar-logo img { display: block; height: 52px; width: auto; }
 
-.landing-topbar-tag {
-    position: relative;
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    line-height: 1.4;
-    max-width: 12em;
-    background: #ffc2e2;
-    color: #4a1030;
-    padding: 0.5rem 0.7rem;
-    transform: rotate(-2deg);
-    box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.2);
-}
-
 .landing-topbar-nav {
     display: flex;
     gap: 1.6rem;
@@ -1213,14 +1197,18 @@ body.landing {
    than pushing the page taller. */
 .process-strip {
     grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: 1fr 1.4fr;
+    display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1.2rem;
     max-width: 1320px;
     width: 100%;
     margin: 1.8rem auto 0;
-    padding: 0.65rem clamp(1.2rem, 2.5vw, 1.8rem);
+    /* Extra left padding clears the badge, which overlaps outside the
+       box's own left edge rather than sitting inside it (see
+       .process-strip-badge) — overflow isn't clipped anywhere between
+       here and the viewport (.panels/.panel don't hide overflow on this
+       sibling), so the badge is free to spill past the border. */
+    padding: 0.6rem 1.4rem 0.6rem 3.4rem;
     background: #ffffff;
     border: 1.5px solid #1a1512;
     box-shadow: 6px 6px 0 rgba(26, 21, 18, 0.14);
@@ -1256,44 +1244,66 @@ body.landing {
     }
 }
 
-.process-strip-head {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
+/* A stamped seal, not a tidy inline icon — sized well past the strip's
+   own thin height and pinned to its left edge so half of it spills
+   outside the box, the way a wax seal or hallmark overlaps the card it's
+   stamped onto. The hover transform repeats its own resting translate
+   first and adds rotate/scale after, rather than replacing it, so it
+   spins and grows in place instead of jumping back to a plain center
+   origin on hover. */
+.process-strip-badge {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 84px;
+    height: 84px;
+    transform: translate(-38%, -50%);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 3;
+    cursor: default;
 }
 
-.process-strip-badge {
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
+.process-strip-badge:hover {
+    transform: translate(-38%, -50%) rotate(14deg) scale(1.12);
+}
+
+.process-strip-text {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.7rem;
+    flex: 1;
+    min-width: 0;
 }
 
 .process-strip-text p {
     font-size: 0.82rem;
     line-height: 1.4;
     color: #4a453d;
-    margin: 0.3rem 0 0.5rem;
+    margin: 0;
 }
 
 .process-strip-eyebrow {
     font-family: var(--font-display);
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 800;
     letter-spacing: -0.01em;
     color: #1a1512;
+    white-space: nowrap;
 }
 
 .process-strip-cta {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
+    flex-shrink: 0;
     background: #d01359;
     color: #fff;
     text-decoration: none;
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 0.85rem;
-    padding: 0.6rem 1.1rem;
+    font-size: 0.8rem;
+    padding: 0.5rem 0.9rem;
     box-shadow: 3px 3px 0 #f5f0e6;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
@@ -1301,42 +1311,6 @@ body.landing {
 .process-strip-cta:hover {
     transform: translate(-2px, -2px);
     box-shadow: 5px 5px 0 #f5f0e6;
-}
-
-.process-steps {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.6rem;
-    list-style: none;
-}
-
-.process-steps li {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    text-align: left;
-}
-
-.process-step-num {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.5rem;
-    height: 1.5rem;
-    border-radius: 50%;
-    background: #1a1512;
-    color: #fff;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    font-weight: 700;
-    z-index: 1;
-}
-
-.process-step-label {
-    font-family: var(--font-display);
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: #1a1512;
 }
 
 .landing-footer {
@@ -1349,22 +1323,7 @@ body.landing {
     padding: 0 1.5rem clamp(1.4rem, 3vw, 2rem);
 }
 
-.landing-footer-tag {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: #7a6f60;
-}
-
-/* Logo + tag + 4 nav links + search + badge is a lot to fit on one row —
-   below ~1400px it wraps to a second row, adding ~40px the page can't
-   spare if the whole thing is meant to fit one screen with no scroll
-   (confirmed missing at the very common 1366x768 and 1280x800 sizes).
-   Dropping the tag here reclaims enough width to stay on one row; the
-   hero repeats the same line moments later regardless. */
 @media (max-width: 1400px) {
-    .landing-topbar-tag { display: none; }
     .landing-topbar-nav { gap: 1.2rem; }
 }
 
@@ -2962,31 +2921,9 @@ body.landing {
 }
 
 /* ===== SHELL PAGES ===== */
-.shell-main {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 9rem 10vw 6rem;
-}
-
-/* Second column for the AAG team photo stack (#teamStack — moved here from
-   its old spot down in .team-section, see process.html) sitting beside the
-   process intro instead of buried at the bottom of the page. */
-.shell-main-grid {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 3rem;
-    /* Not space-between across the full width — on a wide viewport that
-       pushes the team column flush into the bottom-right corner where
-       Flo's fixed widget lives, covering the last bio link behind her
-       bubble. Capped so the pair sits together left of that corner. */
-    max-width: 1000px;
-}
-
-.shell-main-text { min-width: 0; }
-
+/* .shell-kicker/.shell-title/.shell-text are shared with accessible.html's
+   own hero — keep any edits here in sync with what still needs to look
+   right there too. */
 .shell-kicker {
     font-family: var(--font-mono);
     font-size: 0.7rem;
@@ -3012,10 +2949,10 @@ body.landing {
     font-size: 1.05rem;
 }
 
-.process-transition {
-    margin-top: 1.2rem;
-    color: var(--text);
-    font-style: italic;
+/* ===== PROCESS PAGE ===== */
+.pr-intro {
+    max-width: 720px;
+    padding: 9rem 10vw 3rem;
 }
 
 /* .page-topbar has no background anywhere else on the site (transparent,
@@ -3288,7 +3225,6 @@ body.landing {
 /* ===== REDESIGN RESPONSIVE ===== */
 @media (max-width: 768px) {
     .landing-topbar { padding: 1rem 1.2rem; }
-    .landing-topbar-tag { display: none; } /* the hero repeats this same line moments later, below the fold it's just clutter at this width */
     .landing-topbar-nav { gap: 1.1rem; font-size: 0.85rem; }
 
     /* Simplify decorative overlaps at mobile width rather than shrinking
@@ -3307,12 +3243,13 @@ body.landing {
 
     /* Flo auto-opens on load and sits fixed bottom-right — the margin-bottom
        here is her clearance, enough room for her ~195px figure + open
-       bubble not to land on the last panel/footer. Stacked back to a
-       single column (both here and .process-steps below) — the desktop
-       side-by-side text|steps split needs real width to not squeeze
-       either half illegibly, which a 390px screen doesn't have. */
-    .process-strip { grid-template-columns: 1fr; gap: 1.2rem; padding: 1.6rem; margin-bottom: 8rem; }
-    .process-steps { grid-template-columns: 1fr 1fr; }
+       bubble not to land on the last panel/footer. Stacked to a column
+       and the badge pulled back into normal flow (not overlapping the
+       edge) — there's no spare width on a 390px screen for it to spill
+       into without just covering the text underneath. */
+    .process-strip { flex-direction: column; align-items: flex-start; gap: 0.8rem; padding: 1.6rem; margin-bottom: 8rem; }
+    .process-strip-badge { position: static; transform: none; width: 56px; height: 56px; margin-bottom: 0.4rem; }
+    .process-strip-badge:hover { transform: rotate(14deg) scale(1.12); }
 
     .page-topbar { padding: 0.6rem 0.7rem; flex-wrap: wrap; row-gap: 0.4rem; }
     .page-topbar .home-logo { height: 60px; }
