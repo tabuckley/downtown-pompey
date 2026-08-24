@@ -27,57 +27,25 @@
 
     <section class="panels" id="explore">
 
-        <!-- Three ways in, each panel styled to match the page it leads to
-             — cream/tape for the archive-as-scrapbook, dark Win98 pink for
-             the 3D room, calm white for the plain-text view — so clicking
-             through never feels like a jump cut. -->
+        <!-- Three ways in, each panel a single full-bleed background image
+             with just a title + one line of text over it — the image IS
+             the design; see .panel--* background-image in styles.css to
+             swap in a new one per column. -->
 
-        <article class="panel panel--scrapbook">
-            <span class="panel-tag panel-tag--scrapbook">P01</span>
-            <div class="panel-photo">
-                <img src="images/header-right.webp" alt="A collage of torn photos and cut-out lettering from the archive, including a shot of Portsmouth Central Library.">
-                <span class="panel-tape"></span>
-            </div>
-            <h2 class="panel-title panel-title--scrapbook">Scrapbook</h2>
-            <p class="panel-copy">Scroll forever. Pan around a whole wall of photos, flyers, tickets and zines — filter by tag, and see the city the way everyone else pinned it up.</p>
-            <div class="panel-stickers" aria-hidden="true">
-                <span class="panel-sticker panel-sticker--1">Drag</span>
-                <span class="panel-sticker panel-sticker--2">Seaside</span>
-            </div>
-            <a href="scrapbook.html" class="panel-cta panel-cta--scrapbook">Browse the archive <span aria-hidden="true">&rarr;</span></a>
-        </article>
+        <a href="scrapbook.html" class="panel panel--scrapbook">
+            <h2 class="panel-title">Scrapbook</h2>
+            <p class="panel-copy">Scroll the whole archive, pinned up and tagged.</p>
+        </a>
 
-        <article class="panel panel--web00">
-            <div class="panel-browser">
-                <div class="panel-browser-titlebar">
-                    <span class="panel-browser-dot"></span>
-                    <span class="panel-browser-dot"></span>
-                    <span class="panel-browser-dot"></span>
-                    <span class="panel-browser-titletext">editorial.html</span>
-                </div>
-                <div class="panel-browser-address">downtownpompey.online/editorial.html</div>
-                <div class="panel-browser-body">
-                    <img class="panel-browser-tile" src="images/dtp-glow-tile.gif" alt="">
-                    <h2 class="panel-title panel-title--web00">00s Web</h2>
-                    <p class="panel-copy panel-copy--web00">Step inside a 3D room built from the archive itself — move to look around, click what catches your eye, read the story behind it.</p>
-                    <span class="panel-badge">Best viewed with the sound on</span>
-                </div>
-            </div>
-            <a href="editorial.html" class="panel-cta panel-cta--web00">Step inside <span aria-hidden="true">&rarr;</span></a>
-        </article>
+        <a href="editorial.html" class="panel panel--web00">
+            <h2 class="panel-title">00s Web</h2>
+            <p class="panel-copy">Step inside a 3D room built from the archive.</p>
+        </a>
 
-        <article class="panel panel--accessible">
-            <span class="panel-tag panel-tag--accessible" aria-hidden="true">&#128065;</span>
-            <h2 class="panel-title panel-title--accessible">Accessible</h2>
-            <p class="panel-copy">The clear, fast, plain-text way in — built for researchers, screen readers, and anyone who just wants an answer.</p>
-            <ul class="panel-feature-list">
-                <li>Plain-language search</li>
-                <li>Type &amp; project filters</li>
-                <li>Every item has its own link</li>
-                <li>Built for screen readers</li>
-            </ul>
-            <a href="accessible.html" class="panel-cta panel-cta--accessible">Search the archive <span aria-hidden="true">&rarr;</span></a>
-        </article>
+        <a href="accessible.html" class="panel panel--accessible">
+            <h2 class="panel-title">Accessible</h2>
+            <p class="panel-copy">The clear, plain-text way in.</p>
+        </a>
 
         <!-- A grid child of .panels itself (not a separate section below
              it) so it can be placed into the same row as the three panels

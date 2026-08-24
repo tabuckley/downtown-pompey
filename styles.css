@@ -738,11 +738,15 @@ body.landing {
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem 1.6rem;
-    padding: 0.5rem clamp(1.2rem, 4vw, 3rem);
+    padding: 0.7rem clamp(1.2rem, 4vw, 3rem);
     border-bottom: 2px solid #1a1512;
 }
 
-.landing-topbar-logo img { display: block; height: 52px; width: auto; }
+/* Matches .home-logo's own 90px exactly (every other page's topbar) —
+   was 52px, noticeably smaller than the same logo everywhere else on
+   the site for no real reason once the header had already lost the
+   search icon and share-memory badge it used to need room for. */
+.landing-topbar-logo img { display: block; height: 90px; width: auto; }
 
 .landing-topbar-nav {
     display: flex;
@@ -764,15 +768,13 @@ body.landing {
 .landing-topbar-nav a:hover { color: #d01359; border-color: #d01359; }
 
 /* ===== LANDING PANELS ===== */
-/* Three ways into the archive, each panel echoing the palette of the page
-   it leads to — cream/tape for scrapbook.html, dark Win98 pink for
-   editorial.html's 3D room, calm white for accessible.html — so the click
-   through never feels like a jump cut. Deliberately NOT a uniform set of
-   white cards: "don't make every panel look the same" was the one hard
-   rule carried over from the original brief for this section. */
-/* Full-bleed, no gap — the three colours/textures butt straight up
-   against each other rather than sitting as separated cards, so the
-   panel's own background IS the divider. */
+/* Three ways into the archive, each one a single full-bleed photo with a
+   title + one line of text over it and the whole panel as the link —
+   the photo itself is what makes each column look distinct now (a real
+   scrapbook collage photo, the actual 3D room, the accessible page's own
+   mood), not per-panel CSS chrome. Full-bleed, no gap — the three photos
+   butt straight up against each other rather than sitting as separated
+   cards, so the panel's own image is the divider. */
 .panels {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -797,23 +799,26 @@ body.landing {
    at tablet's 2-column-plus-a-full-width-third-panel arrangement, giving
    every panel this same height would stack two viewport-heights' worth
    of colour before the page even got to the footer.
-   212px is the topbar's real rendered height (~103px) plus the footer's
-   (~109px) — .process-strip doesn't factor in since it no longer adds
-   any height of its own (see below), sharing the panels' row instead of
-   sitting in a row of its own underneath them. */
+   237px is the topbar's real rendered height (~114px, bigger now the
+   logo matches every other page's 90px) plus the footer's (~122px, now
+   it has real top padding of its own) — .process-strip doesn't factor
+   in since it no longer adds any height of its own (see below), sharing
+   the panels' row instead of sitting in a row of its own underneath
+   them. */
 @media (min-width: 1001px) {
-    .panel { min-height: calc(100vh - 214px); padding-top: 1.4rem; padding-bottom: 180px; }
+    .panel { min-height: calc(100vh - 237px); padding-top: 1.4rem; padding-bottom: 180px; }
     /* .process-strip is thin now (~158px, a wide strip rather than a
        narrow stacked box) but still floats over whichever panel it
        overlaps — without real clearance reserved below their own
-       content, that lands right on top of each panel's CTA button, not
+       content, that lands right on top of each panel's title/copy, not
        empty background. 180px covers the strip plus a comfortable
        margin; padding rather than a bigger min-height because
        box-sizing is border-box, so this doesn't change the panel's own
        outer height or the no-scroll budget above, just how much of it
-       is reserved. Doesn't reach .panel--web00 — its own padding:0
-       override further down wins that fight on source order, so it gets
-       an equivalent padding-bottom of its own next to that rule instead. */
+       is reserved. All three panels share this rule now that none of
+       them override .panel's own padding (the old win98-chrome panel
+       used to zero it out and reserve its own copy separately — gone
+       along with the chrome itself). */
     /* Fully explicit row AND column for every item sharing this row,
        .process-strip included (see its own min-width:1001px rule further
        down) — mixing that with auto column placement on these three
@@ -832,7 +837,6 @@ body.landing {
     .panel--accessible { grid-row: 1; grid-column: 3; }
 }
 
-
 /* A lift/shadow hover reads fine on a separated card but opens an ugly
    gap between touching panels — brightening in place instead keeps the
    "still responds to hover" feedback without breaking the seam. */
@@ -840,353 +844,57 @@ body.landing {
     filter: brightness(1.05);
 }
 
+/* Each panel is one full-bleed background image with just a title and a
+   short line over it — the image carries the visual identity now, not
+   CSS-drawn chrome per panel (tape/stickers/browser-window/feature-list,
+   all from earlier rounds of this design, are gone; the three real
+   photos are what make the columns look different from each other). A
+   scrim gradient keeps the text legible over whatever image sits behind
+   it regardless of how bright or busy that specific photo is — a real
+   layer (not just text-shadow), since text-shadow alone doesn't hold up
+   against a genuinely busy image. */
+.panel {
+    justify-content: flex-end;
+    color: #fff;
+    text-decoration: none;
+    background-size: cover;
+    background-position: center;
+}
+
+.panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0) 75%);
+    z-index: 0;
+}
+
+.panel-title,
+.panel-copy {
+    position: relative;
+    z-index: 1;
+}
+
 .panel-title {
     font-family: var(--font-display);
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     font-weight: 800;
     letter-spacing: -0.01em;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.4rem;
 }
 
 .panel-copy {
-    font-size: 0.85rem;
-    line-height: 1.55;
-    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.85);
 }
 
-.panel-cta {
-    display: inline-flex;
-    align-self: flex-start;
-    align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 0.85rem;
-    padding: 0.6rem 1.1rem;
-    /* Sits right after the panel's own content rather than docking to the
-       panel's true bottom edge — panels are tall enough on desktop to
-       reach the viewport's bottom, and pinning the CTA there would put it
-       right where .process-strip overlaps up over the panel underneath. */
-    margin-top: 1.4rem;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-/* --- Scrapbook panel: cream paper + a real cut-off from the collage
-   art, matching scrapbook.html's own palette exactly (--card-bg there is
-   the same #f5eed8). --- */
-.panel--scrapbook {
-    background: #f5eed8;
-    color: #1a0f00;
-}
-
-.panel-tag {
-    display: inline-block;
-    align-self: flex-start;
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    background: #ffc2e2;
-    color: #4a1030;
-    padding: 0.3rem 0.6rem;
-    margin-bottom: 0.9rem;
-}
-
-.panel-photo {
-    position: relative;
-    align-self: center;
-    width: 78%;
-    aspect-ratio: 4 / 3;
-    overflow: hidden;
-    margin-bottom: 1rem;
-    transform: rotate(-2deg);
-    box-shadow: 3px 5px 10px rgba(0, 0, 0, 0.25);
-}
-
-/* Desktop only — smaller than the 78% used everywhere else (tablet,
-   mobile-with-photo-visible n/a since mobile drops it entirely). Without
-   this, the photo alone pushes scrapbook's content tall enough that,
-   combined with .panel's own bottom clearance for .process-strip's
-   overlap (see .panel's min-width:1001px rule), content stops fitting
-   the no-scroll budget at ordinary heights like 1440x900 — not just
-   unusually short ones. */
-@media (min-width: 1001px) {
-    .panel-photo { width: 70%; }
-}
-
-/* Short-but-wide desktop viewports (1366x768, 1280x800 and similar) —
-   900/1080's no-scroll budget above already accounts for a 70% photo,
-   but 768/800's tighter budget can't fit even that. Same simplify-the-
-   decoration-rather-than-shrink-it-to-illegibility call the mobile
-   breakpoint already makes for this exact photo — the process strip is
-   thin enough now (60vw wide but short) that this alone is enough; 00s
-   Web's "best viewed with the sound on" badge no longer needs to go too. */
-@media (min-width: 1001px) and (max-height: 850px) {
-    .panel-photo { display: none; }
-}
-
-/* Short-but-wide desktop viewports (1366x768, 1280x800 and similar) —
-   900/1080's no-scroll budget above already accounts for a 50% photo,
-   but 768/800's tighter budget can't fit even that without also giving
-   up the photo entirely. Same simplify-the-decoration-rather-than-
-   shrink-it-to-illegibility call the mobile breakpoint already makes
-   for this exact photo. At this height 00s Web, not scrapbook, ends up
-   the tallest panel (its browser chrome doesn't shrink the way a photo
-   can) — dropping its "best viewed with the sound on" badge closes that
-   gap the same way. */
-
-.panel-photo img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    /* header-right.webp is a wide 1240x400 layer with its actual collage
-       content anchored to the right edge — cropping in from the right,
-       not stretching the whole thing, keeps that content legible at the
-       panel's own tighter 4:3 shape. */
-    object-fit: cover;
-    object-position: right center;
-}
-
-.panel-tape {
-    position: absolute;
-    top: -0.6rem;
-    left: 50%;
-    transform: translateX(-50%) rotate(-4deg);
-    width: 90px;
-    height: 28px;
-    background-image: url('images/tape/tape-2.png');
-    background-size: cover;
-    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
-}
-
-.panel-title--scrapbook { color: #1a0f00; transform: rotate(-1deg); }
-.panel--scrapbook .panel-copy { color: #4a3a24; }
-
-.panel-stickers {
-    display: flex;
-    gap: 0.6rem;
-    margin-top: 0.9rem;
-}
-
-.panel-sticker {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 84px;
-    height: 32px;
-    background-image: url('images/tag-stickers/sticker-ticket.png');
-    background-size: 100% 100%;
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    color: #4a1030;
-    text-transform: uppercase;
-}
-
-.panel-sticker--1 { transform: rotate(-4deg); }
-.panel-sticker--2 { transform: rotate(3deg); }
-
-.panel-cta--scrapbook {
-    background: #d01359;
-    color: #fff;
-    box-shadow: 3px 3px 0 #1a0f00;
-}
-
-.panel-cta--scrapbook:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 5px 5px 0 #1a0f00;
-}
-
-/* --- 00s Web panel: a full faux browser window in editorial's own dark
-   palette, Win98 chrome recipe reused from .room-hint-window /
-   [data-mode="editorial"] .helper-bubble rather than invented fresh. --- */
-.panel--web00 {
-    background: #0d0d0d;
-    padding: 0;
-    color: #f0ece4;
-}
-
-/* Reserves the same clearance below the CTA as the other two panels'
-   own padding-bottom (see .panel's min-width:1001px rule) — placed on
-   the panel itself, after all its content including the CTA, rather
-   than as a margin-bottom on .panel-browser above it. That was the
-   first attempt here and it was wrong: margin-bottom on the flex-grown
-   browser box just redistributes the SAME total space, opening a gap
-   between the browser and the CTA instead of one below the CTA — the
-   CTA itself barely moved. Padding after everything is what actually
-   holds it clear of .process-strip's overlap. */
-@media (min-width: 1001px) {
-    .panel--web00 { padding-bottom: 180px; }
-}
-
-.panel-browser {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    margin: 1.2rem;
-    margin-bottom: 0;
-    background: #ffe3f0;
-    box-shadow:
-        0 0 0 1px #4a0e28,
-        inset 2px 2px 0 #fff,
-        inset -2px -2px 0 #a3175c;
-}
-
-.panel-browser-titlebar {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.4rem 0.6rem;
-    background: #a3175c;
-}
-
-.panel-browser-dot {
-    width: 9px;
-    height: 9px;
-    background: #ffe3f0;
-    box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.25);
-}
-
-.panel-browser-titletext {
-    margin-left: 0.4rem;
-    font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
-    font-size: 0.68rem;
-    font-weight: 700;
-    color: #fff;
-}
-
-.panel-browser-address {
-    padding: 0.4rem 0.6rem;
-    background: #fff;
-    border-bottom: 1px solid #4a0e28;
-    font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
-    font-size: 0.62rem;
-    color: #4a0e28;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.panel-browser-body {
-    position: relative;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 1.4rem 1.2rem;
-    background: #0d0d0d;
-    background-image: linear-gradient(160deg, #2a0d1c 0%, #0d0d0d 60%);
-}
-
-.panel-browser-tile {
-    position: absolute;
-    top: 0.6rem;
-    right: 0.6rem;
-    width: 56px;
-    height: 56px;
-    image-rendering: pixelated;
-    opacity: 0.9;
-}
-
-.panel-title--web00 {
-    color: #ff9dc3;
-    padding-right: 3.6rem;
-}
-
-.panel-copy--web00 { color: #d8cfc4; }
-
-.panel-badge {
-    display: inline-block;
-    align-self: flex-start;
-    margin-top: 1rem;
-    padding: 0.35rem 0.6rem;
-    background: #ffe3f0;
-    color: #a3175c;
-    font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
-    font-size: 0.6rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #a3175c;
-}
-
-/* Short-but-wide viewports only (see the matching .panel-photo rule) —
-   00s Web is the tallest panel at these heights, and this badge is the
-   easiest thing to give up to close that gap. Placed after the base
-   rule above, not inside that other max-height:850px block, so its
-   display:none actually wins — same equal-specificity/source-order fight
-   as .process-strip's margin-top and .panel--web00's padding-bottom
-   elsewhere in this file. */
-
-.panel-cta--web00 {
-    align-self: flex-start;
-    margin: 1.2rem;
-    background: #ffe3f0;
-    color: #a3175c;
-    box-shadow: inset 2px 2px 0 #fff, inset -2px -2px 0 #a3175c, 0 0 0 1px #4a0e28;
-    font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
-}
-
-.panel-cta--web00:hover {
-    background: #ffd0e7;
-}
-
-/* --- Accessible panel: calm and white, matching accessible.html's own
-   stark palette — the least decorated panel on purpose. --- */
-.panel--accessible {
-    background: #ffffff;
-    color: #111111;
-}
-
-.panel-tag--accessible {
-    align-self: flex-start;
-    background: none;
-    padding: 0;
-    font-size: 1.6rem;
-    margin-bottom: 1rem;
-}
-
-.panel-title--accessible { color: #111111; }
-.panel--accessible .panel-copy { color: #444444; }
-
-.panel-feature-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0.7rem;
-    margin: 0.4rem 0 0;
-}
-
-.panel-feature-list li {
-    position: relative;
-    padding-left: 1.3rem;
-    font-size: 0.82rem;
-    color: #333333;
-}
-
-.panel-feature-list li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.45em;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #d01359;
-}
-
-.panel-cta--accessible {
-    background: #111111;
-    color: #fff;
-    box-shadow: 3px 3px 0 #d01359;
-}
-
-.panel-cta--accessible:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 5px 5px 0 #d01359;
-}
+/* Placeholder images — see the note at the top of the panels markup in
+   index.html. Swap these three for the finished set when it's ready;
+   nothing else needs to change to pick up a new image. */
+.panel--scrapbook { background-image: url('images/header-right.webp'); background-color: #f5eed8; }
+.panel--web00 { background-image: url('images/room-captures/room-1.webp'); background-color: #0d0d0d; }
+.panel--accessible { background-image: url('images/accessible-placeholder.webp'); background-color: #ffffff; }
 
 /* ===== PROCESS STRIP ===== */
 /* A grid child of .panels (see index.html) spanning every column, so it
@@ -1320,7 +1028,11 @@ body.landing {
     gap: 0.8rem;
     max-width: 620px;
     margin: 0 auto;
-    padding: 0 1.5rem clamp(1.4rem, 3vw, 2rem);
+    /* Real top padding — was 0, so the logos sat flush against whatever
+       came right before (the panels row on desktop, .process-strip's own
+       margin-bottom on mobile), with nothing but that preceding element's
+       own spacing keeping them apart. */
+    padding: 2.4rem 1.5rem clamp(1.4rem, 3vw, 2rem);
 }
 
 @media (max-width: 1400px) {
@@ -3320,20 +3032,11 @@ body.landing {
 @media (max-width: 768px) {
     .landing-topbar { padding: 1rem 1.2rem; }
     .landing-topbar-nav { gap: 1.1rem; font-size: 0.85rem; }
+    /* Matches .page-topbar .home-logo's own mobile size. */
+    .landing-topbar-logo img { height: 60px; }
 
-    /* Simplify decorative overlaps at mobile width rather than shrinking
-       them to illegibility — the browser chrome collapses to just its
-       title text, and the collage photo/tape/stickers drop out (still
-       plenty of scrapbook texture on scrapbook.html itself moments away
-       via the panel's own CTA). */
     .panels { grid-template-columns: 1fr; padding-top: 1.2rem; }
-    .panel { min-height: 0; }
-    .panel-photo,
-    .panel-tape,
-    .panel-stickers,
-    .panel-browser-tile { display: none; }
-    .panel-browser-address { display: none; }
-    .panel-title--web00 { padding-right: 0; }
+    .panel { min-height: 320px; }
 
     /* Flo auto-opens on load and sits fixed bottom-right — the margin-bottom
        here is her clearance, enough room for her ~195px figure + open
