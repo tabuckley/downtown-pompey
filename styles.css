@@ -723,22 +723,27 @@ a.mode-btn {
 }
 
 /* ===== LANDING PAGE ===== */
-/* Warm off-white + torn-paper/tape collage look, distinct from every other
-   page's own palette — this is the front door, not a working view, so it
-   gets its own more editorial, scrapbook-adjacent treatment. Brand pink
-   (#d01359) carries through as the one accent colour throughout. */
+/* White, distinct from every other page's own palette — this is the
+   front door, not a working view, so it gets its own more editorial
+   treatment. Brand pink (#d01359) carries through as the one accent
+   colour throughout. */
 body.landing {
     min-height: 100vh;
-    background: #f5f0e6;
+    background: #ffffff;
     color: #1a1512;
 }
 
+/* Padding matches .page-topbar's exactly (1rem 1.5rem) so the logo sits
+   at the same inset from the corner as every other page — was its own
+   clamp(1.2rem,4vw,3rem) horizontal value, which grew well past 1.5rem
+   on wide viewports and put the logo noticeably further right than
+   everywhere else. */
 .landing-topbar {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem 1.6rem;
-    padding: 0.7rem clamp(1.2rem, 4vw, 3rem);
+    padding: 1rem 1.5rem;
     border-bottom: 2px solid #1a1512;
 }
 
@@ -799,14 +804,13 @@ body.landing {
    at tablet's 2-column-plus-a-full-width-third-panel arrangement, giving
    every panel this same height would stack two viewport-heights' worth
    of colour before the page even got to the footer.
-   237px is the topbar's real rendered height (~114px, bigger now the
-   logo matches every other page's 90px) plus the footer's (~122px, now
-   it has real top padding of its own) — .process-strip doesn't factor
-   in since it no longer adds any height of its own (see below), sharing
-   the panels' row instead of sitting in a row of its own underneath
-   them. */
+   246px is the topbar's real rendered height (~124px, padding now
+   matches .page-topbar's 1rem 1.5rem) plus the footer's (~122px) —
+   .process-strip doesn't factor in since it no longer adds any height
+   of its own (see below), sharing the panels' row instead of sitting in
+   a row of its own underneath them. */
 @media (min-width: 1001px) {
-    .panel { min-height: calc(100vh - 237px); padding-top: 1.4rem; padding-bottom: 180px; }
+    .panel { min-height: calc(100vh - 246px); padding-top: 1.4rem; padding-bottom: 180px; }
     /* .process-strip is thin now (~158px, a wide strip rather than a
        narrow stacked box) but still floats over whichever panel it
        overlaps — without real clearance reserved below their own
@@ -3030,7 +3034,9 @@ body.landing {
 
 /* ===== REDESIGN RESPONSIVE ===== */
 @media (max-width: 768px) {
-    .landing-topbar { padding: 1rem 1.2rem; }
+    /* Matches .page-topbar's own mobile padding, same reasoning as the
+       desktop rule above. */
+    .landing-topbar { padding: 0.6rem 0.7rem; }
     .landing-topbar-nav { gap: 1.1rem; font-size: 0.85rem; }
     /* Matches .page-topbar .home-logo's own mobile size. */
     .landing-topbar-logo img { height: 60px; }
