@@ -781,14 +781,38 @@ body.landing {
    butt straight up against each other rather than sitting as separated
    cards, so the panel's own image is the divider. */
 .panels {
+    position: relative;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     width: 100%;
     scroll-margin-top: 2rem;
 }
 
+/* Fills the whole row behind all three panels — object-fit:cover crops
+   to fill rather than stretching, and since it's one image sized to the
+   row's own real bounding box (not three separate background-images
+   doing width/height math against each panel's own box), it stays
+   correct at tablet/mobile widths too, where the panels aren't three
+   equal side-by-side thirds any more. position:absolute takes it out of
+   grid flow entirely, so it doesn't need explicit grid-row/column
+   placement the way another real grid item sharing this row would.
+   width/height:100% is required here even with inset:0 set — for an
+   absolutely positioned REPLACED element (an <img>, unlike a plain div)
+   an auto height resolves to the image's own intrinsic size first,
+   ignoring top/bottom, unless width and height are given explicitly. */
+.panels-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    pointer-events: none;
+}
+
 .panel {
     position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     min-height: 640px;
@@ -893,35 +917,19 @@ body.landing {
     color: rgba(255, 255, 255, 0.85);
 }
 
-/* One wide image (images/panels-bg.webp — a CRT/MSN Messenger setup on
-   the left, a PC tower + sticker-covered notebook in the middle, a
-   glowing pillar on the right, all on a lit disco floor) sliced across
-   the three equal-width panels rather than each panel repeating the
-   whole image — background-size:300% stretches it to 3 panel-widths,
-   and background-position 0%/50%/100% each reveal exactly one third of
-   it (the standard trick for splitting one image across N equal
-   siblings: at N=3, position 50% lands on the middle third because the
-   "excess" width the browser slides through is 2 panel-widths, so the
-   midpoint of that slide is exactly panel-width 1 to 2). 100% height
-   (not auto) guarantees full coverage with no gap at any viewport
-   height the no-scroll layout produces, at the cost of some vertical
-   stretch since the image's own 2.12:1 ratio doesn't match every
-   panel's actual height — an acceptable trade for "never shows a gap"
-   over "always pixel-perfect," and easy to swap for a purpose-cropped
-   set of three images later (see index.html's own note above the
-   panels markup). */
-.panel--scrapbook,
-.panel--web00,
-.panel--accessible {
-    background-image: url('images/panels-bg.webp');
-    background-size: 300% 100%;
-    background-repeat: no-repeat;
-    background-color: #0d0d0d;
-}
-
-.panel--scrapbook { background-position: 0% center; }
-.panel--web00 { background-position: 50% center; }
-.panel--accessible { background-position: 100% center; }
+/* No background-image or background-color of their own any more —
+   .panels-bg (a real <img> behind all three, see above) shows through
+   instead. A previous version gave each panel the same image via
+   background-size:300% / background-position:0%/50%/100%, the usual
+   trick for splitting one image across N equal siblings — dropped
+   because matching the image to each panel's own box that way meant
+   stretching it non-uniformly to guarantee no gaps, which visibly
+   distorted it. object-fit:cover on one shared <img> crops instead of
+   stretching and doesn't need that trade-off. A background-color here
+   would sit opaquely on top of .panels-bg (same grid cell, higher
+   z-index) and hide it completely, not just act as a fallback — so
+   .panels-bg's own #0d0d0d-ish tone plus .panel::before's scrim are
+   what carry a dark base if the image is ever slow to load. */
 
 /* ===== PROCESS STRIP ===== */
 /* A grid child of .panels (see index.html) spanning every column, so it
