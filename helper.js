@@ -193,15 +193,38 @@ function buildHelper() {
     function say(text, imageIndex) {
         textEl.textContent = text;
         if (hasFloPhotos) {
-            figureImg.src = floImages[imageIndex % floImages.length];
+            const src = floImages[imageIndex % floImages.length];
             // Remove-reflow-readd, not just re-add — a CSS animation
             // doesn't restart just because the class is already present,
             // and it's already present from the previous line of dialogue
             // by the second image onward. Reading offsetWidth forces the
             // browser to apply the removal before the class goes back on.
-            figureImg.classList.remove('flo-pop');
-            void figureImg.offsetWidth;
-            figureImg.classList.add('flo-pop');
+            const playPop = () => {
+                figureImg.classList.remove('flo-pop');
+                void figureImg.offsetWidth;
+                figureImg.classList.add('flo-pop');
+            };
+            // Setting .src and adding the animation class in the same
+            // tick used to fire the pop-in immediately regardless of
+            // whether the new image had actually finished loading —
+            // an <img> keeps showing its OLD pixels until the new src
+            // is ready, so the bounce played on the outgoing pose and
+            // the incoming one just snapped in afterward, unanimated,
+            // whenever the network/decode happened to finish. Waiting
+            // for the real load event lines the animation up with the
+            // pose it's actually animating in. figureImg.src reads back
+            // as an absolute URL even when set with a relative one, so
+            // resolve src the same way before comparing — otherwise a
+            // repeat of the pose already showing (e.g. cycling back to
+            // an earlier tip) never matches and waits on a load event
+            // that a same-URL reassignment isn't guaranteed to refire.
+            const absoluteSrc = new URL(src, window.location.href).href;
+            if (figureImg.src === absoluteSrc && figureImg.complete) {
+                playPop();
+            } else {
+                figureImg.addEventListener('load', playPop, { once: true });
+                figureImg.src = src;
+            }
         }
         fitTextToBubble();
         bubble.classList.add('open');

@@ -893,12 +893,35 @@ body.landing {
     color: rgba(255, 255, 255, 0.85);
 }
 
-/* Placeholder images — see the note at the top of the panels markup in
-   index.html. Swap these three for the finished set when it's ready;
-   nothing else needs to change to pick up a new image. */
-.panel--scrapbook { background-image: url('images/header-right.webp'); background-color: #f5eed8; }
-.panel--web00 { background-image: url('images/room-captures/room-1.webp'); background-color: #0d0d0d; }
-.panel--accessible { background-image: url('images/accessible-placeholder.webp'); background-color: #ffffff; }
+/* One wide image (images/panels-bg.webp — a CRT/MSN Messenger setup on
+   the left, a PC tower + sticker-covered notebook in the middle, a
+   glowing pillar on the right, all on a lit disco floor) sliced across
+   the three equal-width panels rather than each panel repeating the
+   whole image — background-size:300% stretches it to 3 panel-widths,
+   and background-position 0%/50%/100% each reveal exactly one third of
+   it (the standard trick for splitting one image across N equal
+   siblings: at N=3, position 50% lands on the middle third because the
+   "excess" width the browser slides through is 2 panel-widths, so the
+   midpoint of that slide is exactly panel-width 1 to 2). 100% height
+   (not auto) guarantees full coverage with no gap at any viewport
+   height the no-scroll layout produces, at the cost of some vertical
+   stretch since the image's own 2.12:1 ratio doesn't match every
+   panel's actual height — an acceptable trade for "never shows a gap"
+   over "always pixel-perfect," and easy to swap for a purpose-cropped
+   set of three images later (see index.html's own note above the
+   panels markup). */
+.panel--scrapbook,
+.panel--web00,
+.panel--accessible {
+    background-image: url('images/panels-bg.webp');
+    background-size: 300% 100%;
+    background-repeat: no-repeat;
+    background-color: #0d0d0d;
+}
+
+.panel--scrapbook { background-position: 0% center; }
+.panel--web00 { background-position: 50% center; }
+.panel--accessible { background-position: 100% center; }
 
 /* ===== PROCESS STRIP ===== */
 /* A grid child of .panels (see index.html) spanning every column, so it
