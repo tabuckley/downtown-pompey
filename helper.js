@@ -32,6 +32,13 @@ const ARCHIE_IMAGE_URL = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
 // and need no changes. Pages with no entry (or an empty array) keep
 // showing the placeholder SVG.
 const FLO_IMAGES = {
+    landing: [
+        'images/flo-landing-1.webp', // waving — intro
+        'images/flo-landing-2.webp', // three fingers (a nod to the 3D room) — editorial tip
+        'images/flo-landing-3.webp', // sunglasses, playful — scrapbook "fun one" tip
+        'images/flo-landing-4.webp', // reading a book — accessible/research tip
+        'images/flo-landing-5.webp', // pointing — "hover over each button" tip
+    ],
     editorial: [
         // Matching pink duotone/halftone treatment across all three.
         // Display order (pointing/intro, shrug, thoughtful) doesn't match
