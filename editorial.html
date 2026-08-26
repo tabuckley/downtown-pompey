@@ -42,6 +42,29 @@
                 <span class="room-desktop-icon-label">Refresh</span>
             </button>
             <canvas id="room-canvas"></canvas>
+
+            <!-- Retro Windows media player, styled to match this room's own
+                 Win98-pink chrome (.room-window/.room-desktop-icon) rather
+                 than a generic player skin. -->
+            <div class="retro-player" id="retroPlayer">
+                <div class="retro-player-titlebar">
+                    <span class="retro-player-title">MediaPlayer.exe</span>
+                    <span class="room-window-controls" aria-hidden="true">
+                        <span>&#8211;</span><span>&#9633;</span><span>&times;</span>
+                    </span>
+                </div>
+                <div class="retro-player-body">
+                    <div class="retro-player-track" aria-hidden="true">
+                        <span>&#9835;&nbsp; Oh I do like to be by the seaside - Boris Allenou &nbsp;&#9835;&nbsp; Oh I do like to be by the seaside - Boris Allenou</span>
+                    </div>
+                    <div class="retro-player-controls">
+                        <button type="button" class="retro-player-btn" id="retroPlayBtn" aria-label="Play">&#9654;</button>
+                        <input type="range" class="retro-player-seek" id="retroSeek" min="0" max="1000" value="0" step="1" aria-label="Seek">
+                        <span class="retro-player-time" id="retroTime" aria-hidden="true">0:00 / 0:00</span>
+                    </div>
+                </div>
+                <audio id="retroAudio" src="audio/oh-i-do-like-to-be-by-the-seaside.mp3" preload="metadata"></audio>
+            </div>
         </div>
     </div>
 
@@ -74,5 +97,6 @@
     <div id="site-helper"></div>
     <script type="module" src="helper.js"></script>
     <script type="module" src="editorial.js"></script>
+    <script type="module" src="retro-player.js"></script>
 </body>
 </html>

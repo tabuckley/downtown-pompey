@@ -2522,6 +2522,151 @@ body.landing {
     outline-offset: 2px;
 }
 
+/* Retro media player — same Win98-pink chrome as .room-window/
+   .room-desktop-icon (the #ffe3f0/#d01359/#4a0e28/#a3175c palette,
+   Tahoma stack, inset-highlight-on-light-side bevels) rather than a
+   generic player skin, so it reads as another window on this same
+   desktop. Top-right mirrors the refresh icon's top-left placement;
+   it sits at the same z-index (10) as that icon so .info-panel
+   (z-index 550) still covers it when an object's info slides in,
+   exactly like a real window losing focus to whatever's brought to
+   the front — not a bug, the desktop metaphor holding together. */
+.retro-player {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    z-index: 10;
+    width: 232px;
+    max-width: calc(100% - 1.8rem);
+    background: #ffe3f0;
+    font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
+    box-shadow:
+        0 0 0 1px #4a0e28,
+        inset 2px 2px 0 #fff,
+        inset -2px -2px 0 #a3175c,
+        4px 4px 0 rgba(0, 0, 0, 0.6);
+}
+
+.retro-player-titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.35rem 0.5rem;
+    background: #d01359;
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.retro-player-body { padding: 0.55rem; }
+
+/* A fixed-width ticker with the title doubled up back-to-back inside
+   it (see editorial.html) — the marquee scrolls exactly one copy's
+   width then snaps back, so with two copies the seam where it resets
+   is never visible, unlike scrolling one copy against blank space. */
+.retro-player-track {
+    overflow: hidden;
+    white-space: nowrap;
+    background: #ffffff;
+    color: #4a0e28;
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 0.3rem 0.4rem;
+    margin-bottom: 0.5rem;
+    box-shadow: inset 1px 1px 0 #a3175c, inset -1px -1px 0 #fff;
+}
+
+.retro-player-track span {
+    display: inline-block;
+    animation: retro-marquee 14s linear infinite;
+}
+
+@keyframes retro-marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .retro-player-track { overflow-x: auto; }
+    .retro-player-track span { animation: none; }
+}
+
+.retro-player-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.retro-player-btn {
+    flex-shrink: 0;
+    width: 1.7rem;
+    height: 1.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffe3f0;
+    color: #4a0e28;
+    border: none;
+    font-size: 0.65rem;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #a3175c, 0 0 0 1px #4a0e28;
+}
+
+.retro-player-btn:active {
+    box-shadow: inset -1px -1px 0 #fff, inset 1px 1px 0 #a3175c, 0 0 0 1px #4a0e28;
+}
+
+/* Custom track/thumb on the native <input type="range"> — same sunken
+   bevel as the track ticker above it (light bottom-right, dark
+   top-left reads as "pressed in"), with a small solid-pink thumb
+   rather than the browser default. */
+.retro-player-seek {
+    flex: 1 1 auto;
+    min-width: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    height: 0.6rem;
+    background: #ffffff;
+    box-shadow: inset 1px 1px 0 #a3175c, inset -1px -1px 0 #fff, 0 0 0 1px #4a0e28;
+    cursor: pointer;
+}
+
+.retro-player-seek::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 0.65rem;
+    height: 1rem;
+    background: #d01359;
+    box-shadow: inset 1px 1px 0 #ff9fc4, inset -1px -1px 0 #7a0d3d, 0 0 0 1px #4a0e28;
+    cursor: pointer;
+}
+
+.retro-player-seek::-moz-range-track {
+    height: 0.6rem;
+    background: #ffffff;
+    box-shadow: inset 1px 1px 0 #a3175c, inset -1px -1px 0 #fff, 0 0 0 1px #4a0e28;
+}
+
+.retro-player-seek::-moz-range-thumb {
+    width: 0.65rem;
+    height: 1rem;
+    border: 1px solid #4a0e28;
+    border-radius: 0;
+    background: #d01359;
+    cursor: pointer;
+}
+
+.retro-player-time {
+    flex-shrink: 0;
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: #4a0e28;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
 #room-canvas {
     display: block;
     width: 100%;
