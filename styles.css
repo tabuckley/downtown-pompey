@@ -798,10 +798,16 @@ body.landing {
 }
 
 @media (min-width: 1001px) {
-    /* 246px = topbar (~124px) + footer (~122px), same figure the old
-       per-panel min-height used — see the process-strip rule below for
-       why it doesn't need its own allowance any more either. */
-    .panels { min-height: calc(100vh - 246px); padding: 0; }
+    /* Just the topbar's own height (~56px, measured — it lost most of
+       its old ~124px when the logo was removed from it) now that
+       .how-it-was-made sits between .panels and the real footer
+       instead of the footer following panels directly: the footer's
+       own height is irrelevant to this budget any more, only what's
+       above .panels is. Without this fix, .panels stayed sized for
+       the old (taller) topbar + a footer that's no longer adjacent,
+       leaving .panels short of a full viewport and letting
+       .how-it-was-made's start peek into view before any scrolling. */
+    .panels { min-height: calc(100vh - 56px); padding: 0; }
 }
 
 /* Fills the ENTIRE page — header, panels, and footer — not just the
@@ -886,6 +892,19 @@ body.landing {
 }
 
 .connector-dot.is-active { opacity: 0.9; }
+
+/* Occlusion test — three segments (positioned/sized by occlusion-
+   demo.js) instead of one full-width line, with gaps left open at the
+   PC and column's bounding boxes so the video's own real pixels show
+   through unobstructed there, reading as the line passing behind
+   them. */
+.occlusion-line-segment {
+    position: absolute;
+    height: 2px;
+    background: #ffffff;
+    z-index: 1;
+    pointer-events: none;
+}
 
 .welcome-copy {
     position: absolute;
