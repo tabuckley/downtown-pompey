@@ -3,86 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alternative Archiving | Downtown Pompey</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <title>Downtown Pompey</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="icon" href="images/favicon.png" type="image/png">
+    <style>
+        * { box-sizing: border-box; }
+        html, body {
+            height: 100%;
+            margin: 0;
+            background: #ffffff;
+            color: #1a1512;
+            font-family: 'Montserrat', sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            text-align: center;
+        }
+        img {
+            width: min(260px, 60vw);
+            height: auto;
+            margin-bottom: 1.6rem;
+        }
+        p {
+            font-size: 1rem;
+            color: #55504a;
+            max-width: 28rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+    </style>
 </head>
-<body class="landing" data-page="landing">
-
-    <header class="landing-topbar">
-        <h1 class="sr-only">Downtown Pompey — an alternative archive of Portsmouth city centre</h1>
-        <a href="index.html" class="landing-topbar-logo">
-            <img src="https://media.downtownpompey.online/Downtown-Pompey-logo.png" alt="Downtown Pompey">
-        </a>
-        <nav class="landing-topbar-nav">
-            <a href="editorial.html">Editorial</a>
-            <a href="scrapbook.html">Scrapbook</a>
-            <a href="accessible.html">Accessible</a>
-            <a href="process.html">The Process</a>
-        </nav>
-    </header>
-
-    <section class="panels" id="explore">
-
-        <!-- Three ways in, just a title + one line of text over a shared
-             background image — the image IS the design. One real <img>
-             behind all three panels (object-fit:cover, so it crops to
-             fill rather than stretching) rather than a separate
-             background-image per panel, so it reads as one continuous
-             scene regardless of how the panels themselves reflow at
-             narrower widths. Swap images/panels-bg.webp for a different
-             image any time; nothing else needs to change. -->
-        <img class="panels-bg" src="images/panels-bg.webp" alt="">
-
-        <a href="scrapbook.html" class="panel panel--scrapbook">
-            <h2 class="panel-title">Scrapbook</h2>
-            <p class="panel-copy">Scroll the whole archive, pinned up and tagged.</p>
-        </a>
-
-        <a href="editorial.html" class="panel panel--web00">
-            <h2 class="panel-title">00s Web</h2>
-            <p class="panel-copy">Step inside a 3D room built from the archive.</p>
-        </a>
-
-        <a href="accessible.html" class="panel panel--accessible">
-            <h2 class="panel-title">Accessible</h2>
-            <p class="panel-copy">The clear, plain-text way in.</p>
-        </a>
-
-        <!-- A grid child of .panels itself (not a separate section below
-             it) so it can be placed into the same row as the three panels
-             above and float over them on desktop — see .process-strip's
-             desktop rule in styles.css — rather than adding its own extra
-             row of document height underneath. -->
-        <section class="process-strip">
-            <img class="process-strip-badge" src="images/aag-process-badge.png" alt="Alternative Archiving Group" width="220" height="220">
-            <div class="process-strip-text">
-                <span class="process-strip-eyebrow">How it was made</span>
-                <p>Five years of material, digitised by five people.</p>
-            </div>
-            <a href="process.html" class="process-strip-cta">Read the process <span aria-hidden="true">&rarr;</span></a>
-        </section>
-
-    </section>
-
-    <footer class="landing-footer">
-        <div class="logo-strip">
-            <a href="https://downtownpompey.com/" target="_blank" rel="noopener" class="logo-strip-item">
-                <img src="https://media.downtownpompey.online/Downtown-Pompey-logo.png" alt="Downtown Pompey">
-            </a>
-            <a href="https://www.heritagefund.org.uk/" target="_blank" rel="noopener" class="logo-strip-item">
-                <img src="images/logo-heritage-fund.png" alt="Made possible with Heritage Fund">
-            </a>
-            <a href="https://www.play-office.com/" target="_blank" rel="noopener" class="logo-strip-item">
-                <img src="images/logo-play-office.gif" alt="Play Office">
-            </a>
-        </div>
-    </footer>
-
-    <div id="site-helper"></div>
-    <script type="module" src="helper.js"></script>
+<body>
+    <img src="https://media.downtownpompey.online/Downtown-Pompey-logo.png" alt="Downtown Pompey">
+    <p>We're rebuilding the archive. Back soon.</p>
 </body>
 </html>

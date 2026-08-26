@@ -3,76 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editorial | Alternative Archiving</title>
-
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-        }
-    }
-    </script>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Pixel font for Flo's speech bubble in this room only — matches
-         the 3D room's own low-poly/retro-render treatment (three-scene.js). -->
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <!-- Bubbly display font for the room hint's 90s MySpace-glitter-text
-         treatment (styles.css .room-hint) — a chunky rounded face is what
-         those cooltext.com/glitter-graphics.net generators typically used. -->
-    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <title>Downtown Pompey</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="icon" href="images/favicon.png" type="image/png">
+    <style>
+        * { box-sizing: border-box; }
+        html, body {
+            height: 100%;
+            margin: 0;
+            background: #ffffff;
+            color: #1a1512;
+            font-family: 'Montserrat', sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            text-align: center;
+        }
+        img {
+            width: min(260px, 60vw);
+            height: auto;
+            margin-bottom: 1.6rem;
+        }
+        p {
+            font-size: 1rem;
+            color: #55504a;
+            max-width: 28rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+    </style>
 </head>
-<body data-mode="editorial" data-page="editorial">
-
-    <div class="room-window">
-        <div class="room-window-titlebar">
-            <span class="room-window-title">Editorial_Room.exe</span>
-            <span class="room-window-controls" aria-hidden="true">
-                <span>&#8211;</span><span>&#9633;</span><span>&times;</span>
-            </span>
-        </div>
-        <div class="room-window-content">
-            <button type="button" class="room-desktop-icon" id="roomRefreshBtn" title="Get 3 new objects">
-                <span class="room-desktop-icon-glyph" aria-hidden="true">&#8635;</span>
-                <span class="room-desktop-icon-label">Refresh</span>
-            </button>
-            <canvas id="room-canvas"></canvas>
-        </div>
-    </div>
-
-    <header class="page-topbar">
-        <a href="index.html" class="home-link">
-            <img src="https://media.downtownpompey.online/Downtown-Pompey-logo.png" alt="Downtown Pompey — Alternative Archiving" class="home-logo">
-        </a>
-        <nav class="mode-switcher">
-            <a href="editorial.html" class="mode-btn active">Editorial</a>
-            <a href="scrapbook.html" class="mode-btn">Scrapbook</a>
-            <a href="accessible.html" class="mode-btn">Accessible</a>
-        </nav>
-    </header>
-
-    <div class="room-hint-window">
-        <div class="room-hint-titlebar">readme.txt</div>
-        <p class="room-hint" id="roomHint">Move to look around · click an object to learn its story</p>
-    </div>
-
-    <aside class="info-panel" id="infoPanel" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
-        <button class="info-close" id="infoClose" aria-label="Close panel">&times;</button>
-        <p class="info-kicker" id="infoKicker"></p>
-        <h2 class="info-title" id="infoTitle"></h2>
-        <p class="info-meta" id="infoMeta"></p>
-        <p class="info-desc" id="infoDesc"></p>
-        <div class="lb-tags" id="infoTags"></div>
-        <img class="info-image" id="infoImage" alt="" hidden>
-    </aside>
-
-    <div id="site-helper"></div>
-    <script type="module" src="helper.js"></script>
-    <script type="module" src="editorial.js"></script>
+<body>
+    <img src="https://media.downtownpompey.online/Downtown-Pompey-logo.png" alt="Downtown Pompey">
+    <p>We're rebuilding the archive. Back soon.</p>
 </body>
 </html>
