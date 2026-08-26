@@ -895,7 +895,7 @@ body.landing {
 .welcome-copy {
     position: absolute;
     left: 8.2rem;
-    top: calc(62% + 100px);
+    top: calc(62% + 50px);
     z-index: 1;
     color: #fff;
     pointer-events: none;
@@ -986,14 +986,12 @@ body.landing {
     padding: 0.6rem;
     border-radius: 50%;
     border: 2px solid #fff;
-    background-color: rgba(0, 0, 0, 0.5);
     color: #fff;
     text-decoration: none;
     opacity: 1;
     transform: scale(1) translateY(0);
     transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--badge-i, 0) * 0.12s),
-                opacity 0.5s ease calc(var(--badge-i, 0) * 0.12s),
-                background-color 0.25s ease;
+                opacity 0.5s ease calc(var(--badge-i, 0) * 0.12s);
 }
 
 .badge--scrapbook  { --badge-i: 0; }
@@ -1011,8 +1009,7 @@ body.landing {
    of inheriting the entrance's slower, staggered timing above. */
 .badge:hover,
 .badge:focus-visible {
-    background-color: rgba(0, 0, 0, 0.65);
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.25s ease;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .badge--scrapbook:hover,
@@ -1046,7 +1043,7 @@ body.landing {
 
 @media (prefers-reduced-motion: reduce) {
     .badge {
-        transition: background-color 0.25s ease;
+        transition: none;
     }
     .badge--scrapbook:hover, .badge--scrapbook:focus-visible,
     .badge--web00:hover, .badge--web00:focus-visible,
