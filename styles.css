@@ -870,7 +870,7 @@ body.landing {
 .connector-line {
     fill: none;
     stroke: #ffffff;
-    stroke-width: 1.5;
+    stroke-width: 2.5;
     stroke-linecap: round;
     stroke-linejoin: round;
     opacity: 0;
@@ -878,6 +878,14 @@ body.landing {
 }
 
 .connector-line.is-active { opacity: 0.85; }
+
+.connector-dot {
+    fill: #ffffff;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.connector-dot.is-active { opacity: 0.9; }
 
 .welcome-copy {
     position: absolute;

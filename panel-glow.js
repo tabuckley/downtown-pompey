@@ -41,7 +41,7 @@ function targetToScreen(video, fx, fy) {
 }
 
 function buildElbowPath(sx, sy, tx, ty) {
-    // Vertical from the title up to the target's height, then
+    // Vertical from the badge edge to the target's height, then
     // horizontal into the target — reads as a flagpole reaching over to
     // the object rather than a diagonal line cutting across the scene.
     return `M ${sx} ${sy} L ${sx} ${ty} L ${tx} ${ty}`;
@@ -58,23 +58,38 @@ function initPanelGlow() {
         const fy = parseFloat(panel.dataset.glowY);
         const glow = document.querySelector(`.object-glow[data-glow="${key}"]`);
         const line = document.querySelector(`.connector-line[data-connector="${key}"]`);
-        const title = panel.querySelector('.badge-title') || panel;
-        return { panel, glow, line, title, fx, fy, active: false };
+        const dot = document.querySelector(`.connector-dot[data-connector="${key}"]`);
+        return { panel, glow, line, dot, fx, fy, active: false };
     });
 
     function redraw(rig) {
         if (!rig.active || !rig.line) return;
-        const titleRect = rig.title.getBoundingClientRect();
-        const sx = Math.round(titleRect.left + titleRect.width / 2);
-        const sy = Math.round(titleRect.top);
+        // Start from the badge's own circle edge, not its text — the
+        // circle is a true circle (width === height), so its centre and
+        // radius are enough to find where the vertical first leg should
+        // actually leave the ring, rather than starting from inside it.
+        const rect = rig.panel.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const radius = rect.width / 2;
         const target = targetToScreen(video, rig.fx, rig.fy);
-        rig.line.setAttribute('d', buildElbowPath(sx, sy, Math.round(target.x), Math.round(target.y)));
+        const goingDown = target.y >= cy;
+        const sx = Math.round(cx);
+        const sy = Math.round(cy + radius * (goingDown ? 1 : -1));
+        const tx = Math.round(target.x);
+        const ty = Math.round(target.y);
+        rig.line.setAttribute('d', buildElbowPath(sx, sy, tx, ty));
+        if (rig.dot) {
+            rig.dot.setAttribute('cx', tx);
+            rig.dot.setAttribute('cy', ty);
+        }
     }
 
     function setActive(rig, on) {
         rig.active = on;
         if (rig.glow) rig.glow.classList.toggle('is-active', on);
         if (rig.line) rig.line.classList.toggle('is-active', on);
+        if (rig.dot) rig.dot.classList.toggle('is-active', on);
         if (on) redraw(rig);
     }
 
