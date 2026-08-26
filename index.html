@@ -36,13 +36,16 @@
              narrower widths. -->
         <video class="panels-bg" src="images/panels-bg.mp4" autoplay muted loop playsinline></video>
 
-        <!-- Object-glow test: a soft highlight over the PC in the video,
-             sized/positioned identically to .panels-bg (fixed, inset:0,
-             object-fit:cover) so it tracks the same object-fit cropping
-             math and stays pixel-aligned with the PC at every viewport
-             size without any JS — only its opacity is toggled (see
-             panel-glow.js), on hover/focus of the panel that points at it. -->
+        <!-- Object-glow test: a soft highlight over each object in the
+             video, sized/positioned identically to .panels-bg (fixed,
+             inset:0, object-fit:cover) so each one tracks the same
+             object-fit cropping math and stays pixel-aligned with its
+             object at every viewport size without any JS — only opacity
+             is toggled (see panel-glow.js), on hover/focus of the panel
+             that points at it. -->
+        <img class="object-glow" data-glow="scrapbook" src="images/glow-notebook.png" alt="">
         <img class="object-glow" data-glow="web00" src="images/glow-pc.png" alt="">
+        <img class="object-glow" data-glow="accessible" src="images/glow-pillar.png" alt="">
 
         <!-- Elbow connector overlay: one <path> per glow target, drawn by
              panel-glow.js between the triggering panel's title and the
@@ -50,10 +53,12 @@
              CSS) because the panel's on-screen position reflows across
              breakpoints while the target point is anchored to the video. -->
         <svg class="connector-overlay" aria-hidden="true">
+            <path class="connector-line" data-connector="scrapbook"></path>
             <path class="connector-line" data-connector="web00"></path>
+            <path class="connector-line" data-connector="accessible"></path>
         </svg>
 
-        <a href="scrapbook.html" class="panel panel--scrapbook">
+        <a href="scrapbook.html" class="panel panel--scrapbook" data-glow-target="scrapbook" data-glow-x="0.536" data-glow-y="0.587">
             <h2 class="panel-title">Scrapbook</h2>
             <p class="panel-copy">Scroll the whole archive, pinned up and tagged.</p>
         </a>
@@ -63,7 +68,7 @@
             <p class="panel-copy">Step inside a 3D room built from the archive.</p>
         </a>
 
-        <a href="accessible.html" class="panel panel--accessible">
+        <a href="accessible.html" class="panel panel--accessible" data-glow-target="accessible" data-glow-x="0.587" data-glow-y="0.530">
             <h2 class="panel-title">Accessible</h2>
             <p class="panel-copy">The clear, plain-text way in.</p>
         </a>
