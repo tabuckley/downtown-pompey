@@ -881,7 +881,7 @@ body.landing {
 
 .welcome-copy {
     position: absolute;
-    left: 5.5rem;
+    left: 8.2rem;
     top: 62%;
     max-width: 380px;
     z-index: 1;
@@ -907,12 +907,30 @@ body.landing {
 
 /* White-outline circle badges, floating over the shared video — "only
    white" per the brief: a transparent-centre ring (the video itself
-   shows through), white type, no fill except the hover state. Mobile
-   default is plain stacked normal-flow circles (simplest safe fallback
-   for a shape that doesn't reflow gracefully); desktop scatters them
-   to specific points via .badge--* below instead of the old equal
-   three-column grid, "to balance the page" rather than mechanically
-   dividing it into thirds. */
+   shows through), white type, no fill except the hover state. .badge-
+   row groups all three as one flex unit so they can be centred as a
+   group (near the top on desktop, stacked on mobile) without each
+   needing its own translateX math. Sized at 60% of the original
+   190px/1.2rem/0.72rem pass, per feedback that they read too big. */
+.badge-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 3rem 1.5rem 0;
+}
+
+/* Entrance uses @starting-style + transition, deliberately not
+   @keyframes/animation — a CSS animation with fill-mode:both keeps
+   "winning" the cascade for whatever property it last touched even
+   after it finishes, which silently blocked :hover's own transform
+   from ever applying (confirmed: getComputedStyle kept reporting the
+   animation's resting matrix on hover, no visible change at all).
+   @starting-style's before/after transition fully hands the property
+   back to normal cascade rules once it completes, so :hover works
+   like any other unanimated element afterward. Unsupported browsers
+   just see the badges at their normal resting state with no entrance
+   — a safe fallback, not a broken one. */
 .badge {
     position: relative;
     z-index: 1;
@@ -921,49 +939,93 @@ body.landing {
     align-items: center;
     justify-content: center;
     text-align: center;
-    width: 190px;
-    height: 190px;
-    margin: 0 auto 1.5rem;
-    padding: 1rem;
+    width: 114px;
+    height: 114px;
+    padding: 0.6rem;
     border-radius: 50%;
     border: 2px solid #fff;
     color: #fff;
     text-decoration: none;
-    transition: transform 0.25s ease, background-color 0.25s ease;
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--badge-i, 0) * 0.12s),
+                opacity 0.5s ease calc(var(--badge-i, 0) * 0.12s),
+                background-color 0.25s ease, border-color 0.25s ease;
 }
 
-.badge:last-child { margin-bottom: 0; }
+.badge--scrapbook  { --badge-i: 0; }
+.badge--web00      { --badge-i: 1; }
+.badge--accessible { --badge-i: 2; }
 
+@starting-style {
+    .badge { opacity: 0; transform: scale(0.4) translateY(-24px); }
+}
+
+/* A little different per badge so the row doesn't feel mechanical —
+   alternating tilt direction, one with an extra wobble. Bouncy easing
+   (shared with .process-seal's own hover) is what sells "fun" over a
+   flat ease-out. Re-declaring transition here (a faster, undelayed
+   0.35s) is what keeps hover snappy instead of inheriting the
+   entrance's slower, staggered timing above. */
 .badge:hover,
 .badge:focus-visible {
-    transform: scale(1.06);
-    background-color: rgba(255, 255, 255, 0.08);
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #ff7fac;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.badge--scrapbook:hover,
+.badge--scrapbook:focus-visible {
+    transform: scale(1.14) rotate(-8deg) translateY(-4px);
+}
+
+.badge--web00:hover,
+.badge--web00:focus-visible {
+    transform: scale(1.16) translateY(-8px);
+}
+
+.badge--accessible:hover,
+.badge--accessible:focus-visible {
+    transform: scale(1.14) rotate(8deg) translateY(-4px);
 }
 
 .badge-title {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: 1.2rem;
+    font-size: 0.75rem;
     letter-spacing: 0.01em;
 }
 
 .badge-copy {
-    font-size: 0.72rem;
-    line-height: 1.35;
-    margin-top: 0.4rem;
+    font-size: 0.5rem;
+    line-height: 1.3;
+    margin-top: 0.25rem;
     color: rgba(255, 255, 255, 0.85);
 }
 
-/* Scattered rather than gridded — positions are eyeballed against the
-   video's own composition (clear of the neon sign, the PC, and each
-   other) at a 1440-ish desktop width; percentages keep them roughly in
-   place at other desktop widths since they're relative to .panels'
-   own full-bleed box. */
+@media (prefers-reduced-motion: reduce) {
+    .badge {
+        transition: background-color 0.25s ease, border-color 0.25s ease;
+    }
+    .badge--scrapbook:hover, .badge--scrapbook:focus-visible,
+    .badge--web00:hover, .badge--web00:focus-visible,
+    .badge--accessible:hover, .badge--accessible:focus-visible {
+        transform: none;
+    }
+}
+
+/* Centred as a group near the top, clear of the welcome copy/seal
+   below and the header above. */
 @media (min-width: 1001px) {
-    .badge { position: absolute; margin: 0; }
-    .badge--scrapbook  { left: 8%;  top: 20%; }
-    .badge--web00      { left: 60%; top: 54%; }
-    .badge--accessible { left: 76%; top: 20%; }
+    .badge-row {
+        position: absolute;
+        top: 8%;
+        left: 50%;
+        transform: translateX(-50%);
+        flex-direction: row;
+        gap: 2.5rem;
+        padding: 0;
+    }
 }
 
 /* ===== PROCESS STRIP ===== */
@@ -3041,17 +3103,36 @@ body.landing {
        desktop rule above. */
     .landing-topbar { padding: 0.6rem 0.7rem; }
     .landing-topbar-nav { gap: 1.1rem; font-size: 0.85rem; }
+
+    /* Desktop's left:5.5rem/top:62% aligns it with the neon sign at
+       that specific video crop — meaningless once .badge-row stacks
+       into a column below it, and left it overlapping the Accessible
+       badge (a fixed % of .panels' now much shorter, content-driven
+       mobile height landed mid-stack rather than clear of it). Back to
+       plain flow instead of chasing a new magic percentage: reads
+       fine as an intro line ahead of the badges either way. No top
+       padding of its own — .panels' own 3rem already clears the
+       header; adding more here on top of that plus .badge-row's own
+       top padding would stack up into a lot of empty space. */
+    .welcome-copy {
+        position: static;
+        max-width: none;
+        padding: 0;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .badge-row { padding-top: 0; }
     /* Matches .page-topbar .home-logo's own mobile size. */
     .landing-topbar-logo img { height: 60px; }
 
-    /* Stacked circles read as overlapping at this width even though
-       they aren't (checked via getBoundingClientRect — there's a clean
-       gap): the video's own PC/monitor is tall enough to show through
-       several transparent circles at once, so adjacent ones blur
-       together visually. Smaller circles + a bigger gap gives each one
-       more of its own clear video backdrop to sit in. */
-    .badge { width: 150px; height: 150px; margin-bottom: 3rem; }
-    .badge:last-child { margin-bottom: 0; }
+    /* Stacked circles previously read as overlapping at this width even
+       though they weren't (the video's own PC/monitor showing through
+       several transparent circles at once made adjacent ones blur
+       together visually) — the 60%-size pass plus .badge-row's own
+       gap (2rem here, wider than the row's 1.5rem) gives each one
+       enough of its own clear video backdrop to avoid that. */
+    .badge-row { gap: 2rem; padding: 3rem 1.5rem 0; }
 
     /* Flo's auto-intro is already skipped on landing at this width (see
        helper.js), but she's still a fixed bottom-right figure once

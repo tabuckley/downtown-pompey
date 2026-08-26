@@ -71,20 +71,25 @@
             <p class="welcome-copy-text">An archive of Portsmouth's city centre, kept alive by the people who lived it.</p>
         </div>
 
-        <a href="scrapbook.html" class="badge badge--scrapbook" data-glow-target="scrapbook" data-glow-x="0.536" data-glow-y="0.587">
-            <span class="badge-title">Scrapbook</span>
-            <span class="badge-copy">Pinned up &amp; tagged</span>
-        </a>
+        <!-- A flex row instead of each badge scattered individually —
+             centres all three as one group near the top rather than
+             needing per-badge translateX math to line them up. -->
+        <div class="badge-row">
+            <a href="scrapbook.html" class="badge badge--scrapbook" data-glow-target="scrapbook" data-glow-x="0.536" data-glow-y="0.587">
+                <span class="badge-title">Scrapbook</span>
+                <span class="badge-copy">Pinned up &amp; tagged</span>
+            </a>
 
-        <a href="editorial.html" class="badge badge--web00" data-glow-target="web00" data-glow-x="0.448" data-glow-y="0.467">
-            <span class="badge-title">00s Web</span>
-            <span class="badge-copy">Step into the room</span>
-        </a>
+            <a href="editorial.html" class="badge badge--web00" data-glow-target="web00" data-glow-x="0.448" data-glow-y="0.467">
+                <span class="badge-title">00s Web</span>
+                <span class="badge-copy">Step into the room</span>
+            </a>
 
-        <a href="accessible.html" class="badge badge--accessible" data-glow-target="accessible" data-glow-x="0.587" data-glow-y="0.530">
-            <span class="badge-title">Accessible</span>
-            <span class="badge-copy">Plain-text way in</span>
-        </a>
+            <a href="accessible.html" class="badge badge--accessible" data-glow-target="accessible" data-glow-x="0.587" data-glow-y="0.530">
+                <span class="badge-title">Accessible</span>
+                <span class="badge-copy">Plain-text way in</span>
+            </a>
+        </div>
 
         <!-- Just the seal now, centred below the video/badges rather than
              a full banner — it links down to #how-it-was-made (a real
