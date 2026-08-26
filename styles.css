@@ -899,7 +899,7 @@ body.landing {
 .welcome-copy-text {
     font-size: 0.9rem;
     line-height: 1.5;
-    color: rgba(255, 255, 255, 0.85);
+    color: #ffffff;
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
     /* Desktop only (see the mobile override) — one line rather than
        wrapping at whatever width happens to be left of the badge row. */
