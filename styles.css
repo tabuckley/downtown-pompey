@@ -869,6 +869,23 @@ body.landing {
 
 .connector-line.is-active { opacity: 0.85; }
 
+/* Test placement: midway down the panels row, on the left, over the
+   Scrapbook panel — an opaque rectangular badge (the source GIF has a
+   solid maroon background, no transparency), not tied to any
+   interaction. pointer-events:none so it doesn't block the Scrapbook
+   link sitting underneath it. */
+.vhs-logo {
+    position: absolute;
+    left: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 220px;
+    height: auto;
+    z-index: 1;
+    pointer-events: none;
+    box-shadow: 6px 6px 0 rgba(26, 21, 18, 0.25);
+}
+
 .panel {
     position: relative;
     z-index: 1;
