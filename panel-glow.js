@@ -47,6 +47,26 @@ function buildElbowPath(sx, sy, tx, ty) {
     return `M ${sx} ${sy} L ${sx} ${ty} L ${tx} ${ty}`;
 }
 
+// getBoundingClientRect() on a *rotated* element returns the axis-
+// aligned box that contains the rotated shape, which is bigger than
+// the shape itself (a square rotated by 8° needs a ~13% bigger AABB to
+// contain it) — rect.width stops being the circle's true diameter the
+// moment rotate() is in the mix. Scrapbook/Accessible both rotate on
+// hover; 00s Web doesn't, which is why only that one badge's line
+// lined up correctly before this fix. The centre is still trustworthy
+// from the rect (rotating around an element's own centre can't move
+// that centre), so only the radius needs a rotation-proof source:
+// offsetWidth (the layout box, untouched by any CSS transform) times
+// the transform matrix's own scale factor, sqrt(a²+b²) — that
+// combination is invariant to whatever angle rotate() is currently at.
+function getTransformScale(el) {
+    const t = getComputedStyle(el).transform;
+    if (!t || t === 'none') return 1;
+    const values = t.replace(/^matrix\(|\)$/g, '').split(',').map(Number);
+    const [a, b] = values;
+    return Math.sqrt(a * a + b * b);
+}
+
 function initPanelGlow() {
     const video = document.querySelector(VIDEO_SELECTOR);
     const panels = document.querySelectorAll(PANEL_SELECTOR);
@@ -68,10 +88,14 @@ function initPanelGlow() {
         // circle is a true circle (width === height), so its centre and
         // radius are enough to find where the vertical first leg should
         // actually leave the ring, rather than starting from inside it.
+        // Centre comes from the live (post-transform) rect; radius comes
+        // from the untransformed layout size × the transform's own scale
+        // factor — see getTransformScale for why rect.width alone isn't
+        // safe here once rotate() is involved.
         const rect = rig.panel.getBoundingClientRect();
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
-        const radius = rect.width / 2;
+        const radius = (rig.panel.offsetWidth / 2) * getTransformScale(rig.panel);
         const target = targetToScreen(video, rig.fx, rig.fy);
         const goingDown = target.y >= cy;
         const sx = Math.round(cx);
