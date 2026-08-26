@@ -891,19 +891,9 @@ body.landing {
     position: absolute;
     left: 8.2rem;
     top: 62%;
-    max-width: 380px;
     z-index: 1;
     color: #fff;
     pointer-events: none;
-}
-
-.welcome-copy-title {
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: 1.5rem;
-    letter-spacing: -0.01em;
-    margin-bottom: 0.4rem;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
 }
 
 .welcome-copy-text {
@@ -911,6 +901,9 @@ body.landing {
     line-height: 1.5;
     color: rgba(255, 255, 255, 0.85);
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+    /* Desktop only (see the mobile override) — one line rather than
+       wrapping at whatever width happens to be left of the badge row. */
+    white-space: nowrap;
 }
 
 /* White-outline circle badges, floating over the shared video — "only
@@ -952,6 +945,7 @@ body.landing {
     padding: 0.6rem;
     border-radius: 50%;
     border: 2px solid #fff;
+    background-color: rgba(0, 0, 0, 0.5);
     color: #fff;
     text-decoration: none;
     opacity: 1;
@@ -977,7 +971,7 @@ body.landing {
    entrance's slower, staggered timing above. */
 .badge:hover,
 .badge:focus-visible {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.65);
     transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.25s ease;
 }
 
@@ -3269,10 +3263,12 @@ body.landing {
     .welcome-copy {
         position: static;
         max-width: none;
-        padding: 0;
+        padding: 0 1.5rem;
         margin-bottom: 2rem;
         text-align: center;
     }
+
+    .welcome-copy-text { white-space: normal; }
 
     .badge-row { padding-top: 0; }
     /* Matches .page-topbar .home-logo's own mobile size. */
