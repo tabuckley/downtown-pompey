@@ -85,12 +85,43 @@ function initPanelGlow() {
         }
     }
 
+    // A single redraw on activation used to grab the badge's resting
+    // bounding box before its hover :transform transition (scale +
+    // rotate + lift, 0.35s) had actually finished animating — the line
+    // would jump to roughly the right place immediately, then sit
+    // slightly off from the ring's real (now bigger/shifted) edge once
+    // the bounce settled. Tracking every frame for as long as anything
+    // is active keeps it glued to the badge's true current position
+    // throughout the whole hover-in/out animation instead of just its
+    // start and end states.
+    let rafId = null;
+    function tick() {
+        rigs.forEach(redraw);
+        if (rigs.some((r) => r.active)) {
+            rafId = requestAnimationFrame(tick);
+        } else {
+            rafId = null;
+        }
+    }
+    function ensureTicking() {
+        if (rafId === null) rafId = requestAnimationFrame(tick);
+    }
+
     function setActive(rig, on) {
         rig.active = on;
         if (rig.glow) rig.glow.classList.toggle('is-active', on);
         if (rig.line) rig.line.classList.toggle('is-active', on);
         if (rig.dot) rig.dot.classList.toggle('is-active', on);
-        if (on) redraw(rig);
+        if (on) {
+            redraw(rig);
+            ensureTicking();
+        }
+        // On deactivation the line/dot simply freeze at their last
+        // drawn (hovered) position and fade out via their own opacity
+        // transition (0.3s) rather than tracking the badge's hover-out
+        // settle — short enough that a static line briefly fading
+        // under it isn't noticeable, and simpler than extending the
+        // tick loop past "is anything currently active".
     }
 
     rigs.forEach((rig) => {
