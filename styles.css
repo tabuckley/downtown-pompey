@@ -779,19 +779,29 @@ body.landing {
 .landing-topbar-nav a:hover { color: #ff7fac; border-color: #ff7fac; }
 
 /* ===== LANDING PANELS ===== */
-/* Three ways into the archive, each one a single full-bleed photo with a
-   title + one line of text over it and the whole panel as the link —
-   the photo itself is what makes each column look distinct now (a real
-   scrapbook collage photo, the actual 3D room, the accessible page's own
-   mood), not per-panel CSS chrome. Full-bleed, no gap — the three photos
-   butt straight up against each other rather than sitting as separated
-   cards, so the panel's own image is the divider. */
+/* Three ways into the archive, now white-outline circle badges floating
+   over the shared video rather than three full-bleed columns — the
+   scene itself carries the visual identity, the badges are just the
+   click targets. .panels no longer needs to be a grid: the badges are
+   position:absolute on desktop (scattered, see .badge--* below) and
+   plain stacked block content on mobile/tablet, so there's nothing
+   left that needs grid track sizing. It still needs its own min-height
+   on desktop, though — with the badges taken out of normal flow,
+   nothing else in here is tall enough to hold the row open at the old
+   "full viewport minus topbar/footer" size, and the footer would ride
+   up the page without it. */
 .panels {
     position: relative;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
     width: 100%;
     scroll-margin-top: 2rem;
+    padding: 3rem 1.5rem;
+}
+
+@media (min-width: 1001px) {
+    /* 246px = topbar (~124px) + footer (~122px), same figure the old
+       per-panel min-height used — see the process-strip rule below for
+       why it doesn't need its own allowance any more either. */
+    .panels { min-height: calc(100vh - 246px); padding: 0; }
 }
 
 /* Fills the ENTIRE page — header, panels, and footer — not just the
@@ -869,145 +879,101 @@ body.landing {
 
 .connector-line.is-active { opacity: 0.85; }
 
-/* Test placement: midway down the panels row, on the left, over the
-   Scrapbook panel — an opaque rectangular badge (the source GIF has a
-   solid maroon background, no transparency), not tied to any
-   interaction. pointer-events:none so it doesn't block the Scrapbook
-   link sitting underneath it. */
-.vhs-logo {
+.welcome-copy {
     position: absolute;
-    left: 2rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 220px;
-    height: auto;
+    left: 1.5rem;
+    top: 62%;
+    max-width: 380px;
     z-index: 1;
+    color: #fff;
     pointer-events: none;
-    box-shadow: 6px 6px 0 rgba(26, 21, 18, 0.25);
 }
 
-.panel {
+.welcome-copy-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.4rem;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+.welcome-copy-text {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.85);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+}
+
+/* White-outline circle badges, floating over the shared video — "only
+   white" per the brief: a transparent-centre ring (the video itself
+   shows through), white type, no fill except the hover state. Mobile
+   default is plain stacked normal-flow circles (simplest safe fallback
+   for a shape that doesn't reflow gracefully); desktop scatters them
+   to specific points via .badge--* below instead of the old equal
+   three-column grid, "to balance the page" rather than mechanically
+   dividing it into thirds. */
+.badge {
     position: relative;
     z-index: 1;
     display: flex;
     flex-direction: column;
-    min-height: 640px;
-    padding: clamp(1.8rem, 3vw, 3rem);
-    overflow: hidden;
-    transition: filter 0.2s ease;
-}
-
-/* Desktop only (single row of 3) — the row fills the rest of the first
-   screen below the topbar, so the whole page (topbar + panels + footer)
-   fits one screen with no scroll, the panels' own colour reaching the
-   very bottom of the page. Scoped to the single-row layout specifically:
-   at tablet's 2-column-plus-a-full-width-third-panel arrangement, giving
-   every panel this same height would stack two viewport-heights' worth
-   of colour before the page even got to the footer.
-   246px is the topbar's real rendered height (~124px, padding now
-   matches .page-topbar's 1rem 1.5rem) plus the footer's (~122px) —
-   .process-strip doesn't factor in since it no longer adds any height
-   of its own (see below), sharing the panels' row instead of sitting in
-   a row of its own underneath them. */
-@media (min-width: 1001px) {
-    .panel { min-height: calc(100vh - 246px); padding-top: 1.4rem; padding-bottom: 180px; }
-    /* .process-strip is thin now (~158px, a wide strip rather than a
-       narrow stacked box) but still floats over whichever panel it
-       overlaps — without real clearance reserved below their own
-       content, that lands right on top of each panel's title/copy, not
-       empty background. 180px covers the strip plus a comfortable
-       margin; padding rather than a bigger min-height because
-       box-sizing is border-box, so this doesn't change the panel's own
-       outer height or the no-scroll budget above, just how much of it
-       is reserved. All three panels share this rule now that none of
-       them override .panel's own padding (the old win98-chrome panel
-       used to zero it out and reserve its own copy separately — gone
-       along with the chrome itself). */
-    /* Fully explicit row AND column for every item sharing this row,
-       .process-strip included (see its own min-width:1001px rule further
-       down) — mixing that with auto column placement on these three
-       (leaving column to fall out naturally left-to-right) is what
-       actually caused the bug this replaced: an item with BOTH axes
-       explicit (.process-strip, spanning 1/-1) is placed before any
-       auto-placed item even gets a turn, so by the time these three came
-       up for placement every explicit column in row 1 already read as
-       "occupied" — Grid's answer to that wasn't to overlap them (which
-       is what explicit-on-explicit placement allows) but to invent new
-       implicit columns to slot them into instead, which also shifted
-       what line -1 on .process-strip resolved to. Giving every item in
-       the row a real, explicit column removes the ambiguity entirely. */
-    .panel--scrapbook  { grid-row: 1; grid-column: 1; }
-    .panel--web00      { grid-row: 1; grid-column: 2; }
-    .panel--accessible { grid-row: 1; grid-column: 3; }
-}
-
-/* A lift/shadow hover reads fine on a separated card but opens an ugly
-   gap between touching panels — brightening in place instead keeps the
-   "still responds to hover" feedback without breaking the seam. */
-.panel:hover {
-    filter: brightness(1.05);
-}
-
-/* Each panel is one full-bleed background image with just a title and a
-   short line over it — the image carries the visual identity now, not
-   CSS-drawn chrome per panel (tape/stickers/browser-window/feature-list,
-   all from earlier rounds of this design, are gone; the three real
-   photos are what make the columns look different from each other). A
-   scrim gradient keeps the text legible over whatever image sits behind
-   it regardless of how bright or busy that specific photo is — a real
-   layer (not just text-shadow), since text-shadow alone doesn't hold up
-   against a genuinely busy image. */
-.panel {
-    justify-content: flex-end;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 190px;
+    height: 190px;
+    margin: 0 auto 1.5rem;
+    padding: 1rem;
+    border-radius: 50%;
+    border: 2px solid #fff;
     color: #fff;
     text-decoration: none;
-    background-size: cover;
-    background-position: center;
+    transition: transform 0.25s ease, background-color 0.25s ease;
 }
 
-.panel-title,
-.panel-copy {
-    position: relative;
-    z-index: 1;
+.badge:last-child { margin-bottom: 0; }
+
+.badge:hover,
+.badge:focus-visible {
+    transform: scale(1.06);
+    background-color: rgba(255, 255, 255, 0.08);
 }
 
-.panel-title {
+.badge-title {
     font-family: var(--font-display);
-    font-size: 1.6rem;
     font-weight: 800;
-    letter-spacing: -0.01em;
-    margin-bottom: 0.4rem;
+    font-size: 1.2rem;
+    letter-spacing: 0.01em;
 }
 
-.panel-copy {
-    font-size: 0.9rem;
-    line-height: 1.5;
+.badge-copy {
+    font-size: 0.72rem;
+    line-height: 1.35;
+    margin-top: 0.4rem;
     color: rgba(255, 255, 255, 0.85);
 }
 
-/* No background-image or background-color of their own any more —
-   .panels-bg (a real <img> behind all three, see above) shows through
-   instead. A previous version gave each panel the same image via
-   background-size:300% / background-position:0%/50%/100%, the usual
-   trick for splitting one image across N equal siblings — dropped
-   because matching the image to each panel's own box that way meant
-   stretching it non-uniformly to guarantee no gaps, which visibly
-   distorted it. object-fit:cover on one shared <img> crops instead of
-   stretching and doesn't need that trade-off. A background-color here
-   would sit opaquely on top of .panels-bg (same grid cell, higher
-   z-index) and hide it completely, not just act as a fallback — so
-   .panels-bg's own #0d0d0d-ish tone plus .panel::before's scrim are
-   what carry a dark base if the image is ever slow to load. */
+/* Scattered rather than gridded — positions are eyeballed against the
+   video's own composition (clear of the neon sign, the PC, and each
+   other) at a 1440-ish desktop width; percentages keep them roughly in
+   place at other desktop widths since they're relative to .panels'
+   own full-bleed box. */
+@media (min-width: 1001px) {
+    .badge { position: absolute; margin: 0; }
+    .badge--scrapbook  { left: 8%;  top: 20%; }
+    .badge--web00      { left: 60%; top: 54%; }
+    .badge--accessible { left: 26%; top: 56%; }
+}
 
 /* ===== PROCESS STRIP ===== */
-/* A grid child of .panels (see index.html) spanning every column, so it
-   can share the panels' own row instead of adding a new one below them —
-   on tablet/mobile that just means it flows naturally under the panels
-   like any other row; on desktop (min-width:1001px below) it's pinned to
-   the bottom of that same row instead, floating over the panels rather
-   than pushing the page taller. */
+/* A normal-flow block, centred under the badges on mobile/tablet; on
+   desktop (min-width:1001px below) it's pinned near the bottom of
+   .panels instead, floating over the scene rather than pushing the
+   page taller — the badges are position:absolute now so they can no
+   longer hold it in place via a shared grid row the way the old
+   three-column layout did. */
 .process-strip {
-    grid-column: 1 / -1;
     display: flex;
     align-items: center;
     gap: 1.2rem;
@@ -1017,8 +983,8 @@ body.landing {
     /* Extra left padding clears the badge, which overlaps outside the
        box's own left edge rather than sitting inside it (see
        .process-strip-badge) — overflow isn't clipped anywhere between
-       here and the viewport (.panels/.panel don't hide overflow on this
-       sibling), so the badge is free to spill past the border. */
+       here and the viewport, so the badge is free to spill past the
+       border. */
     padding: 0.6rem 1.4rem 0.6rem 3.4rem;
     background: #ffffff;
     border: 1.5px solid #1a1512;
@@ -1027,30 +993,19 @@ body.landing {
     z-index: 2;
 }
 
-/* Desktop only (matches .panel's own min-width:1001px rule) — pinned to
-   the same grid row as the three panels and to the bottom of it, so it
-   floats over their lower portion instead of flowing below them in its
-   own row. Placed after the base rule above (rather than inside that
-   other min-width:1001px block) specifically so its margin-top:0 beats
-   the base rule's own margin shorthand on source order — same media
-   query, but the base rule's plain margin:1.8rem auto 0 would otherwise
-   win over an earlier, equal-specificity margin-top:0.
-   max-width:60vw — spans across all three panels (a narrower, one-
-   column-wide box read as belonging to just the middle panel it
-   happened to sit over) while still leaving panel colour visible on
-   both sides, rather than the full page width; tablet/mobile keep the
-   1320px box from the base rule, since the panels below it are no
-   longer three touching columns for it to visually bridge.
-   margin-bottom lifts it clear of the panels' own bottom edge — without
-   it, align-self:end put the strip's bottom flush against the same line
-   the panels end on, so it read as sitting on the columns' base rather
-   than floating over them. */
+/* max-width:60vw — spans widely without going full page width, leaving
+   the scene visible on both sides. left:50%+translateX(-50%) centres
+   it the same way margin:auto did in normal flow, since position:
+   absolute needs an explicit horizontal anchor instead. bottom:2.5rem
+   lifts it clear of .panels' own bottom edge, matching the old
+   margin-bottom's job when this was a grid-aligned item. */
 @media (min-width: 1001px) {
     .process-strip {
-        grid-row: 1;
-        align-self: end;
-        margin-top: 0;
-        margin-bottom: 2.5rem;
+        position: absolute;
+        left: 50%;
+        bottom: 2.5rem;
+        transform: translateX(-50%);
+        margin: 0;
         max-width: 60vw;
     }
 }
@@ -3133,14 +3088,6 @@ body.landing {
     border-color: var(--accent);
 }
 
-/* Tablet: 2 columns, with Accessible (the calmest/least decorated panel)
-   spanning the full width below rather than leaving an awkward half-empty
-   row next to Scrapbook + 00s Web. */
-@media (max-width: 1000px) {
-    .panels { grid-template-columns: 1fr 1fr; }
-    .panel--accessible { grid-column: 1 / -1; }
-}
-
 /* ===== REDESIGN RESPONSIVE ===== */
 @media (max-width: 768px) {
     /* Matches .page-topbar's own mobile padding, same reasoning as the
@@ -3150,8 +3097,14 @@ body.landing {
     /* Matches .page-topbar .home-logo's own mobile size. */
     .landing-topbar-logo img { height: 60px; }
 
-    .panels { grid-template-columns: 1fr; padding-top: 1.2rem; }
-    .panel { min-height: 320px; }
+    /* Stacked circles read as overlapping at this width even though
+       they aren't (checked via getBoundingClientRect — there's a clean
+       gap): the video's own PC/monitor is tall enough to show through
+       several transparent circles at once, so adjacent ones blur
+       together visually. Smaller circles + a bigger gap gives each one
+       more of its own clear video backdrop to sit in. */
+    .badge { width: 150px; height: 150px; margin-bottom: 3rem; }
+    .badge:last-child { margin-bottom: 0; }
 
     /* Flo auto-opens on load and sits fixed bottom-right — the margin-bottom
        here is her clearance, enough room for her ~195px figure + open

@@ -58,7 +58,7 @@ function initPanelGlow() {
         const fy = parseFloat(panel.dataset.glowY);
         const glow = document.querySelector(`.object-glow[data-glow="${key}"]`);
         const line = document.querySelector(`.connector-line[data-connector="${key}"]`);
-        const title = panel.querySelector('.panel-title') || panel;
+        const title = panel.querySelector('.badge-title') || panel;
         return { panel, glow, line, title, fx, fy, active: false };
     });
 
