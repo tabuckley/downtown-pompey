@@ -798,14 +798,15 @@ body.landing {
 }
 
 @media (min-width: 1001px) {
-    /* Locked/no-scroll homepage: topbar + panels + footer fill exactly
-       one viewport. 212px = topbar (~56px, down from ~124px since the
-       logo was removed) + footer (~156px) — .how-it-was-made no longer
-       sits between them (moved back to its own process.html page), so
-       the footer is directly adjacent to .panels again and back in
-       this budget. Re-measure both real heights via Playwright any
-       time either changes; this figure has drifted before. */
-    .panels { min-height: calc(100vh - 212px); padding: 0; }
+    /* Locked/no-scroll homepage: .panels fills the viewport below the
+       topbar (~56px). The footer used to need its own slice of this
+       budget too, but it's position:fixed now (see .landing-footer)
+       instead of sitting in normal flow after .panels, so it no longer
+       competes for height here — .panels can use all the space that
+       frees up, which is the actual point (room for the badge row to
+       sit lower). Re-measure the topbar's real height via Playwright
+       if it ever changes; this figure has drifted before. */
+    .panels { min-height: calc(100vh - 56px); padding: 0; }
 }
 
 /* Fills the ENTIRE page — header, panels, and footer — not just the
@@ -891,23 +892,10 @@ body.landing {
 
 .connector-dot.is-active { opacity: 0.9; }
 
-/* Occlusion test — three segments (positioned/sized by occlusion-
-   demo.js) instead of one full-width line, with gaps left open at the
-   PC and column's bounding boxes so the video's own real pixels show
-   through unobstructed there, reading as the line passing behind
-   them. */
-.occlusion-line-segment {
-    position: absolute;
-    height: 2px;
-    background: #ffffff;
-    z-index: 1;
-    pointer-events: none;
-}
-
 .welcome-copy {
     position: absolute;
     left: 8.2rem;
-    top: 62%;
+    top: calc(62% + 100px);
     z-index: 1;
     color: #fff;
     pointer-events: none;
@@ -1084,40 +1072,54 @@ body.landing {
     }
 }
 
+/* Desktop only (see the mobile override below) — fixed to the
+   viewport's bottom-left corner instead of sitting in normal flow
+   after .panels, since that flow height was coming straight out of
+   the desktop no-scroll budget; pulling it out of flow frees that
+   space for .panels (and the badge row inside it) to use instead.
+   Page is locked/no-scroll on desktop, so "fixed" and "at the bottom
+   of the document" are the same place anyway. Mobile still scrolls
+   normally (no such budget to free up there), so a fixed footer there
+   would just stay pinned on top of whatever scrolls past it instead
+   of appearing once at the actual end of the page like it used to. */
 .landing-footer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.8rem;
+    position: static;
     max-width: 620px;
     margin: 0 auto;
-    /* Real top padding — was 0, so the logos sat flush against whatever
-       came right before (the panels row on desktop, .process-strip's own
-       margin-bottom on mobile), with nothing but that preceding element's
-       own spacing keeping them apart. */
-    padding: 2.4rem 1.5rem clamp(1.4rem, 3vw, 2rem);
+    padding: 2rem 1.5rem;
+}
+
+@media (min-width: 1001px) {
+    .landing-footer {
+        position: fixed;
+        left: 1.5rem;
+        bottom: 1.2rem;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        z-index: 2;
+    }
 }
 
 @media (max-width: 1400px) {
     .landing-topbar-nav { gap: 1.2rem; }
 }
 
-/* The Heritage Fund and Play Office marks are fixed-color assets built
-   to sit on white — over the full-page video they'd either vanish
-   (transparent PNG/GIF) or clash (baked-in white boxes fighting the
-   scene behind them). A real white card, matching the same hard-edged
-   card look as .process-strip elsewhere on this page, keeps them
-   exactly as designed regardless of what's playing behind it. */
+/* No background card any more — logos sit directly on the video.
+   Heritage Fund's own mark already carries a solid colour disc behind
+   it so it holds up fine; Play Office's black wordmark (transparent
+   GIF) gets a drop-shadow instead of a full white plate, enough to
+   separate it from a dark frame without reintroducing a box. */
 .logo-strip {
     display: flex;
-    gap: 1.5rem;
+    gap: 1.2rem;
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    background: #ffffff;
-    border: 1.5px solid #1a1512;
-    box-shadow: 6px 6px 0 rgba(26, 21, 18, 0.14);
-    padding: 1rem 1.6rem;
+}
+
+@media (min-width: 1001px) {
+    .logo-strip { justify-content: flex-start; }
 }
 
 .logo-strip-item {
@@ -1137,6 +1139,7 @@ body.landing {
     width: auto;
     height: auto;
     object-fit: contain;
+    filter: drop-shadow(0 1px 5px rgba(0, 0, 0, 0.7));
 }
 
 .logo-placeholder {

@@ -33,15 +33,6 @@
              narrower widths. -->
         <video class="panels-bg" src="images/panels-bg.mp4" autoplay muted loop playsinline></video>
 
-        <!-- Occlusion test: a horizontal line that stops before the PC
-             and column and resumes after them, so it reads as passing
-             behind those two objects — see occlusion-demo.js for the
-             (hand-eyeballed bounding box, not a pixel-perfect mask)
-             coordinates and why. -->
-        <div class="occlusion-line-segment"></div>
-        <div class="occlusion-line-segment"></div>
-        <div class="occlusion-line-segment"></div>
-
         <!-- Object-glow test: a soft highlight over each object in the
              video, sized/positioned identically to .panels-bg (fixed,
              inset:0, object-fit:cover) so each one tracks the same
@@ -122,6 +113,5 @@
     <div id="site-helper"></div>
     <script type="module" src="helper.js"></script>
     <script type="module" src="panel-glow.js"></script>
-    <script type="module" src="occlusion-demo.js"></script>
 </body>
 </html>
