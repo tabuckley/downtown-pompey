@@ -798,16 +798,14 @@ body.landing {
 }
 
 @media (min-width: 1001px) {
-    /* Just the topbar's own height (~56px, measured — it lost most of
-       its old ~124px when the logo was removed from it) now that
-       .how-it-was-made sits between .panels and the real footer
-       instead of the footer following panels directly: the footer's
-       own height is irrelevant to this budget any more, only what's
-       above .panels is. Without this fix, .panels stayed sized for
-       the old (taller) topbar + a footer that's no longer adjacent,
-       leaving .panels short of a full viewport and letting
-       .how-it-was-made's start peek into view before any scrolling. */
-    .panels { min-height: calc(100vh - 56px); padding: 0; }
+    /* Locked/no-scroll homepage: topbar + panels + footer fill exactly
+       one viewport. 212px = topbar (~56px, down from ~124px since the
+       logo was removed) + footer (~156px) — .how-it-was-made no longer
+       sits between them (moved back to its own process.html page), so
+       the footer is directly adjacent to .panels again and back in
+       this budget. Re-measure both real heights via Playwright any
+       time either changes; this figure has drifted before. */
+    .panels { min-height: calc(100vh - 212px); padding: 0; }
 }
 
 /* Fills the ENTIRE page — header, panels, and footer — not just the
@@ -925,13 +923,49 @@ body.landing {
     white-space: nowrap;
 }
 
+/* The AAG badge + a short call to action, both part of the same link
+   through to process.html — .welcome-copy above is pointer-events:none
+   (it's just an overlay label), so this needs its own pointer-events:
+   auto to actually be clickable. */
+.welcome-copy-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.7rem;
+    color: #ffffff;
+    text-decoration: none;
+    pointer-events: auto;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+}
+
+.welcome-copy-link img {
+    display: block;
+    width: 34px;
+    height: 34px;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.welcome-copy-link span {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.welcome-copy-link:hover img,
+.welcome-copy-link:focus-visible img {
+    transform: rotate(14deg) scale(1.12);
+}
+
 /* White-outline circle badges, floating over the shared video — "only
    white" per the brief: a transparent-centre ring (the video itself
    shows through), white type, no fill except the hover state. .badge-
    row groups all three as one flex unit so they can be centred as a
-   group (near the top on desktop, stacked on mobile) without each
-   needing its own translateX math. Sized at 60% of the original
-   190px/1.2rem/0.72rem pass, per feedback that they read too big. */
+   group (in the lower half of the frame on desktop, stacked on mobile)
+   without each needing its own translateX math. Sized at 60% of the
+   original 190px/1.2rem/0.72rem pass, per feedback that they read too
+   big. */
 .badge-row {
     display: flex;
     flex-direction: column;
@@ -984,10 +1018,9 @@ body.landing {
 
 /* A little different per badge so the row doesn't feel mechanical —
    alternating tilt direction, one with an extra wobble. Bouncy easing
-   (shared with .process-seal's own hover) is what sells "fun" over a
-   flat ease-out. Re-declaring transition here (a faster, undelayed
-   0.35s) is what keeps hover snappy instead of inheriting the
-   entrance's slower, staggered timing above. */
+   is what sells "fun" over a flat ease-out. Re-declaring transition
+   here (a faster, undelayed 0.35s) is what keeps hover snappy instead
+   of inheriting the entrance's slower, staggered timing above. */
 .badge:hover,
 .badge:focus-visible {
     background-color: rgba(0, 0, 0, 0.65);
@@ -1034,78 +1067,21 @@ body.landing {
     }
 }
 
-/* Centred as a group near the top, clear of the welcome copy/seal
-   below and the header above. */
+/* Centred as a group in the lower part of the frame — roughly midway
+   between the computer's own bottom edge and the bottom of the page,
+   clear of the welcome copy over on the left. Eyeballed against the
+   video's composition like the badges' own individual positions used
+   to be, not computed from the object's exact video-frame fraction. */
 @media (min-width: 1001px) {
     .badge-row {
         position: absolute;
-        top: 8%;
+        top: 78%;
         left: 50%;
         transform: translateX(-50%);
         flex-direction: row;
         gap: 2.5rem;
         padding: 0;
     }
-}
-
-/* ===== PROCESS STRIP ===== */
-/* Just the seal now, centred below the badges/video rather than a full
-   banner — a normal-flow block on mobile/tablet (sits after the
-   stacked badges), pinned near the bottom of .panels on desktop like
-   the old strip was. Links down to the real #how-it-was-made section
-   below instead of out to process.html. */
-.process-seal {
-    display: block;
-    width: 110px;
-    margin: 2rem auto 0;
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.process-seal img { display: block; width: 100%; height: auto; }
-
-.process-seal:hover { transform: rotate(14deg) scale(1.12); }
-
-@media (min-width: 1001px) {
-    .process-seal {
-        position: absolute;
-        left: 50%;
-        bottom: 2.5rem;
-        transform: translateX(-50%);
-        margin: 0;
-    }
-    .process-seal:hover { transform: translateX(-50%) rotate(14deg) scale(1.12); }
-}
-
-/* Everything from the old standalone process.html, moved here (see
-   index.html) — same --bg/--text/etc values that page got from its own
-   [data-page="process"] selector (styles.css:66), scoped to this
-   section instead since body here is data-page="landing", not
-   "process". Without this the pr- and shell- prefixed rules below
-   would fall through to :root's dark defaults (tuned for editorial's
-   3D room), not the light warm palette this content was actually
-   designed for. Reads as a clean break from the video scene above it
-   either way. */
-.how-it-was-made {
-    --bg:           #faf7f2;
-    --text:         #1a1512;
-    --muted:        #6b6258;
-    --accent:       #d01359;
-    --border:       #e4ddd0;
-    --card-bg:      #ffffff;
-    position: relative;
-    z-index: 1;
-    background: var(--bg);
-    color: var(--text);
-}
-
-/* process.html's own .pr-intro padding-top (9rem / 9rem mobile) existed
-   to clear that page's fixed .page-topbar header — this section flows
-   normally below index.html's own header instead, so it only needs
-   ordinary breathing room, not fixed-header clearance. */
-.how-it-was-made .pr-intro { padding-top: 4rem; }
-
-@media (max-width: 768px) {
-    .how-it-was-made .pr-intro { padding-top: 3rem; }
 }
 
 .landing-footer {
@@ -3300,12 +3276,6 @@ body.landing {
        gap (2rem here, wider than the row's 1.5rem) gives each one
        enough of its own clear video backdrop to avoid that. */
     .badge-row { gap: 2rem; padding: 3rem 1.5rem 0; }
-
-    /* Flo's auto-intro is already skipped on landing at this width (see
-       helper.js), but she's still a fixed bottom-right figure once
-       opened by hand — this margin gives the seal clearance from her
-       rather than sitting right at the edge she occupies. */
-    .process-seal { width: 80px; margin-bottom: 3rem; }
 
     .page-topbar { padding: 0.6rem 0.7rem; flex-wrap: wrap; row-gap: 0.4rem; }
     .page-topbar .home-logo { height: 60px; }
