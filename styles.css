@@ -819,6 +819,56 @@ body.landing {
     pointer-events: none;
 }
 
+/* Same fixed/inset/object-fit treatment as .panels-bg (and the same
+   1924x1076 intrinsic size as the source video) — that's what keeps a
+   glow pixel-aligned with an object in the video at every viewport
+   size without any JS math of its own. Sits at z-index:0, above the
+   video (-1) but below panel content (1). Opacity is the only thing
+   panel-glow.js touches; mix-blend-mode:screen lets it add light to
+   the scene rather than sitting on top as a flat sprite. */
+.object-glow {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0;
+    mix-blend-mode: screen;
+    transition: opacity 0.5s ease;
+}
+
+.object-glow.is-active { opacity: 1; }
+
+/* Full-viewport SVG overlay for the elbow connectors — panel-glow.js
+   redraws each <path>'s "d" on hover/focus/resize, since (unlike the
+   glow image) an SVG path has no object-fit equivalent: one endpoint
+   lives in the video's coordinate space, the other on a panel title
+   that reflows across breakpoints, so both need real pixel math. Above
+   panel content (z-index 1) so the line reads clearly crossing over a
+   neighbouring panel, not hidden under it. */
+.connector-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.connector-line {
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.connector-line.is-active { opacity: 0.85; }
+
 .panel {
     position: relative;
     z-index: 1;
