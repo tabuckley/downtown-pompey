@@ -958,7 +958,7 @@ body.landing {
     transform: scale(1) translateY(0);
     transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--badge-i, 0) * 0.12s),
                 opacity 0.5s ease calc(var(--badge-i, 0) * 0.12s),
-                background-color 0.25s ease, border-color 0.25s ease;
+                background-color 0.25s ease;
 }
 
 .badge--scrapbook  { --badge-i: 0; }
@@ -978,8 +978,7 @@ body.landing {
 .badge:hover,
 .badge:focus-visible {
     background-color: rgba(255, 255, 255, 0.1);
-    border-color: #ff7fac;
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.25s ease, border-color 0.25s ease;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.25s ease;
 }
 
 .badge--scrapbook:hover,
@@ -1013,7 +1012,7 @@ body.landing {
 
 @media (prefers-reduced-motion: reduce) {
     .badge {
-        transition: background-color 0.25s ease, border-color 0.25s ease;
+        transition: background-color 0.25s ease;
     }
     .badge--scrapbook:hover, .badge--scrapbook:focus-visible,
     .badge--web00:hover, .badge--web00:focus-visible,
