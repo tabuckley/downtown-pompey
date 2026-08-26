@@ -881,7 +881,7 @@ body.landing {
 
 .welcome-copy {
     position: absolute;
-    left: 1.5rem;
+    left: 5.5rem;
     top: 62%;
     max-width: 380px;
     z-index: 1;
@@ -963,120 +963,67 @@ body.landing {
     .badge { position: absolute; margin: 0; }
     .badge--scrapbook  { left: 8%;  top: 20%; }
     .badge--web00      { left: 60%; top: 54%; }
-    .badge--accessible { left: 26%; top: 56%; }
+    .badge--accessible { left: 76%; top: 20%; }
 }
 
 /* ===== PROCESS STRIP ===== */
-/* A normal-flow block, centred under the badges on mobile/tablet; on
-   desktop (min-width:1001px below) it's pinned near the bottom of
-   .panels instead, floating over the scene rather than pushing the
-   page taller — the badges are position:absolute now so they can no
-   longer hold it in place via a shared grid row the way the old
-   three-column layout did. */
-.process-strip {
-    display: flex;
-    align-items: center;
-    gap: 1.2rem;
-    max-width: 1320px;
-    width: 100%;
-    margin: 1.8rem auto 0;
-    /* Extra left padding clears the badge, which overlaps outside the
-       box's own left edge rather than sitting inside it (see
-       .process-strip-badge) — overflow isn't clipped anywhere between
-       here and the viewport, so the badge is free to spill past the
-       border. */
-    padding: 0.6rem 1.4rem 0.6rem 3.4rem;
-    background: #ffffff;
-    border: 1.5px solid #1a1512;
-    box-shadow: 6px 6px 0 rgba(26, 21, 18, 0.14);
-    position: relative;
-    z-index: 2;
+/* Just the seal now, centred below the badges/video rather than a full
+   banner — a normal-flow block on mobile/tablet (sits after the
+   stacked badges), pinned near the bottom of .panels on desktop like
+   the old strip was. Links down to the real #how-it-was-made section
+   below instead of out to process.html. */
+.process-seal {
+    display: block;
+    width: 110px;
+    margin: 2rem auto 0;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* max-width:60vw — spans widely without going full page width, leaving
-   the scene visible on both sides. left:50%+translateX(-50%) centres
-   it the same way margin:auto did in normal flow, since position:
-   absolute needs an explicit horizontal anchor instead. bottom:2.5rem
-   lifts it clear of .panels' own bottom edge, matching the old
-   margin-bottom's job when this was a grid-aligned item. */
+.process-seal img { display: block; width: 100%; height: auto; }
+
+.process-seal:hover { transform: rotate(14deg) scale(1.12); }
+
 @media (min-width: 1001px) {
-    .process-strip {
+    .process-seal {
         position: absolute;
         left: 50%;
         bottom: 2.5rem;
         transform: translateX(-50%);
         margin: 0;
-        max-width: 60vw;
     }
+    .process-seal:hover { transform: translateX(-50%) rotate(14deg) scale(1.12); }
 }
 
-/* A stamped seal, not a tidy inline icon — sized well past the strip's
-   own thin height and pinned to its left edge so half of it spills
-   outside the box, the way a wax seal or hallmark overlaps the card it's
-   stamped onto. The hover transform repeats its own resting translate
-   first and adds rotate/scale after, rather than replacing it, so it
-   spins and grows in place instead of jumping back to a plain center
-   origin on hover. */
-.process-strip-badge {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 84px;
-    height: 84px;
-    transform: translate(-38%, -50%);
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-    z-index: 3;
-    cursor: default;
+/* Everything from the old standalone process.html, moved here (see
+   index.html) — same --bg/--text/etc values that page got from its own
+   [data-page="process"] selector (styles.css:66), scoped to this
+   section instead since body here is data-page="landing", not
+   "process". Without this the pr- and shell- prefixed rules below
+   would fall through to :root's dark defaults (tuned for editorial's
+   3D room), not the light warm palette this content was actually
+   designed for. Reads as a clean break from the video scene above it
+   either way. */
+.how-it-was-made {
+    --bg:           #faf7f2;
+    --text:         #1a1512;
+    --muted:        #6b6258;
+    --accent:       #d01359;
+    --border:       #e4ddd0;
+    --card-bg:      #ffffff;
+    position: relative;
+    z-index: 1;
+    background: var(--bg);
+    color: var(--text);
 }
 
-.process-strip-badge:hover {
-    transform: translate(-38%, -50%) rotate(14deg) scale(1.12);
-}
+/* process.html's own .pr-intro padding-top (9rem / 9rem mobile) existed
+   to clear that page's fixed .page-topbar header — this section flows
+   normally below index.html's own header instead, so it only needs
+   ordinary breathing room, not fixed-header clearance. */
+.how-it-was-made .pr-intro { padding-top: 4rem; }
 
-.process-strip-text {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 0.3rem 0.7rem;
-    flex: 1;
-    min-width: 0;
-}
-
-.process-strip-text p {
-    font-size: 0.82rem;
-    line-height: 1.4;
-    color: #4a453d;
-    margin: 0;
-}
-
-.process-strip-eyebrow {
-    font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 800;
-    letter-spacing: -0.01em;
-    color: #1a1512;
-    white-space: nowrap;
-}
-
-.process-strip-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    flex-shrink: 0;
-    background: #d01359;
-    color: #fff;
-    text-decoration: none;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 0.8rem;
-    padding: 0.5rem 0.9rem;
-    box-shadow: 3px 3px 0 #f5f0e6;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.process-strip-cta:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 5px 5px 0 #f5f0e6;
+@media (max-width: 768px) {
+    .how-it-was-made .pr-intro { padding-top: 3rem; }
 }
 
 .landing-footer {
@@ -3106,15 +3053,11 @@ body.landing {
     .badge { width: 150px; height: 150px; margin-bottom: 3rem; }
     .badge:last-child { margin-bottom: 0; }
 
-    /* Flo auto-opens on load and sits fixed bottom-right — the margin-bottom
-       here is her clearance, enough room for her ~195px figure + open
-       bubble not to land on the last panel/footer. Stacked to a column
-       and the badge pulled back into normal flow (not overlapping the
-       edge) — there's no spare width on a 390px screen for it to spill
-       into without just covering the text underneath. */
-    .process-strip { flex-direction: column; align-items: flex-start; gap: 0.8rem; padding: 1.6rem; margin-bottom: 8rem; }
-    .process-strip-badge { position: static; transform: none; width: 56px; height: 56px; margin-bottom: 0.4rem; }
-    .process-strip-badge:hover { transform: rotate(14deg) scale(1.12); }
+    /* Flo's auto-intro is already skipped on landing at this width (see
+       helper.js), but she's still a fixed bottom-right figure once
+       opened by hand — this margin gives the seal clearance from her
+       rather than sitting right at the edge she occupies. */
+    .process-seal { width: 80px; margin-bottom: 3rem; }
 
     .page-topbar { padding: 0.6rem 0.7rem; flex-wrap: wrap; row-gap: 0.4rem; }
     .page-topbar .home-logo { height: 60px; }
