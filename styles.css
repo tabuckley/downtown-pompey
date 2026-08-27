@@ -3435,20 +3435,29 @@ body.landing {
     .landing-topbar { padding: 0.6rem 0.7rem; }
     .landing-topbar-nav { gap: 1.1rem; font-size: 0.85rem; }
 
-    /* Desktop's left:5.5rem/top:62% aligns it with the neon sign at
-       that specific video crop — meaningless once .badge-row stacks
-       into a column below it, and left it overlapping the Accessible
-       badge (a fixed % of .panels' now much shorter, content-driven
-       mobile height landed mid-stack rather than clear of it). Back to
-       plain flow instead of chasing a new magic percentage: reads
-       fine as an intro line ahead of the badges either way. No top
-       padding of its own — .panels' own 3rem already clears the
-       header; adding more here on top of that plus .badge-row's own
-       top padding would stack up into a lot of empty space. */
+    /* .panels itself is the flex column now — min-height gives auto
+       margins below real room to distribute. Text and badges both get
+       margin-top:auto, which splits the free space evenly above each:
+       some clears the header first, the text lands roughly where the
+       badge row used to sit, then an equal gap before the badge row
+       itself, now pushed all the way down to the bottom of the screen
+       instead of following right under the text. */
+    .panels {
+        display: flex;
+        flex-direction: column;
+        min-height: calc(100vh - 80px);
+        /* Clears the fixed .landing-footer's own reserved zone (bottom:
+           1rem + its own ~75px content height) — without this the badge
+           row (pushed to the very bottom via margin-top:auto below) ran
+           a few px into the logos underneath it. */
+        padding-bottom: 3.5rem;
+    }
+
     .welcome-copy {
         position: static;
         max-width: none;
         padding: 0 1.5rem;
+        margin-top: auto;
         margin-bottom: 2rem;
         text-align: center;
     }
@@ -3459,14 +3468,9 @@ body.landing {
     .landing-topbar-logo img { height: 60px; }
 
     /* Row, not stacked — three side-by-side circles read better here
-       than a tall column, and (combined with the shrink below) keeps
-       the badge row's own footprint well clear of Flo's fixed
-       bottom-right figure without needing extra scroll clearance.
-       Smaller and pushed down a bit further from the shared 96px/1.6rem
-       — the mobile background video has its own "Downtown Pompey" neon
-       sign baked in, and the welcome text above needs room to actually
-       sit under it instead of the badge row crowding straight into it. */
-    .badge-row { flex-direction: row; flex-wrap: nowrap; gap: 0.7rem; padding: 2.4rem 1.2rem 0; }
+       than a tall column. Smaller than the shared 138px default so they
+       don't dominate a narrow screen. */
+    .badge-row { flex-direction: row; flex-wrap: nowrap; gap: 0.7rem; padding: 0 1.2rem; margin-top: auto; }
     .badge { width: 84px; height: 84px; padding: 0.4rem; }
     .badge-title { font-size: 0.64rem; }
     .badge-copy { font-size: 0.44rem; }
@@ -3491,17 +3495,6 @@ body.landing {
     .logo-strip-stack { gap: 0.3rem; }
     .logo-strip-stack .logo-strip-item img { max-height: 23px; }
     .logo-strip-label { font-size: 0.42rem; margin-bottom: 0.2rem; }
-
-    /* Enlarged from the shared 143x164 mobile default (see the 480px
-       rule below) so Flo fills roughly her own half of the screen too,
-       matching the logos opposite her rather than leaving a gap of bare
-       dance floor between the two. Scoped to landing only — other pages
-       still want the smaller shared size to clear their own content
-       (filter chips, etc). */
-    [data-page="landing"] .helper-figure-img--photo {
-        width: 160px;
-        height: 184px;
-    }
 
     .page-topbar { padding: 0.6rem 0.7rem; flex-wrap: wrap; row-gap: 0.4rem; }
     .page-topbar .home-logo { height: 60px; }
