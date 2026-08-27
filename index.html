@@ -37,7 +37,18 @@
              background-image per panel, so it reads as one continuous
              scene regardless of how the panels themselves reflow at
              narrower widths. -->
-        <video class="panels-bg" src="images/panels-bg.mp4" autoplay muted loop playsinline></video>
+        <!-- <source media> is evaluated once at load, not live on resize —
+             fine here since a visit doesn't change device type mid-session.
+             The mobile cut is its own portrait composition, not just a
+             crop of the desktop one, so panel-glow.js's hover glow/
+             connector overlay (tuned to the desktop video's object
+             positions) may not land pixel-perfect on it — low-risk since
+             those only ever show on :hover, which touch devices rarely
+             trigger. -->
+        <video class="panels-bg" autoplay muted loop playsinline>
+            <source src="images/panels-bg-mobile.mp4" media="(max-width: 768px)">
+            <source src="images/panels-bg.mp4">
+        </video>
 
         <!-- Object-glow test: a soft highlight over each object in the
              video, sized/positioned identically to .panels-bg (fixed,

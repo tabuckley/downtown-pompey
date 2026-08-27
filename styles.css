@@ -3500,10 +3500,6 @@ body.landing {
         height: 184px;
     }
 
-    /* Nudged toward the right side of the source video (was dead-
-       centred at 50%; the first attempt at 35% went the wrong way). */
-    .panels-bg { object-position: 65% center; }
-
     .page-topbar { padding: 0.6rem 0.7rem; flex-wrap: wrap; row-gap: 0.4rem; }
     .page-topbar .home-logo { height: 60px; }
     /* Fixed-size circles (66px, set on the base .mode-btn rule) already
