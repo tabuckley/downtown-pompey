@@ -3462,11 +3462,14 @@ body.landing {
        than a tall column, and (combined with the shrink below) keeps
        the badge row's own footprint well clear of Flo's fixed
        bottom-right figure without needing extra scroll clearance.
-       padding-top trimmed slightly from 2rem to nudge the whole row up. */
-    .badge-row { flex-direction: row; flex-wrap: nowrap; gap: 0.8rem; padding: 1.6rem 1.2rem 0; }
-    .badge { width: 96px; height: 96px; padding: 0.5rem; }
-    .badge-title { font-size: 0.72rem; }
-    .badge-copy { font-size: 0.5rem; }
+       Smaller and pushed down a bit further from the shared 96px/1.6rem
+       — the mobile background video has its own "Downtown Pompey" neon
+       sign baked in, and the welcome text above needs room to actually
+       sit under it instead of the badge row crowding straight into it. */
+    .badge-row { flex-direction: row; flex-wrap: nowrap; gap: 0.7rem; padding: 2.4rem 1.2rem 0; }
+    .badge { width: 84px; height: 84px; padding: 0.4rem; }
+    .badge-title { font-size: 0.64rem; }
+    .badge-copy { font-size: 0.44rem; }
 
     /* Fixed to the bottom-left corner, mirroring Flo's own fixed
        bottom-right one — the two now sit side by side at the same
