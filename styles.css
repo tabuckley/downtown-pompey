@@ -67,9 +67,26 @@ body[data-mode="scrapbook"] {
     --bg:           #faf7f2;
     --text:         #1a1512;
     --muted:        #6b6258;
-    --accent:       #d01359;
+    /* The AAG starburst badge's own red (sampled from the artwork
+       itself), not the site-wide brand pink — this page is the group's
+       own signature, not the archive's. */
+    --accent:       #ff0000;
     --border:       #e4ddd0;
     --card-bg:      #ffffff;
+}
+
+/* The white/cream .pr-panel cards (--card-bg above) are the reading
+   surface; this dark, textured backdrop is what shows through the
+   padding around and between them. Overrides the plain var(--bg) fill
+   the base body rule uses everywhere else on the site. */
+body[data-page="process"] {
+    /* cover — fills the viewport completely, cropping into the image as
+       needed rather than leaving letterboxed fallback-colour edges. */
+    /* ?v cache-busts this specific URL — the file's been swapped several
+       times during development under the same filename, and without
+       something in the URL itself changing, a browser that already
+       cached an earlier version has no reason to re-fetch it. */
+    background: #1a1a17 url('images/process-bg.jpg?v=10') center / cover fixed no-repeat;
 }
 
 /* ===== ACCESSIBLE MODE ===== */
@@ -83,6 +100,75 @@ body[data-mode="scrapbook"] {
     --font-display: 'Montserrat', sans-serif;
     --font-body:    'Montserrat', sans-serif;
     --radius:       6px;
+    /* Reading options (text size / high contrast / dark mode) — all
+       opt-in, JS-driven (see accessible.js), independent of each other,
+       and only ever set on this page's own <body>. --acc-scale multiplies
+       the accessible view's own font-sizes below rather than touching the
+       shared root em, so the fixed-diameter mode-switcher circles in the
+       topbar never have to fight a resized root font. */
+    --acc-scale: 1;
+}
+
+[data-mode="accessible"][data-text-size="small"] { --acc-scale: 0.88; }
+[data-mode="accessible"][data-text-size="large"] { --acc-scale: 1.25; }
+
+/* Dark mode — same accent, inverted surfaces. Scoped to this page's own
+   data-theme attribute so it can't collide with any other page's palette. */
+[data-mode="accessible"][data-theme="dark"] {
+    --bg:      #121212;
+    --text:    #f2f2f2;
+    --muted:   #b3b3b3;
+    --accent:  #ff5c96;
+    --border:  #3a3a3a;
+    --card-bg: #1e1e1e;
+}
+
+/* A few components paint a literal white/grey rather than reading --bg or
+   --card-bg (built that way for the page's original white-only design) —
+   those need an explicit dark-mode override. .active keeps its accent
+   fill in both themes, so it's excluded here rather than fought over. */
+[data-mode="accessible"][data-theme="dark"] .acc-chip:not(.active),
+[data-mode="accessible"][data-theme="dark"] .acc-search-input,
+[data-mode="accessible"][data-theme="dark"] .acc-select,
+[data-mode="accessible"][data-theme="dark"] .acc-btn {
+    background: var(--card-bg);
+}
+
+[data-mode="accessible"][data-theme="dark"] .acc-result-thumb {
+    background: #333333;
+}
+
+/* High contrast — pure black/white text, thicker borders, underlined
+   links. Stacks with dark mode instead of replacing it. */
+[data-mode="accessible"][data-contrast="high"] {
+    --text:   #000000;
+    --muted:  #000000;
+    --accent: #a3003f;
+    --border: #000000;
+}
+
+[data-mode="accessible"][data-contrast="high"][data-theme="dark"] {
+    --bg:      #000000;
+    --text:    #ffffff;
+    --muted:   #ffffff;
+    --accent:  #ff85b3;
+    --border:  #ffffff;
+    --card-bg: #000000;
+}
+
+[data-mode="accessible"][data-contrast="high"] .acc-chip,
+[data-mode="accessible"][data-contrast="high"] .acc-search-input,
+[data-mode="accessible"][data-contrast="high"] .acc-select,
+[data-mode="accessible"][data-contrast="high"] .acc-btn,
+[data-mode="accessible"][data-contrast="high"] .acc-result-link,
+[data-mode="accessible"][data-contrast="high"] .acc-tag-pill {
+    border-width: 2px;
+}
+
+[data-mode="accessible"][data-contrast="high"] .acc-result-reason,
+[data-mode="accessible"][data-contrast="high"] .acc-back-link,
+[data-mode="accessible"][data-contrast="high"] .acc-open-link {
+    text-decoration: underline;
 }
 
 /* ===== BASE ===== */
@@ -107,22 +193,29 @@ body {
    treatment below. */
 .mode-switcher {
     display: flex;
-    gap: 0.4rem;
+    gap: 0.8rem;
     z-index: 300;
 }
 
 .mode-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 66px;
+    height: 66px;
     background: none;
     border: 1px solid var(--border);
     color: var(--muted);
     font-family: var(--font-mono);
     font-size: 0.6rem;
-    letter-spacing: 0.05em;
-    padding: 0.3rem 0.6rem;
-    border-radius: 99px;
+    line-height: 1.15;
+    letter-spacing: 0.02em;
+    padding: 0.4rem;
+    border-radius: 50%;
     cursor: pointer;
     transition: color var(--transition), border-color var(--transition), background var(--transition);
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .mode-btn:hover { color: var(--text); border-color: var(--text); }
@@ -676,8 +769,6 @@ body {
 /* Mode switcher buttons are now <a> links */
 a.mode-btn {
     text-decoration: none;
-    display: inline-block;
-    line-height: 1.4;
 }
 
 /* ===== PAGE TOP BAR (content pages) ===== */
@@ -895,14 +986,14 @@ body.landing {
 .welcome-copy {
     position: absolute;
     left: 8.2rem;
-    top: calc(62% + 50px);
+    top: calc(62% + 50px - 1cm);
     z-index: 1;
     color: #fff;
     pointer-events: none;
 }
 
 .welcome-copy-text {
-    font-size: 0.9rem;
+    font-size: calc(0.9rem + 3px);
     line-height: 1.5;
     color: #ffffff;
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
@@ -936,7 +1027,7 @@ body.landing {
 .welcome-copy-link span {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 0.8rem;
+    font-size: calc(0.8rem + 3px);
     text-decoration: underline;
     text-underline-offset: 3px;
 }
@@ -981,9 +1072,9 @@ body.landing {
     align-items: center;
     justify-content: center;
     text-align: center;
-    width: 114px;
-    height: 114px;
-    padding: 0.6rem;
+    width: 138px;
+    height: 138px;
+    padding: 0.7rem;
     border-radius: 50%;
     border: 2px solid #fff;
     color: #fff;
@@ -1030,12 +1121,12 @@ body.landing {
 .badge-title {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: 0.75rem;
+    font-size: 0.9rem;
     letter-spacing: 0.01em;
 }
 
 .badge-copy {
-    font-size: 0.5rem;
+    font-size: 0.62rem;
     line-height: 1.3;
     margin-top: 0.25rem;
     color: rgba(255, 255, 255, 0.85);
@@ -1089,8 +1180,8 @@ body.landing {
 @media (min-width: 1001px) {
     .landing-footer {
         position: fixed;
-        left: 1.5rem;
-        bottom: 1.2rem;
+        left: 2.5rem;
+        bottom: 2rem;
         max-width: none;
         margin: 0;
         padding: 0;
@@ -1103,10 +1194,10 @@ body.landing {
 }
 
 /* No background card any more — logos sit directly on the video.
-   Heritage Fund's own mark already carries a solid colour disc behind
-   it so it holds up fine; Play Office's black wordmark (transparent
-   GIF) gets a drop-shadow instead of a full white plate, enough to
-   separate it from a dark frame without reintroducing a box. */
+   Heritage Fund is the lead funder mark, doubled up as the feature
+   logo; Downtown Pompey and Play Office stack beside it at a shared
+   smaller size, each with a tiny "Commissioned by" / "Created by"
+   credit line above it. */
 .logo-strip {
     display: flex;
     gap: 1.2rem;
@@ -1126,6 +1217,8 @@ body.landing {
     justify-content: center;
     opacity: 0.85;
     transition: opacity 0.2s;
+    color: inherit;
+    text-decoration: none;
 }
 
 .logo-strip-item:hover { opacity: 1; }
@@ -1136,7 +1229,38 @@ body.landing {
     width: auto;
     height: auto;
     object-fit: contain;
-    filter: drop-shadow(0 1px 5px rgba(0, 0, 0, 0.7));
+}
+
+.logo-strip-item--feature {
+    height: 104px;
+}
+
+.logo-strip-stack {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.logo-strip-stack .logo-strip-item {
+    height: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.logo-strip-stack .logo-strip-item img {
+    max-height: 32px;
+}
+
+.logo-strip-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.65);
+    margin-bottom: 0.3rem;
 }
 
 .logo-placeholder {
@@ -1231,7 +1355,7 @@ body.landing {
     background: var(--card-bg);
     border: 1px solid var(--border);
     color: var(--text);
-    border-radius: 14px;
+    border-radius: 0;
     padding: 1rem 1.1rem;
     margin-bottom: 0.3rem;
     font-family: var(--font-mono);
@@ -1656,13 +1780,15 @@ body.landing {
    current, same idea as a real Win98 pressed toolbar button. */
 [data-mode="editorial"] .mode-btn {
     font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     color: #4a0e28;
     background: #ffe3f0;
-    border-radius: 0;
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
     border: none;
     box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #a3175c, 0 0 0 1px #4a0e28;
-    padding: 0.5rem 0.7rem;
+    padding: 0.4rem;
     letter-spacing: normal;
 }
 
@@ -2879,23 +3005,140 @@ body.landing {
     font-size: 1.05rem;
 }
 
-/* ===== PROCESS PAGE ===== */
-.pr-intro {
-    max-width: 720px;
-    padding: 9rem 10vw 3rem;
+/* ===== PROCESS PAGE: HORIZONTAL SCROLL =====
+   Every section is its own roughly-square card in one continuous
+   sideways scroll (.pr-scroll) instead of a tall vertical page — bottom-
+   aligned with room above, rather than full-viewport slides, which
+   sidesteps ever needing to clear the fixed .page-topbar at all (cards
+   sit well clear of it by construction). Each keeps its own existing
+   class for its own internal styling — .pr-panel only adds the card
+   shape/surface and scroll-snap every one of them shares. */
+.pr-scroll {
+    display: flex;
+    align-items: flex-end;
+    gap: 2.5rem;
+    height: 100vh;
+    overflow-x: auto;
+    overflow-y: hidden;
+    /* No scroll-snap — it was fighting the wheel handler's small,
+       frequent scrollLeft increments (a smooth trackpad/precision mouse
+       sends many tiny deltas per gesture), snapping back to the nearest
+       card between them and making scrolling feel stuck or unresponsive
+       except on a hard, chunky wheel notch. Plain free scrolling instead. */
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+    padding: 0 6vw 4rem;
+    /* The wheel/touch handlers in process.js are the intended way to move
+       through the page — a native scrollbar track along the bottom edge
+       is redundant chrome on top of that, not a needed affordance. */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
-/* .page-topbar has no background anywhere else on the site (transparent,
-   pointer-events:none on its own padding area) — harmless on every other
-   page since none scroll far enough to reveal it, but this page is
-   genuinely long-form, so scrolled paragraph text was showing straight
-   through the fixed header instead of disappearing behind it. Scoped to
-   this page only, rather than changing the shared rule everyone else
-   already looks fine without. */
-[data-page="process"] .page-topbar {
-    background: rgba(250, 247, 242, 0.85);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+.pr-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.pr-panel {
+    flex: 0 0 auto;
+    /* Width and height share the exact same min() so they're always
+       equal — capping each dimension separately (e.g. height by vh,
+       width by vw) drifts away from square on any viewport whose aspect
+       ratio isn't close to the card's own, which is most phones. */
+    width: min(62vh, 84vw, 620px);
+    height: min(62vh, 84vw, 620px);
+    box-sizing: border-box;
+    /* No scroll on any individual card, ever — #prScroll (see process.js)
+       is the page's one and only scrollable element, so a vertical wheel
+       gesture always has just one unambiguous thing to move sideways.
+       Content that would otherwise overflow shrinks to fit instead (see
+       --pr-scale below and fitCardText() in process.js) rather than
+       scrolling or clipping. */
+    overflow: hidden;
+    background: var(--card-bg);
+    border-radius: 14px;
+    box-shadow: 0 20px 44px rgba(0, 0, 0, 0.12);
+    padding: 2.4rem;
+    /* Multiplies every text size below within a card — process.js steps
+       this down per-card until that card's content fits without
+       overflowing, so no two cards necessarily end up at the same scale. */
+    --pr-scale: 1;
+}
+
+/* Short, "title card" sections read better filling and centring within
+   their card than pinned to its top with empty space below; the
+   text-heavy ones (intro, each chapter) stay in normal top-down flow
+   instead, so where reading starts stays predictable regardless of how
+   long that particular chapter runs (and so the internal scroll such a
+   card may need starts from a sensible place). */
+.pr-group-photo.pr-panel,
+.pr-team.pr-panel,
+.pr-watch.pr-panel,
+.pr-colophon.pr-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* The group photo fills its card edge-to-edge (no card padding, image
+   itself carries the border-radius) rather than sitting inset like every
+   other card's text/content does. */
+.pr-group-photo.pr-panel {
+    padding: 0;
+    overflow: hidden;
+}
+
+/* The card's own padding (see .pr-panel) already insets this — no
+   padding/max-width of its own needed, just a smaller title than
+   .shell-title's usual full-width-page size so "OUR PROCESS" fits a
+   ~600px card instead of overflowing it. */
+.pr-intro {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.pr-intro .shell-title {
+    font-size: calc(clamp(1.6rem, 4.5vw, 2.3rem) * var(--pr-scale, 1));
+}
+
+.pr-intro .shell-text {
+    font-size: calc(1.05rem * var(--pr-scale, 1));
+}
+
+.pr-intro-badge {
+    width: 96px;
+    height: 96px;
+    margin-bottom: 1.2rem;
+}
+
+/* No topbar scrim needed any more — this page no longer scrolls
+   vertically under the fixed header at all (the whole page is one
+   sideways scroll of bottom-anchored cards now, see .pr-scroll), so
+   nothing ever passes behind it. Sits directly on the dark background
+   image instead, same as the landing page's own video-background
+   topbar — light text/border + text-shadow carries legibility against
+   the image's own brightness variation instead of a scrim. */
+[data-page="process"] .home-logo {
+    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.6));
+}
+
+[data-page="process"] .mode-btn {
+    color: rgba(255, 255, 255, 0.75);
+    border-color: rgba(255, 255, 255, 0.5);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+[data-page="process"] .mode-btn:hover {
+    color: #fff;
+    border-color: #fff;
+}
+
+[data-page="process"] .mode-btn.active {
+    background: #fff;
+    color: #14100e;
+    border-color: #fff;
+    text-shadow: none;
 }
 
 /* Full-bleed real photo of the group — establishes "these are real
@@ -2904,12 +3147,11 @@ body.landing {
    object-fit:cover, capped-height banner technique the old landing hero
    used, not a copy of its actual CSS (that page dropped its own hero
    entirely in an earlier redesign). */
+/* Sizing/cropping now comes entirely from .pr-panel's own square card
+   box (width/height/overflow) — this just establishes the containing
+   block the figcaption below is positioned against. */
 .pr-group-photo {
     position: relative;
-    width: 100%;
-    aspect-ratio: 2100 / 1400;
-    max-height: 520px;
-    overflow: hidden;
 }
 
 .pr-group-photo img {
@@ -2921,7 +3163,7 @@ body.landing {
 
 .pr-group-photo figcaption {
     position: absolute;
-    left: 10vw;
+    left: 1.4rem;
     bottom: 1.2rem;
     font-family: var(--font-mono);
     font-size: 0.68rem;
@@ -2936,61 +3178,32 @@ body.landing {
    beat here instead of being squeezed beside the intro paragraph — it's
    a real feature (hover a name, its photo jumps to the front), not a
    decorative afterthought, so it earns room to breathe. */
-.pr-team {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 4.5rem 10vw 5rem;
-}
-
-.pr-team-kicker {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 1.8rem;
+/* Wider than the standard square card — the photo stack and the bio
+   list read much better side by side (see .team-layout) than squeezed
+   into a square's width, and there's no reason to force a square shape
+   on content that naturally wants to be a wide row. */
+.pr-team.pr-panel {
+    width: min(78vh, 94vw, 840px);
+    align-items: flex-start;
 }
 
 /* ===== PROCESS CHAPTERS =====
-   A single editorial column, not a symmetric 2x2 grid of identical
-   cards — each of the 4 steps is its own "chapter": a giant pale numeral
-   as a real typographic device (not a small sticker badge), a heading,
-   body text in a comfortable reading measure, and its pull-quote styled
-   as the same pink sticky note .postit-note already established for PDF
-   thumbnails elsewhere (kept from the previous design — one of its few
-   details worth carrying forward), now floated beside the text like a
-   magazine pull-quote instead of sitting inline mid-paragraph. */
-.pr-chapters {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 2rem 10vw 6rem;
-}
-
+   Each of the 4 steps is its own full-panel "chapter" (see .pr-panel
+   above) rather than one shared vertical column of stacked cards — a
+   heading, body text in a comfortable reading measure, and its
+   pull-quote styled as the same pink sticky note .postit-note already
+   established for PDF thumbnails elsewhere (kept from the previous
+   design — one of its few details worth carrying forward), floated
+   beside the text like a magazine pull-quote instead of sitting inline
+   mid-paragraph. No more divider border/margin between chapters — each
+   is a standalone slide now, not a stacked card needing a seam. */
 .pr-chapter {
     position: relative;
-    padding-top: 2.5rem;
-    margin-top: 3rem;
-    border-top: 1px solid var(--border);
-}
-
-.pr-chapter:first-child {
-    margin-top: 0;
-    border-top: none;
-}
-
-.pr-chapter-num {
-    display: block;
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: clamp(3.5rem, 9vw, 6rem);
-    line-height: 1;
-    color: rgba(208, 19, 89, 0.14);
-    margin-bottom: -1.2rem;
 }
 
 .process-heading {
     font-family: var(--font-display);
-    font-size: clamp(1.4rem, 2.6vw, 1.85rem);
+    font-size: calc(clamp(1.4rem, 2.6vw, 1.85rem) * var(--pr-scale, 1));
     font-weight: 700;
     letter-spacing: -0.01em;
     margin-bottom: 1.3rem;
@@ -2998,10 +3211,14 @@ body.landing {
     position: relative;
 }
 
-.pr-chapter-body p {
+/* :not(.process-note) — .process-note is itself a <p> inside here, and
+   without the exclusion this rule's higher specificity (class+element vs
+   .process-note's class alone) was silently overriding its white text
+   back to the body's muted grey. */
+.pr-chapter-body p:not(.process-note) {
     color: var(--muted);
     line-height: 1.75;
-    font-size: 1.02rem;
+    font-size: calc(1.02rem * var(--pr-scale, 1));
     max-width: 62ch;
 }
 
@@ -3016,11 +3233,12 @@ body.landing {
 .process-note {
     position: relative;
     font-family: var(--font-mono);
-    font-size: 0.92rem;
+    /* em-based width above scales along with this automatically. */
+    font-size: calc(0.92rem * var(--pr-scale, 1));
     font-weight: 700;
     line-height: 1.5;
-    color: #4a1030;
-    background: #ffc2e2;
+    color: #ffffff;
+    background: #111111;
     width: 15em;
     margin-bottom: 1rem;
     padding: 1.1rem 1.2rem;
@@ -3054,65 +3272,54 @@ body.landing {
 }
 
 /* ===== WATCH THE PROCESS =====
-   A dark "screening" frame rather than a plain dashed placeholder box —
-   there's still no real video to show yet, but it reads as an
-   intentional moment being held for one, not an unfinished corner of
-   the page. The heading sits below the frame, not above it, so the
-   frame itself is the first thing read here. */
-.pr-watch {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 10vw 6rem;
+   A dark "screening" frame around the real 16:9 process video. The
+   heading sits below the frame, not above it, so the frame itself is
+   the first thing read here. */
+/* Wider than the standard square card, sized so the actual 16:9 video
+   fills its frame at a real size instead of being squeezed down to fit
+   a square — the card's shape follows the video's, not the other way
+   round. Height still comes from the shared .pr-panel budget. */
+.pr-watch.pr-panel {
+    width: min(96vh, 92vw, 900px);
 }
 
 .pr-watch-frame {
     position: relative;
     aspect-ratio: 16 / 9;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
     background: #14100e;
     border-radius: 10px;
     margin-bottom: 1.6rem;
+    overflow: hidden;
 }
 
-.pr-watch-play {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    color: #f0ece4;
+.pr-watch-video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
-.pr-watch-text {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: #a89e93;
-}
-
-/* ===== TEAM SECTION ===== */
+/* ===== TEAM SECTION =====
+   Side by side — the card itself (.pr-team.pr-panel above) is widened
+   specifically to fit the stack and the bio list as a row, names to the
+   photos' right, rather than forcing them to stack inside a square. */
 .team-layout {
     display: flex;
     align-items: center;
-    gap: 2.5rem;
-    /* Never wraps — the photo stack stays beside the bios at every
-       viewport width; both shrink together on narrow screens instead
-       (see the mobile override below) rather than stacking vertically. */
+    gap: 2.6rem;
     flex-wrap: nowrap;
 }
 
 .team-stack {
     position: relative;
-    width: 260px;
-    height: 340px;
+    /* rem + --pr-scale, not a flat px size — so on a tight card this
+       shrinks right along with the text (see fitCardText in process.js)
+       instead of staying full-size and crowding the names beside it. */
+    width: calc(17.5rem * var(--pr-scale, 1));
+    height: calc(22.9rem * var(--pr-scale, 1));
     flex-shrink: 0;
+    /* A small nudge right, off the card's own left padding edge. */
+    margin-left: 0.8rem;
 }
 
 .team-photo {
@@ -3149,11 +3356,18 @@ body.landing {
     display: flex;
     flex-direction: column;
     gap: 1.1rem;
+    min-width: 0;
+    flex: 1 1 auto;
+    /* Above the photo stack's own z-index (up to 50 for the active,
+       scaled-up photo) — a name must never end up hidden behind it even
+       if the two ever visually overlap at a tight card width. */
+    position: relative;
+    z-index: 60;
 }
 
 .team-bio {
     font-family: var(--font-display);
-    font-size: 1.15rem;
+    font-size: calc(0.95rem * var(--pr-scale, 1));
     padding: 0.3rem 0;
     border-bottom: 1px solid transparent;
     transition: border-color 0.2s ease;
@@ -3175,7 +3389,7 @@ body.landing {
 .team-pronouns {
     display: block;
     font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: calc(0.6rem * var(--pr-scale, 1));
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--muted);
@@ -3191,13 +3405,17 @@ body.landing {
    feels like the same object followed to its source rather than two
    unrelated badges that happen to share artwork. */
 .pr-colophon {
-    display: flex;
-    flex-direction: column;
     align-items: center;
     text-align: center;
     gap: 1rem;
-    padding: 5rem 10vw 6rem;
-    border-top: 1px solid var(--border);
+}
+
+/* Just the badge floating over the background texture, not a white card
+   holding it — nothing left inside to need a reading surface for once
+   the credit line beside it is gone. */
+.pr-colophon.pr-panel {
+    background: transparent;
+    box-shadow: none;
 }
 
 .pr-colophon-badge {
@@ -3208,34 +3426,6 @@ body.landing {
 
 .pr-colophon-badge:hover {
     transform: rotate(14deg) scale(1.12);
-}
-
-.pr-colophon-text {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.05rem;
-    color: var(--text);
-}
-
-.pr-colophon-links {
-    display: flex;
-    gap: 1.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-}
-
-.pr-colophon-links a {
-    color: var(--muted);
-    text-decoration: none;
-    border-bottom: 1px solid transparent;
-    transition: color 0.2s, border-color 0.2s;
-}
-
-.pr-colophon-links a:hover {
-    color: var(--accent);
-    border-color: var(--accent);
 }
 
 /* ===== REDESIGN RESPONSIVE ===== */
@@ -3263,31 +3453,63 @@ body.landing {
         text-align: center;
     }
 
-    .welcome-copy-text { white-space: normal; }
+    .welcome-copy-text { white-space: normal; font-size: 0.85rem; }
 
-    .badge-row { padding-top: 0; }
     /* Matches .page-topbar .home-logo's own mobile size. */
     .landing-topbar-logo img { height: 60px; }
 
-    /* Stacked circles previously read as overlapping at this width even
-       though they weren't (the video's own PC/monitor showing through
-       several transparent circles at once made adjacent ones blur
-       together visually) — the 60%-size pass plus .badge-row's own
-       gap (2rem here, wider than the row's 1.5rem) gives each one
-       enough of its own clear video backdrop to avoid that. */
-    .badge-row { gap: 2rem; padding: 3rem 1.5rem 0; }
+    /* Row, not stacked — three side-by-side circles read better here
+       than a tall column, and (combined with the shrink below) keeps
+       the badge row's own footprint well clear of Flo's fixed
+       bottom-right figure without needing extra scroll clearance.
+       padding-top trimmed slightly from 2rem to nudge the whole row up. */
+    .badge-row { flex-direction: row; flex-wrap: nowrap; gap: 0.8rem; padding: 1.6rem 1.2rem 0; }
+    .badge { width: 96px; height: 96px; padding: 0.5rem; }
+    .badge-title { font-size: 0.72rem; }
+    .badge-copy { font-size: 0.5rem; }
+
+    /* Fixed to the bottom-left corner, mirroring Flo's own fixed
+       bottom-right one — the two now sit side by side at the same
+       height instead of needing a long scroll (and extra clearance
+       padding) to separate a flowing footer from her fixed figure. Each
+       is sized to genuinely fill its own half of the screen rather than
+       leaving a wide gap of empty floor between them. */
+    .landing-footer {
+        position: fixed;
+        left: 1rem;
+        bottom: 1rem;
+        max-width: 52vw;
+        margin: 0;
+        padding: 0;
+        z-index: 100;
+    }
+    .logo-strip { justify-content: flex-start; gap: 0.55rem; }
+    .logo-strip-item--feature { height: 70px; }
+    .logo-strip-stack { gap: 0.3rem; }
+    .logo-strip-stack .logo-strip-item img { max-height: 23px; }
+    .logo-strip-label { font-size: 0.42rem; margin-bottom: 0.2rem; }
+
+    /* Enlarged from the shared 143x164 mobile default (see the 480px
+       rule below) so Flo fills roughly her own half of the screen too,
+       matching the logos opposite her rather than leaving a gap of bare
+       dance floor between the two. Scoped to landing only — other pages
+       still want the smaller shared size to clear their own content
+       (filter chips, etc). */
+    [data-page="landing"] .helper-figure-img--photo {
+        width: 160px;
+        height: 184px;
+    }
+
+    /* Nudged toward the right side of the source video (was dead-
+       centred at 50%; the first attempt at 35% went the wrong way). */
+    .panels-bg { object-position: 65% center; }
 
     .page-topbar { padding: 0.6rem 0.7rem; flex-wrap: wrap; row-gap: 0.4rem; }
     .page-topbar .home-logo { height: 60px; }
-    /* ~43px tall (line-height 1.4 on 0.62rem font + generous vertical
-       padding) — was ~24px, well under the ~44px touch-target guideline.
-       Height is the dimension that actually matters for a horizontal row
-       of thumb targets. */
-    /* Horizontal padding/gap trimmed from desktop's — three individually
-       bordered chips (vs. the old single joined pill bar) need real
-       width savings to fit a 320px screen at all; vertical padding is
-       untouched since that's what keeps the ~43px touch-target height. */
-    .page-topbar .mode-btn { padding: 0.85rem 0.25rem; font-size: 0.54rem; letter-spacing: 0.02em; }
+    /* Fixed-size circles (66px, set on the base .mode-btn rule) already
+       clear the ~44px touch-target guideline and are narrower side-to-
+       side than the old text-driven pills ever were, so no mobile-specific
+       resizing is needed here any more. */
     /* Desktop centres the switcher with position:absolute over the whole
        topbar, which works there because there's room either side of the
        logo — at mobile widths the three (now individually bordered,
@@ -3302,7 +3524,7 @@ body.landing {
         transform: none;
         flex: 1 1 100%;
         justify-content: center;
-        gap: 0.15rem;
+        gap: 0.5rem;
     }
 
     /* The desktop one-line treatment needs real width — wrapping to 2-3
@@ -3379,14 +3601,14 @@ body.landing {
        viewport — old iPhone SE-class devices (~568-667px tall) or
        landscape phones — can still see Flo's bubble brush the last
        line of the paragraph. Known, accepted residual, not a full fix. */
-    .pr-intro { padding: 9rem 8vw 2.5rem; }
-    .pr-group-photo { max-height: 280px; }
-    .pr-team { padding: 3rem 8vw 3.5rem; }
-    .pr-chapters { padding: 1rem 8vw 4rem; }
-    .pr-chapter-num { font-size: 3.2rem; margin-bottom: -0.6rem; }
-    /* Pull-quotes float beside the text column on wider viewports — no
-       room to spare for that here, so they go back to a plain full-width
-       block sitting in the normal reading flow instead. */
+    /* Every .pr-panel card's own padding (2.4rem, see the base rule)
+       already insets its content at every viewport width — nothing
+       further needed here for that. Just the pieces that still
+       genuinely need a narrower-screen adjustment: */
+    /* Pull-quotes float beside the text column on wider cards — a
+       ~240px note plus wrapped text leaves almost nothing to work with
+       in a narrow mobile card, so they go back to a plain full-width
+       block in the normal reading flow instead. */
     .process-note,
     .process-note--left,
     .process-note--right {
@@ -3396,23 +3618,9 @@ body.landing {
         margin: 0 0 1.2rem;
         transform: none;
     }
-    .pr-watch { padding: 0 8vw 4rem; }
-    .pr-colophon { padding: 3.5rem 8vw 4rem; }
-    /* Was side-by-side (stack + bios shrinking together) when this lived
-       as a compact aside next to the hero — reasonable there since it
-       never had a bottom-right corner to spare. Now that it's its own
-       full section, a bio list squeezed into the narrow leftover column
-       next to the stack sits at almost exactly the width and position
-       Flo's fixed bottom-right bubble occupies, hiding whichever bio
-       links land in that corner behind her (confirmed with her bubble
-       open — Hannah's and Ines's links were unclickable without closing
-       her first). Full-width stacking gives the bio list the whole
-       column instead of a narrow strip that happens to line up with her
-       corner. */
-    .team-layout { flex-direction: column; align-items: flex-start; gap: 1.4rem; }
+    /* A further shrink from the (already-compact) 190px default — safety
+       margin for the narrowest phones' own smaller card width. */
     .team-stack { width: 150px; height: 197px; }
-    .team-bio { font-size: 0.95rem; }
-    .team-pronouns { font-size: 0.6rem; }
 }
 
 /* ===== ACCESSIBLE ARCHIVE ===== */
@@ -3450,7 +3658,7 @@ body.landing {
    width into the results column beside it. Scoped down specifically here
    rather than changing the shared rule everyone else still relies on. */
 .acc-search-panel .shell-title {
-    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-size: clamp(calc(1.8rem * var(--acc-scale, 1)), 4vw, calc(2.6rem * var(--acc-scale, 1)));
 }
 
 .acc-results-panel {
@@ -3494,14 +3702,14 @@ body.landing {
     }
 }
 
-.acc-intro { margin-bottom: 2rem; }
+.acc-intro { margin-bottom: 2rem; font-size: calc(1.05rem * var(--acc-scale, 1)); }
 
 .acc-search-form { margin-bottom: 1.8rem; }
 
 .acc-search-label {
     display: block;
     font-family: var(--font-mono);
-    font-size: 0.8rem;
+    font-size: calc(0.8rem * var(--acc-scale, 1));
     font-weight: 700;
     margin-bottom: 0.5rem;
 }
@@ -3514,7 +3722,7 @@ body.landing {
 
 .acc-search-input {
     flex: 1 1 320px;
-    font-size: 1.1rem;
+    font-size: calc(1.1rem * var(--acc-scale, 1));
     font-family: var(--font-body);
     padding: 0.8rem 1rem;
     border: 2px solid var(--border);
@@ -3529,7 +3737,7 @@ body.landing {
 }
 
 .acc-search-btn {
-    font-size: 1rem;
+    font-size: calc(1rem * var(--acc-scale, 1));
     font-weight: 700;
     padding: 0.8rem 1.6rem;
     border: none;
@@ -3540,6 +3748,31 @@ body.landing {
 }
 
 .acc-search-btn:hover { opacity: 0.9; }
+
+/* Reading settings — live inside Flo's speech bubble on this page (see
+   helper.js's isAccessiblePage branch) rather than a standalone panel in
+   the page's own markup. Stacked, not the sidebar's old flex-wrap row —
+   the bubble is only ~185px wide inside its own padding. */
+.helper-display-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    margin: 0.9rem 0;
+}
+
+/* Same chip as the type/project filters, but the label itself carries the
+   size — three growing "A"s read faster than a text label ever would. */
+.acc-size-btn {
+    font-family: var(--font-body);
+    line-height: 1;
+}
+
+/* Element-qualified so these fixed sizes reliably beat .acc-chip's own
+   (scaled) font-size regardless of source order — these three are a
+   fixed visual affordance, not user-adjustable body text. */
+button.acc-size-btn--sm { font-size: 0.75rem; }
+button.acc-size-btn--md { font-size: 1.05rem; }
+button.acc-size-btn--lg { font-size: 1.4rem; }
 
 .acc-filters {
     display: flex;
@@ -3553,7 +3786,7 @@ body.landing {
 .acc-filter-label {
     display: block;
     font-family: var(--font-mono);
-    font-size: 0.7rem;
+    font-size: calc(0.7rem * var(--acc-scale, 1));
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--muted);
@@ -3569,7 +3802,7 @@ body.landing {
 .acc-chip {
     font-family: var(--font-mono);
     font-weight: 700;
-    font-size: 0.85rem;
+    font-size: calc(0.85rem * var(--acc-scale, 1));
     background: #ffffff;
     border: 2px solid var(--border);
     border-radius: 999px;
@@ -3591,7 +3824,7 @@ body.landing {
 }
 
 .acc-select {
-    font-size: 0.95rem;
+    font-size: calc(0.95rem * var(--acc-scale, 1));
     padding: 0.55rem 0.8rem;
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -3602,7 +3835,7 @@ body.landing {
 
 .acc-status {
     font-family: var(--font-mono);
-    font-size: 0.85rem;
+    font-size: calc(0.85rem * var(--acc-scale, 1));
     color: var(--muted);
     margin-bottom: 1.2rem;
     min-height: 1.2em;
@@ -3687,17 +3920,17 @@ body.landing {
 
 .acc-result-title {
     font-weight: 700;
-    font-size: 1.05rem;
+    font-size: calc(1.05rem * var(--acc-scale, 1));
 }
 
 .acc-result-sub {
     font-family: var(--font-mono);
-    font-size: 0.78rem;
+    font-size: calc(0.78rem * var(--acc-scale, 1));
     color: var(--muted);
 }
 
 .acc-result-reason {
-    font-size: 0.85rem;
+    font-size: calc(0.85rem * var(--acc-scale, 1));
     color: var(--accent);
     margin-top: 0.15rem;
 }
@@ -3706,7 +3939,7 @@ body.landing {
 .acc-back-link {
     display: inline-block;
     font-family: var(--font-mono);
-    font-size: 0.85rem;
+    font-size: calc(0.85rem * var(--acc-scale, 1));
     color: var(--accent);
     text-decoration: none;
     margin-bottom: 1.6rem;
@@ -3744,13 +3977,13 @@ body.landing {
 
 .acc-detail-title {
     font-family: var(--font-display);
-    font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+    font-size: clamp(calc(1.6rem * var(--acc-scale, 1)), 3.5vw, calc(2.4rem * var(--acc-scale, 1)));
     margin: 0.3rem 0 1rem;
     line-height: 1.15;
 }
 
 .acc-detail-desc {
-    font-size: 1.05rem;
+    font-size: calc(1.05rem * var(--acc-scale, 1));
     line-height: 1.7;
     max-width: 65ch;
     margin-bottom: 1.2rem;
@@ -3765,14 +3998,13 @@ body.landing {
 
 .acc-tag-pill {
     font-family: var(--font-mono);
-    font-size: 0.72rem;
+    font-size: calc(0.72rem * var(--acc-scale, 1));
     border: 1px solid var(--border);
     border-radius: 999px;
     padding: 0.25rem 0.7rem;
     color: var(--muted);
 }
 
-.acc-share,
 .acc-refine,
 .acc-credit {
     border-top: 1px solid var(--border);
@@ -3783,7 +4015,7 @@ body.landing {
 .acc-credit-label {
     display: block;
     font-family: var(--font-mono);
-    font-size: 0.8rem;
+    font-size: calc(0.8rem * var(--acc-scale, 1));
     font-weight: 700;
     margin-bottom: 0.5rem;
 }
@@ -3796,21 +4028,9 @@ body.landing {
 
 .acc-credit-input { flex: 1 1 auto; }
 
-.acc-share-heading {
-    font-size: 1rem;
-    margin-bottom: 0.8rem;
-}
-
-.acc-share-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    margin-bottom: 0.8rem;
-}
-
 .acc-btn {
     font-family: var(--font-body);
-    font-size: 0.9rem;
+    font-size: calc(0.9rem * var(--acc-scale, 1));
     font-weight: 600;
     padding: 0.55rem 1rem;
     border: 1px solid var(--border);
@@ -3825,20 +4045,8 @@ body.landing {
 .acc-btn:hover { border-color: var(--accent); color: var(--accent); }
 .acc-btn:disabled { opacity: 0.6; cursor: default; }
 
-.acc-share-url {
-    width: 100%;
-    max-width: 480px;
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    padding: 0.5rem 0.7rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--card-bg);
-    color: var(--muted);
-}
-
 .acc-refine-msg {
-    font-size: 0.9rem;
+    font-size: calc(0.9rem * var(--acc-scale, 1));
     color: var(--accent);
     margin-top: 0.6rem;
 }

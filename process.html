@@ -17,67 +17,71 @@
             <img src="https://media.downtownpompey.online/Downtown-Pompey-logo.png" alt="Downtown Pompey — Alternative Archiving" class="home-logo">
         </a>
         <nav class="mode-switcher">
-            <a href="editorial.html" class="mode-btn">Editorial</a>
-            <a href="scrapbook.html" class="mode-btn">Scrapbook</a>
-            <a href="accessible.html" class="mode-btn">Accessible</a>
+            <a href="editorial.html" class="mode-btn">Curated</a>
+            <a href="scrapbook.html" class="mode-btn">Collected</a>
+            <a href="accessible.html" class="mode-btn">Credited</a>
         </nav>
     </header>
 
-    <main class="pr-intro">
-        <p class="shell-kicker">Downtown Pompey</p>
-        <h1 class="shell-title">Our Process</h1>
-        <p class="shell-text">
-            We are the Alternative Archive Group, five people with a close relationship to archiving.
-            We were invited to work with Downtown Pompey, taking years of their material, photos, flyers,
-            zines, masks, and building it into a digital archive. We wanted it to feel open and ongoing
-            rather than fixed and finished. Here's how it happened.
-        </p>
-    </main>
+    <!-- One continuous sideways scroll instead of a tall vertical page —
+         every section below is its own full-viewport "slide" (see
+         .pr-panel in styles.css), scroll-snapped so it settles on one
+         slide at a time. process.js remaps ordinary vertical wheel input
+         (mice, mostly) onto this same horizontal scroll, since trackpad/
+         touch already scroll sideways natively on their own. -->
+    <div class="pr-scroll" id="prScroll">
 
-    <figure class="pr-group-photo">
-        <img src="images/team/group.jpg" alt="The five members of the Alternative Archiving Group standing together indoors, surrounded by plants.">
-        <figcaption>The Alternative Archiving Group</figcaption>
-    </figure>
+        <main class="pr-intro pr-panel">
+            <img class="pr-intro-badge" src="images/aag-process-badge.png" alt="Alternative Archiving Group" width="220" height="220">
+            <h1 class="shell-title">Our Process</h1>
+            <p class="shell-text">
+                We are the Alternative Archive Group, five people with a close relationship to archiving.
+                We were invited to work with Downtown Pompey, taking years of their material, photos, flyers,
+                zines, masks, and building it into a digital archive. We wanted it to feel open and ongoing
+                rather than fixed and finished. Here's how it happened.
+            </p>
+        </main>
 
-    <section class="pr-team">
-        <p class="pr-team-kicker">Five people, one archive</p>
-        <div class="team-layout">
-            <div class="team-stack" id="teamStack">
-                <img class="team-photo" data-person="harry" src="images/team/harry.jpg" alt="Harry Payne">
-                <img class="team-photo" data-person="hannah" src="images/team/hannah.jpg" alt="Hannah Buckingham">
-                <img class="team-photo" data-person="ines" src="images/team/ines.jpg" alt="Ines">
-                <img class="team-photo" data-person="moxie" src="images/team/moxie.jpg" alt="Mohan (Moxie) Xie">
-                <img class="team-photo" data-person="helen" src="images/team/helen.jpg" alt="Helen Goss">
+        <figure class="pr-group-photo pr-panel">
+            <img src="images/team/group.jpg" alt="The five members of the Alternative Archiving Group standing together indoors, surrounded by plants.">
+            <figcaption>The Alternative Archiving Group</figcaption>
+        </figure>
+
+        <section class="pr-team pr-panel">
+            <div class="team-layout">
+                <div class="team-stack" id="teamStack">
+                    <img class="team-photo" data-person="harry" src="images/team/harry.jpg" alt="Harry Payne">
+                    <img class="team-photo" data-person="hannah" src="images/team/hannah.jpg" alt="Hannah Buckingham">
+                    <img class="team-photo" data-person="ines" src="images/team/ines.jpg" alt="Ines">
+                    <img class="team-photo" data-person="moxie" src="images/team/moxie.jpg" alt="Mohan (Moxie) Xie">
+                    <img class="team-photo" data-person="helen" src="images/team/helen.jpg" alt="Helen Goss">
+                </div>
+                <ul class="team-bios">
+                    <li class="team-bio" data-person="harry" tabindex="0">
+                        <a href="https://harrypayneart.co.uk/" target="_blank" rel="noopener">Harry Payne</a>
+                        <span class="team-pronouns">He/Him</span>
+                    </li>
+                    <li class="team-bio" data-person="hannah" tabindex="0">
+                        <a href="https://www.hannahmaebuckingham.com/" target="_blank" rel="noopener">Hannah Buckingham</a>
+                        <span class="team-pronouns">They/Them</span>
+                    </li>
+                    <li class="team-bio" data-person="ines" tabindex="0">
+                        <a href="https://linktr.ee/iamlinhares" target="_blank" rel="noopener">Ines</a>
+                        <span class="team-pronouns">They/Them, She/Her</span>
+                    </li>
+                    <li class="team-bio" data-person="moxie" tabindex="0">
+                        <a href="https://www.linkedin.com/in/mohan-xie-058b36304?utm_source=share_via&utm_content=profile&utm_medium=member_ios" target="_blank" rel="noopener">Mohan (Moxie) Xie</a>
+                        <span class="team-pronouns">She/Her</span>
+                    </li>
+                    <li class="team-bio" data-person="helen" tabindex="0">
+                        <a href="https://www.wayoutmedia.com/helen-goss/" target="_blank" rel="noopener">Helen Goss</a>
+                        <span class="team-pronouns">She/Her</span>
+                    </li>
+                </ul>
             </div>
-            <ul class="team-bios">
-                <li class="team-bio" data-person="harry" tabindex="0">
-                    <a href="https://harrypayneart.co.uk/" target="_blank" rel="noopener">Harry Payne</a>
-                    <span class="team-pronouns">He/Him</span>
-                </li>
-                <li class="team-bio" data-person="hannah" tabindex="0">
-                    <a href="https://www.hannahmaebuckingham.com/" target="_blank" rel="noopener">Hannah Buckingham</a>
-                    <span class="team-pronouns">They/Them</span>
-                </li>
-                <li class="team-bio" data-person="ines" tabindex="0">
-                    <a href="https://linktr.ee/iamlinhares" target="_blank" rel="noopener">Ines</a>
-                    <span class="team-pronouns">They/Them, She/Her</span>
-                </li>
-                <li class="team-bio" data-person="moxie" tabindex="0">
-                    <a href="https://www.linkedin.com/in/mohan-xie-058b36304?utm_source=share_via&utm_content=profile&utm_medium=member_ios" target="_blank" rel="noopener">Mohan (Moxie) Xie</a>
-                    <span class="team-pronouns">She/Her</span>
-                </li>
-                <li class="team-bio" data-person="helen" tabindex="0">
-                    <a href="https://www.wayoutmedia.com/helen-goss/" target="_blank" rel="noopener">Helen Goss</a>
-                    <span class="team-pronouns">She/Her</span>
-                </li>
-            </ul>
-        </div>
-    </section>
+        </section>
 
-    <article class="pr-chapters">
-
-        <section class="pr-chapter">
-            <span class="pr-chapter-num" aria-hidden="true">01</span>
+        <section class="pr-chapter pr-panel">
             <div class="pr-chapter-body">
                 <h2 class="process-heading">Talking First, Building Second</h2>
                 <p class="process-note process-note--right">We decided early to keep creation and analysis separate — building first, judging later.</p>
@@ -95,8 +99,7 @@
             </div>
         </section>
 
-        <section class="pr-chapter">
-            <span class="pr-chapter-num" aria-hidden="true">02</span>
+        <section class="pr-chapter pr-panel">
             <div class="pr-chapter-body">
                 <h2 class="process-heading">Queering the Archive</h2>
                 <p class="process-note process-note--left">How do you represent Portsmouth honestly, through the perspectives and spaces that actually shaped this community, rather than through the familiar clichés the city usually gets reduced to?</p>
@@ -115,16 +118,10 @@
                     ran a hands-on exercise recategorizing photographs from the archive under these new
                     themes, and talked through what shifted and what got left out.
                 </p>
-                <p>
-                    We also looked at using a 3D scan of the old Downtown Pompey office as a starting
-                    point for the site, "building the house," so the archive would be grounded in a
-                    real, remembered space rather than a blank template.
-                </p>
             </div>
         </section>
 
-        <section class="pr-chapter">
-            <span class="pr-chapter-num" aria-hidden="true">03</span>
+        <section class="pr-chapter pr-panel">
             <div class="pr-chapter-body">
                 <h2 class="process-heading">Designing for Interaction</h2>
                 <p class="process-note process-note--right">We wanted an archive people could engage with, not just browse.</p>
@@ -145,8 +142,7 @@
             </div>
         </section>
 
-        <section class="pr-chapter">
-            <span class="pr-chapter-num" aria-hidden="true">04</span>
+        <section class="pr-chapter pr-panel">
             <div class="pr-chapter-body">
                 <h2 class="process-heading">Making Ourselves Visible</h2>
                 <p class="process-note process-note--left">Building trust with the community whose history we're working with meant being transparent about who we are, not just what we made.</p>
@@ -168,30 +164,19 @@
             </div>
         </section>
 
-    </article>
+        <section class="pr-watch pr-panel">
+            <div class="pr-watch-frame">
+                <video class="pr-watch-video" src="images/aag-process-video.mp4" controls playsinline poster="images/team/group.jpg"></video>
+            </div>
+            <h2 class="process-heading">Watch the Process</h2>
+        </section>
 
-    <section class="pr-watch">
-        <div class="pr-watch-frame">
-            <span class="pr-watch-play" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-            </span>
-            <p class="pr-watch-text">Video coming soon</p>
-        </div>
-        <h2 class="process-heading">Watch the Process</h2>
-    </section>
+        <footer class="pr-colophon pr-panel">
+            <img class="pr-colophon-badge" src="images/aag-process-badge.png" alt="Alternative Archiving Group" width="220" height="220">
+        </footer>
 
-    <footer class="pr-colophon">
-        <img class="pr-colophon-badge" src="images/aag-process-badge.png" alt="Alternative Archiving Group" width="220" height="220">
-        <p class="pr-colophon-text">Made by the Alternative Archiving Group</p>
-        <nav class="pr-colophon-links">
-            <a href="editorial.html">Editorial</a>
-            <a href="scrapbook.html">Scrapbook</a>
-            <a href="accessible.html">Accessible</a>
-        </nav>
-    </footer>
+    </div>
 
-    <div id="site-helper"></div>
-    <script type="module" src="helper.js"></script>
     <script type="module" src="process.js"></script>
 </body>
 </html>

@@ -51,8 +51,8 @@ function buildElbowPath(sx, sy, tx, ty) {
 // aligned box that contains the rotated shape, which is bigger than
 // the shape itself (a square rotated by 8° needs a ~13% bigger AABB to
 // contain it) — rect.width stops being the circle's true diameter the
-// moment rotate() is in the mix. Scrapbook/Accessible both rotate on
-// hover; 00s Web doesn't, which is why only that one badge's line
+// moment rotate() is in the mix. Collected/Credited both rotate on
+// hover; Curated doesn't, which is why only that one badge's line
 // lined up correctly before this fix. The centre is still trustworthy
 // from the rect (rotating around an element's own centre can't move
 // that centre), so only the radius needs a rotation-proof source:

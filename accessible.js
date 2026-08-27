@@ -54,6 +54,11 @@ const resultsEl = document.getElementById('accResults');
 const backLink = document.getElementById('accBackLink');
 const detailContent = document.getElementById('accDetailContent');
 
+// Display options (text size / high contrast / dark mode) live in Flo's
+// speech bubble on this page now — see helper.js. It sets the same
+// data-text-size/data-contrast/data-theme attributes on <body> that
+// styles.css keys off, so nothing here needs to know about them.
+
 let allItems = [];
 let searchIndex = [];
 let itemsById = new Map();
@@ -162,7 +167,6 @@ function renderResults(results, query) {
         return;
     }
     if (results === null) {
-        statusEl.textContent = 'Type something, or pick a filter, to search the archive.';
         const li = document.createElement('li');
         li.className = 'acc-empty-state';
         li.textContent = 'Results will appear here once you search or filter.';
@@ -197,7 +201,11 @@ function renderResults(results, query) {
         // and falling back to it for a missing thumbnail just renders a
         // permanently-broken image instead of the type-icon fallback below.
         // (A video item with no thumbnail recorded was doing exactly this.)
-        const thumbSrc = item.thumbnail || (item.type === 'photo' ? item.url : '');
+        // Documents specifically never use item.thumbnail here even when
+        // it's set — the sheet's "thumbnail" for a download row is the
+        // document file itself, not a real image, so treating it as one
+        // showed a permanently-broken image instead of the ☷ type icon.
+        const thumbSrc = item.type === 'download' ? '' : (item.thumbnail || (item.type === 'photo' ? item.url : ''));
         if (thumbSrc) {
             const img = document.createElement('img');
             img.className = 'acc-result-thumb';
@@ -296,7 +304,7 @@ backLink.addEventListener('click', (e) => {
     history.pushState({ view: 'search' }, '', lastSearchUrl);
     revealPane(resultsPane);
     detailPane.hidden = true;
-    document.title = 'Accessible | Alternative Archiving';
+    document.title = 'Credited | Alternative Archiving';
 });
 
 // ===== ITEM DETAIL =====
@@ -385,11 +393,10 @@ function showItem(id, pushUrl = true) {
         <p class="acc-result-sub">${esc(item.project || '')}${year ? ` · ${esc(year)}` : ''}${item.credit ? ` · © ${esc(item.credit)}` : ''}</p>
         <h1 class="acc-detail-title">${esc(item.title || 'Untitled')}</h1>
         <p class="acc-detail-desc">${esc(item.description || 'No description recorded for this item yet.')}</p>
-        ${item.type === '3d' ? '<p class="acc-detail-desc">3D object — see it in the Editorial room for the interactive version.</p>' : ''}
+        ${item.type === '3d' ? '<p class="acc-detail-desc">3D object — see it in the Curated room for the interactive version.</p>' : ''}
         <div class="acc-tag-row">${tags.map(t => `<span class="acc-tag-pill">${esc(t)}</span>`).join('')}</div>
     `;
     detailContent.appendChild(info);
-    detailContent.appendChild(buildShareBlock(item));
     detailContent.appendChild(buildCreditRequestBlock(item));
 
     if (pushUrl) history.pushState({ view: 'item', id }, '', `accessible.html?item=${encodeURIComponent(id)}`);
@@ -408,86 +415,15 @@ function showNotFound(id) {
     `;
 }
 
-// ===== SHARING =====
-function buildShareBlock(item) {
-    const wrap = document.createElement('div');
-    wrap.className = 'acc-share';
-    const url = `${location.origin}${location.pathname}?item=${encodeURIComponent(item.id)}`;
-    const shareText = `"${item.title || 'This item'}" from the Downtown Pompey archive`;
-
-    const heading = document.createElement('h2');
-    heading.className = 'acc-share-heading';
-    heading.textContent = 'Share this item';
-    wrap.appendChild(heading);
-
-    const row = document.createElement('div');
-    row.className = 'acc-share-row';
-
-    if (navigator.share) {
-        const shareBtn = document.createElement('button');
-        shareBtn.type = 'button';
-        shareBtn.className = 'acc-btn';
-        shareBtn.textContent = 'Share…';
-        shareBtn.addEventListener('click', () => {
-            navigator.share({ title: shareText, url }).catch(() => {}); // AbortError on cancel — nothing to report
-        });
-        row.appendChild(shareBtn);
-    }
-
-    const copyBtn = document.createElement('button');
-    copyBtn.type = 'button';
-    copyBtn.className = 'acc-btn';
-    copyBtn.textContent = 'Copy link';
-    copyBtn.addEventListener('click', async () => {
-        try {
-            if (navigator.clipboard) await navigator.clipboard.writeText(url);
-            else {
-                // Fallback for non-secure contexts / older browsers.
-                const ta = document.createElement('textarea');
-                ta.value = url;
-                ta.style.position = 'fixed';
-                ta.style.opacity = '0';
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                ta.remove();
-            }
-            copyBtn.textContent = 'Link copied';
-            setTimeout(() => { copyBtn.textContent = 'Copy link'; }, 2000);
-        } catch {
-            copyBtn.textContent = 'Could not copy — select the link manually';
-        }
-    });
-    row.appendChild(copyBtn);
-
-    const emailLink = document.createElement('a');
-    emailLink.className = 'acc-btn';
-    emailLink.href = `mailto:?subject=${encodeURIComponent(shareText)}&body=${encodeURIComponent(url)}`;
-    emailLink.textContent = 'Email to a friend';
-    row.appendChild(emailLink);
-
-    wrap.appendChild(row);
-
-    const urlField = document.createElement('input');
-    urlField.type = 'text';
-    urlField.className = 'acc-share-url';
-    urlField.readOnly = true;
-    urlField.value = url;
-    urlField.setAttribute('aria-label', 'Link to this item');
-    urlField.addEventListener('focus', () => urlField.select());
-    wrap.appendChild(urlField);
-
-    return wrap;
-}
-
-
 // ===== "ASK TO BE CREDITED" =====
-// No backend on this site (static files only), so this reuses the same
-// mailto: approach buildShareBlock's "Email to a friend" already relies on
-// — just addressed to the archive maintainer instead of a friend, with the
-// item's own link and the visitor's answers pre-filled in the body. Opens
-// their own email client; nothing is sent or recorded until they hit send
-// there themselves.
+// No backend on this site (static files only) — submits via Web3Forms
+// (web3forms.com), a free form-relay for static sites: POST straight to
+// their API with the access key below and the request lands as an email,
+// with no page navigation and no mail app involved. Get a key by entering
+// an email at web3forms.com (no account/password needed) and paste it in
+// below in place of the placeholder.
+const WEB3FORMS_ACCESS_KEY = 'fe833ea5-c80a-468d-828b-7781e93d4bf4';
+const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
 const CREDIT_REQUEST_EMAIL = 'Thomas@Thomas-Buckley.com';
 
 // Two steps sharing ONE input box rather than two fields stacked (name,
@@ -524,7 +460,7 @@ function buildCreditRequestBlock(item) {
     wrap.appendChild(form);
 
     let name = '';
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!name) {
             // Step 1 done — swap the same box over to the second question
@@ -539,10 +475,39 @@ function buildCreditRequestBlock(item) {
         const note = field.value.trim();
         const url = `${location.origin}${location.pathname}?item=${encodeURIComponent(item.id)}`;
         const subject = `Credit request — ${item.title || 'Untitled item'}`;
-        const body = `Item: ${item.title || 'Untitled'}\nLink: ${url}\n\nName: ${name}\nConnection: ${note}`;
-        window.location.href = `mailto:${CREDIT_REQUEST_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        label.textContent = 'Opening your email app with this filled in — just hit send.';
-        form.remove();
+
+        field.disabled = true;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending…';
+
+        try {
+            const res = await fetch(WEB3FORMS_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                body: JSON.stringify({
+                    access_key: WEB3FORMS_ACCESS_KEY,
+                    subject,
+                    from_name: name,
+                    item: item.title || 'Untitled',
+                    link: url,
+                    connection: note,
+                }),
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message || 'Send failed');
+            label.textContent = 'Thanks — request sent. We\'ll be in touch.';
+            form.remove();
+        } catch {
+            // Covers both a real network/API failure and the access key
+            // still being the unfilled placeholder above — either way, a
+            // mailto: fallback means the message is never just lost.
+            const body = `Item: ${item.title || 'Untitled'}\nLink: ${url}\n\nName: ${name}\nConnection: ${note}`;
+            const mailtoUrl = `mailto:${CREDIT_REQUEST_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            label.innerHTML = `Couldn't send that automatically — <a href="${mailtoUrl}">email us directly instead</a>.`;
+            submitBtn.disabled = false;
+            field.disabled = false;
+            submitBtn.textContent = 'Send';
+        }
     });
 
     return wrap;
@@ -557,7 +522,7 @@ function route(pushUrl = false) {
     } else {
         revealPane(resultsPane);
         detailPane.hidden = true;
-        document.title = 'Accessible | Alternative Archiving';
+        document.title = 'Credited | Alternative Archiving';
         restoreSearchStateFromUrl();
         runSearch(false);
     }

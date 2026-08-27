@@ -1,0 +1,6 @@
+# AI coding tool config/cache — not part of the site
+.agents/
+.claude/
+.codex/
+.impeccable/
+skills-lock.json
