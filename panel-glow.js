@@ -72,10 +72,19 @@ function initPanelGlow() {
     const panels = document.querySelectorAll(PANEL_SELECTOR);
     if (!video || !panels.length) return;
 
+    // The portrait mobile background video is its own composition, not
+    // a crop of the desktop one (see index.html) — each object sits at
+    // a different point in-frame there, so the connector line needs its
+    // own coordinate pair on that breakpoint rather than reusing the
+    // desktop one. One-time check at load, same reasoning as the mobile
+    // <source media> itself: a visit doesn't change device type
+    // mid-session.
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
     const rigs = Array.from(panels).map((panel) => {
         const key = panel.dataset.glowTarget;
-        const fx = parseFloat(panel.dataset.glowX);
-        const fy = parseFloat(panel.dataset.glowY);
+        const fx = parseFloat(isMobile ? panel.dataset.glowXMobile : panel.dataset.glowX);
+        const fy = parseFloat(isMobile ? panel.dataset.glowYMobile : panel.dataset.glowY);
         const glow = document.querySelector(`.object-glow[data-glow="${key}"]`);
         const line = document.querySelector(`.connector-line[data-connector="${key}"]`);
         const dot = document.querySelector(`.connector-dot[data-connector="${key}"]`);
@@ -163,10 +172,7 @@ function initPanelGlow() {
     // used above through each badge in turn, standing in for a hover
     // that can't happen. .is-demo-active mirrors :hover/:focus-visible
     // in the badge transform rules (styles.css) since a JS class toggle
-    // doesn't trigger a real CSS pseudo-class. One-time check at load,
-    // same reasoning as the mobile <source media> in index.html — a
-    // visit doesn't change device type mid-session.
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    // doesn't trigger a real CSS pseudo-class.
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (isMobile && !reduceMotion) {
         let index = 0;
