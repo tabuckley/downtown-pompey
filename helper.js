@@ -32,12 +32,19 @@ const ARCHIE_IMAGE_URL = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
 // and need no changes. Pages with no entry (or an empty array) keep
 // showing the placeholder SVG.
 const FLO_IMAGES = {
+    // Index here is imageIndex (intro=0, tip N=N), which must line up with
+    // whichever tips array actually ends up live — the _copy sheet's own
+    // archie_landing_tip_* rows when reachable (the normal case; currently
+    // 4 of them), or DEFAULT_SCRIPTS.landing.tips below otherwise. Kept
+    // the same length/order as the sheet's 4 tips specifically so "about
+    // page", last in both, always lands on the same image regardless of
+    // which source is actually driving the dialogue.
     landing: [
         'images/flo-landing-1.webp', // waving — intro
         'images/flo-landing-2.webp', // three fingers (a nod to the 3D room) — editorial tip
         'images/flo-landing-3.webp', // sunglasses, playful — scrapbook "fun one" tip
         'images/flo-landing-4.webp', // reading a book — accessible/research tip
-        'images/flo-landing-5.webp', // pointing — "hover over each button" tip
+        'images/flo-landing-6.webp', // clapping — "about page" tip
     ],
     editorial: [
         // Matching pink duotone/halftone treatment across all three.
@@ -54,6 +61,12 @@ const FLO_IMAGES = {
         'images/flo-scrapbook-2.webp', // pointing
         'images/flo-scrapbook-3.webp', // eating chips
     ],
+    // Just the one pose — this page's bubble is a single static screen
+    // (short intro + the display-options controls, no Next/tip-cycling),
+    // so there's only ever one line of dialogue to illustrate.
+    accessible: [
+        'images/flo-accessible-1.webp', // waving
+    ],
 };
 
 const MAX_TIPS = 8;
@@ -62,10 +75,10 @@ const DEFAULT_SCRIPTS = {
     landing: {
         intro: "Hello! I'm Flo, the archive helper. Pick one of the buttons above — each shows the archive in a different way.",
         tips: [
-            "Editorial is the full art experience — a 3D room you can look around.",
-            "Scrapbook is the fun one: scroll forever, filter by tags.",
-            "Accessible is the clear, easy-to-read version for researchers and screen readers.",
-            "Hover over each button to get a feel for where it takes you.",
+            "Curated is the full art experience — a 3D room you can look around.",
+            "Collected is the fun one: scroll forever, filter by tags.",
+            "Credited is the clear, easy-to-read version for researchers and screen readers.",
+            "Also check out the about page to how those babes made all this.",
         ],
     },
     editorial: {
@@ -73,7 +86,7 @@ const DEFAULT_SCRIPTS = {
         tips: [
             "The objects here are pulled from the archive — a new selection each visit.",
             "Click a framed photo or object to open its info panel.",
-            "Want more control? The Scrapbook view lets you search everything.",
+            "Want more control? The Collected view lets you search everything.",
         ],
     },
     scrapbook: {
@@ -85,21 +98,13 @@ const DEFAULT_SCRIPTS = {
             "Clear filters any time with the link next to the item count.",
         ],
     },
+    // This page's bubble is a single static screen — short intro plus the
+    // display-options controls (see buildHelper's accessible-page branch)
+    // — rather than the intro+cycling-tips pattern every other page uses,
+    // so there's no Next button and `tips` here goes unused.
     accessible: {
-        intro: "This is the accessible view — designed to be clear, fast, and easy to navigate for everyone.",
-        tips: [
-            "Search in plain language — you don't need the exact title, and small typos are fine.",
-            "Use the type, project, and tag filters to narrow things down further.",
-            "Every item has its own link, so you can share, bookmark, or come straight back to it.",
-            "You can switch views at any time with the buttons at the top.",
-        ],
-    },
-    process: {
-        intro: "This page is about how the archive itself was made — the thinking, the tools, and the people behind it.",
-        tips: [
-            "The archive is a living project — this page grows as it does.",
-            "Head back to the landing page to pick a way in.",
-        ],
+        intro: "This is the accessible view — clear, fast, and easy to navigate. Adjust it below:",
+        tips: [],
     },
 };
 
@@ -131,6 +136,12 @@ function buildHelper() {
     let tipIndex = -1;
     const floImages = FLO_IMAGES[page];
     const hasFloPhotos = !!(floImages && floImages.length);
+    // The accessible page's bubble replaces the usual intro+cycling-tips
+    // pattern with a single static screen: a short intro plus the
+    // text-size/contrast/dark-mode controls (see setupDisplayOptions
+    // below) — those live here, in Flo, rather than a standalone panel
+    // in the page's own markup.
+    const isAccessiblePage = page === 'accessible';
 
     const widget = document.createElement('div');
     widget.className = 'helper-widget';
@@ -147,7 +158,32 @@ function buildHelper() {
     // if the clip-path lives on that same element. Moving the paper's
     // clip-path/mask onto this inner wrapper instead leaves .helper-bubble
     // itself unclipped, free for its tape/tail to overlap the page edge.
-    bubble.innerHTML = `
+    bubble.innerHTML = isAccessiblePage ? `
+        <div class="helper-bubble-page">
+            <div class="helper-bubble-name">Flo</div>
+            <div class="helper-bubble-text"></div>
+            <div class="helper-display-options">
+                <div class="acc-filter-group">
+                    <span class="acc-filter-label">Text size</span>
+                    <div class="acc-chip-row" role="group" aria-label="Text size">
+                        <button type="button" class="acc-chip acc-size-btn acc-size-btn--sm" data-size="small" aria-pressed="false">A</button>
+                        <button type="button" class="acc-chip acc-size-btn acc-size-btn--md" data-size="medium" aria-pressed="true">A</button>
+                        <button type="button" class="acc-chip acc-size-btn acc-size-btn--lg" data-size="large" aria-pressed="false">A</button>
+                    </div>
+                </div>
+                <div class="acc-filter-group">
+                    <span class="acc-filter-label">Display</span>
+                    <div class="acc-chip-row" role="group" aria-label="Display">
+                        <button type="button" class="acc-chip" data-display-toggle="contrast" aria-pressed="false">High contrast</button>
+                        <button type="button" class="acc-chip" data-display-toggle="dark" aria-pressed="false">Dark mode</button>
+                    </div>
+                </div>
+            </div>
+            <div class="helper-bubble-actions">
+                <button class="helper-chip" data-action="close">close ×</button>
+            </div>
+        </div>
+    ` : `
         <div class="helper-bubble-page">
             <div class="helper-bubble-name">Flo</div>
             <div class="helper-bubble-text"></div>
@@ -248,6 +284,77 @@ function buildHelper() {
         say(script.tips[tipIndex], tipIndex + 1);
     }
 
+    // ===== ACCESSIBLE PAGE: display options (text size / contrast / dark) =====
+    // Independent, JS-set attributes on <body> (already carrying
+    // data-mode="accessible") — styles.css keys off them to scale type,
+    // invert the palette, and thicken borders/underline links. Persisted so
+    // a visitor who needs these doesn't have to reset them every visit.
+    if (isAccessiblePage) {
+        const DISPLAY_PREFS_KEY = 'acc-display-prefs';
+        const DEFAULT_DISPLAY_PREFS = { textSize: 'medium', contrast: false, dark: false };
+
+        const loadDisplayPrefs = () => {
+            try {
+                return { ...DEFAULT_DISPLAY_PREFS, ...JSON.parse(localStorage.getItem(DISPLAY_PREFS_KEY)) };
+            } catch {
+                return { ...DEFAULT_DISPLAY_PREFS };
+            }
+        };
+
+        const saveDisplayPrefs = (prefs) => {
+            try {
+                localStorage.setItem(DISPLAY_PREFS_KEY, JSON.stringify(prefs));
+            } catch {
+                // Private browsing / storage disabled — prefs just won't persist.
+            }
+        };
+
+        const sizeButtons = Array.from(bubble.querySelectorAll('.acc-size-btn'));
+        const contrastToggle = bubble.querySelector('[data-display-toggle="contrast"]');
+        const darkToggle = bubble.querySelector('[data-display-toggle="dark"]');
+        const displayPrefs = loadDisplayPrefs();
+
+        const applyDisplayPrefs = () => {
+            document.body.setAttribute('data-text-size', displayPrefs.textSize);
+            if (displayPrefs.contrast) document.body.setAttribute('data-contrast', 'high');
+            else document.body.removeAttribute('data-contrast');
+            if (displayPrefs.dark) document.body.setAttribute('data-theme', 'dark');
+            else document.body.removeAttribute('data-theme');
+
+            sizeButtons.forEach(b => {
+                const active = b.dataset.size === displayPrefs.textSize;
+                b.classList.toggle('active', active);
+                b.setAttribute('aria-pressed', String(active));
+            });
+            contrastToggle.classList.toggle('active', displayPrefs.contrast);
+            contrastToggle.setAttribute('aria-pressed', String(displayPrefs.contrast));
+            darkToggle.classList.toggle('active', displayPrefs.dark);
+            darkToggle.setAttribute('aria-pressed', String(displayPrefs.dark));
+        };
+
+        sizeButtons.forEach(b => {
+            b.addEventListener('click', () => {
+                displayPrefs.textSize = b.dataset.size;
+                saveDisplayPrefs(displayPrefs);
+                applyDisplayPrefs();
+            });
+        });
+
+        contrastToggle.addEventListener('click', () => {
+            displayPrefs.contrast = !displayPrefs.contrast;
+            saveDisplayPrefs(displayPrefs);
+            applyDisplayPrefs();
+        });
+
+        darkToggle.addEventListener('click', () => {
+            displayPrefs.dark = !displayPrefs.dark;
+            saveDisplayPrefs(displayPrefs);
+            applyDisplayPrefs();
+        });
+
+        applyDisplayPrefs();
+    }
+
     btn.addEventListener('click', () => {
         if (bubble.classList.contains('open')) close();
         else say(script.intro, 0);
@@ -263,15 +370,14 @@ function buildHelper() {
     // narrow viewports for two pages: accessible, where the search form +
     // type/project filters already fill the whole first screen and Flo's
     // own auto-opening bubble would land right on top of the filters
-    // instead of below them like on every other page; and process, whose
-    // team bio list can scroll to sit exactly in Flo's fixed bottom-right
-    // corner (confirmed: with her bubble open, the longer names' tails
-    // land underneath it, unclickable until she's closed). Neither case
-    // is about the bubble's position at open time — it's a fixed corner
-    // that can end up over arbitrary content once the page scrolls — so
-    // not auto-opening is what actually avoids it for most visits; Flo
-    // is still fully available via click either way.
-    const skipAutoIntro = (page === 'accessible' || page === 'process') && window.matchMedia('(max-width: 480px)').matches;
+    // instead of below them like on every other page; and landing, whose
+    // stacked circle badges run the full column and put one directly under
+    // Flo's corner too (confirmed: her bubble covers the Accessible badge's
+    // text). Neither is about the bubble's position at open time — it's a
+    // fixed corner that can end up over arbitrary content once the page
+    // scrolls or stacks — so not auto-opening is what actually avoids it
+    // for most visits; Flo is still fully available via click either way.
+    const skipAutoIntro = (page === 'accessible' || page === 'landing') && window.matchMedia('(max-width: 480px)').matches;
     if (!skipAutoIntro) {
         setTimeout(() => say(script.intro, 0), 1400);
     }

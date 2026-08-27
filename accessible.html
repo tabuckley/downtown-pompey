@@ -3,43 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Downtown Pompey</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>Credited | Alternative Archiving</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="images/favicon.png" type="image/png">
-    <style>
-        * { box-sizing: border-box; }
-        html, body {
-            height: 100%;
-            margin: 0;
-            background: #ffffff;
-            color: #1a1512;
-            font-family: 'Montserrat', sans-serif;
-        }
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 2rem;
-            text-align: center;
-        }
-        img {
-            width: min(260px, 60vw);
-            height: auto;
-            margin-bottom: 1.6rem;
-        }
-        p {
-            font-size: 1rem;
-            color: #55504a;
-            max-width: 28rem;
-            line-height: 1.6;
-            margin: 0;
-        }
-    </style>
 </head>
-<body>
-    <img src="https://media.downtownpompey.online/Downtown-Pompey-logo.png" alt="Downtown Pompey">
-    <p>We're rebuilding the archive. Back soon.</p>
+<body data-mode="accessible" data-page="accessible">
+
+    <header class="page-topbar">
+        <a href="index.html" class="home-link">
+            <img src="https://media.downtownpompey.online/Downtown-Pompey-logo.png" alt="Downtown Pompey — Alternative Archiving" class="home-logo">
+        </a>
+        <nav class="mode-switcher">
+            <a href="editorial.html" class="mode-btn">Curated</a>
+            <a href="scrapbook.html" class="mode-btn">Collected</a>
+            <a href="accessible.html" class="mode-btn active">Credited</a>
+        </nav>
+    </header>
+
+    <main class="acc-main">
+
+        <!-- ===== SEARCH VIEW ===== -->
+        <section id="accSearchView" class="acc-view acc-search-view">
+            <div class="acc-search-panel">
+                <h1 class="shell-title">Credited Archive</h1>
+                <p class="shell-text acc-intro">
+                    Search the whole archive in plain text. Describe what you remember, or
+                    what you're looking for. Exact titles aren't needed, and typos are fine.
+                </p>
+
+                <form id="accSearchForm" class="acc-search-form" role="search">
+                    <label for="accSearchInput" class="acc-search-label">Search the archive</label>
+                    <div class="acc-search-row">
+                        <input type="search" id="accSearchInput" class="acc-search-input"
+                            placeholder="e.g. &quot;a collage about gender&quot; or &quot;pink writing on faces&quot;"
+                            autocomplete="off">
+                        <button type="submit" class="acc-search-btn">Search</button>
+                    </div>
+                </form>
+
+                <div class="acc-filters">
+                    <div class="acc-filter-group">
+                        <span class="acc-filter-label">Type</span>
+                        <div id="accTypeFilters" class="acc-chip-row"></div>
+                    </div>
+                    <div class="acc-filter-group">
+                        <span class="acc-filter-label">Project</span>
+                        <div id="accProjectFilters" class="acc-chip-row"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="acc-results-panel">
+                <!-- Clicking a result swaps this pane out for accDetailPane
+                     below, in place -- the search panel to the left stays
+                     put and this panel just grows to fit, rather than
+                     navigating to a whole separate full-page view. -->
+                <div id="accResultsPane">
+                    <p id="accStatus" class="acc-status" role="status" aria-live="polite"></p>
+                    <ul id="accResults" class="acc-results" aria-label="Search results"></ul>
+                </div>
+                <div id="accDetailPane" hidden>
+                    <a href="accessible.html" id="accBackLink" class="acc-back-link">&larr; Back to results</a>
+                    <article id="accDetailContent" class="acc-detail"></article>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="site-helper"></div>
+    <script type="module" src="helper.js"></script>
+    <script type="module" src="accessible.js"></script>
 </body>
 </html>
