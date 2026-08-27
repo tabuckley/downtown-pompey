@@ -4,8 +4,9 @@
 // rows to the _copy tab using the keys
 //   archie_<page>_intro   — shown automatically on first visit
 //   archie_<page>_tip_1, archie_<page>_tip_2, ... — cycled by "another tip?"
-// where <page> is editorial / scrapbook / accessible (Flo doesn't appear
-// on the landing or process pages).
+// where <page> is landing / editorial / scrapbook / accessible (Flo
+// doesn't appear on the process page, and is hidden via CSS on mobile
+// for landing specifically — see .helper-widget in styles.css).
 // The defaults below are the fallback used until the sheet loads (or if a
 // key is left blank), so the helper always has something to say.
 
@@ -33,6 +34,20 @@ const ARCHIE_IMAGE_URL = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
 // and need no changes. Pages with no entry (or an empty array) keep
 // showing the placeholder SVG.
 const FLO_IMAGES = {
+    // Index here is imageIndex (intro=0, tip N=N), which must line up with
+    // whichever tips array actually ends up live — the _copy sheet's own
+    // archie_landing_tip_* rows when reachable (the normal case; currently
+    // 4 of them), or DEFAULT_SCRIPTS.landing.tips below otherwise. Kept
+    // the same length/order as the sheet's 4 tips specifically so "about
+    // page", last in both, always lands on the same image regardless of
+    // which source is actually driving the dialogue.
+    landing: [
+        'images/flo-landing-1.webp', // waving — intro
+        'images/flo-landing-2.webp', // three fingers (a nod to the 3D room) — editorial tip
+        'images/flo-landing-3.webp', // sunglasses, playful — scrapbook "fun one" tip
+        'images/flo-landing-4.webp', // reading a book — accessible/research tip
+        'images/flo-landing-6.webp', // clapping — "about page" tip
+    ],
     editorial: [
         // Matching pink duotone/halftone treatment across all three.
         // Display order (pointing/intro, shrug, thoughtful) doesn't match
@@ -62,9 +77,21 @@ const DEFAULT_SCRIPTS = {
     // Fallback for any page with no entry of its own below — keeps
     // buildHelper() safe rather than showing "undefined" if one's ever
     // missing.
+    // Generic fallback for any page with no entry of its own below —
+    // keeps buildHelper() safe rather than showing "undefined" if one's
+    // ever missing.
     default: {
         intro: "Hello! I'm Flo, the archive helper.",
         tips: [],
+    },
+    landing: {
+        intro: "Hello! I'm Flo, the archive helper. Pick one of the buttons above — each shows the archive in a different way.",
+        tips: [
+            "Curated is the full art experience — a 3D room you can look around.",
+            "Collected is the fun one: scroll forever, filter by tags.",
+            "Credited is the clear, easy-to-read version for researchers and screen readers.",
+            "Also check out the about page to how those babes made all this.",
+        ],
     },
     editorial: {
         intro: "You're in the room. Move your mouse to look around, and click any object on display to learn its story.",

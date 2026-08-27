@@ -3475,6 +3475,12 @@ body.landing {
     .badge-title { font-size: 0.64rem; }
     .badge-copy { font-size: 0.44rem; }
 
+    /* Flo doesn't appear on this page at mobile widths — the composition
+       above (neon sign, text, badges) already fills the screen without
+       her. Desktop still gets her; this is scoped inside the mobile
+       breakpoint only. */
+    [data-page="landing"] .helper-widget { display: none; }
+
     /* Fixed to the bottom-left corner, mirroring Flo's own fixed
        bottom-right one — the two now sit side by side at the same
        height instead of needing a long scroll (and extra clearance
