@@ -156,6 +156,31 @@ function initPanelGlow() {
     });
 
     window.addEventListener('resize', () => rigs.forEach(redraw));
+
+    // Touch devices never trigger :hover, so the glow/connector-line
+    // effect (and the badges' own hover bounce) would otherwise go
+    // completely unseen there — this auto-cycles the same setActive()
+    // used above through each badge in turn, standing in for a hover
+    // that can't happen. .is-demo-active mirrors :hover/:focus-visible
+    // in the badge transform rules (styles.css) since a JS class toggle
+    // doesn't trigger a real CSS pseudo-class. One-time check at load,
+    // same reasoning as the mobile <source media> in index.html — a
+    // visit doesn't change device type mid-session.
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (isMobile && !reduceMotion) {
+        let index = 0;
+        const cycle = () => {
+            rigs.forEach((rig, i) => {
+                const on = i === index;
+                setActive(rig, on);
+                rig.panel.classList.toggle('is-demo-active', on);
+            });
+            index = (index + 1) % rigs.length;
+        };
+        cycle();
+        setInterval(cycle, 2200);
+    }
 }
 
 initPanelGlow();

@@ -1017,6 +1017,12 @@ body.landing {
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
 }
 
+/* Hidden by default — only ever shown on mobile (see the breakpoint
+   below), where it takes over from the copy nested inside .welcome-copy
+   (hidden there instead) so the link can sit just above the badge row
+   rather than under the heading. */
+.welcome-copy-link--mobile { display: none; }
+
 .welcome-copy-link img {
     display: block;
     width: 34px;
@@ -1099,22 +1105,31 @@ body.landing {
    here (a faster, undelayed 0.35s) is what keeps hover snappy instead
    of inheriting the entrance's slower, staggered timing above. */
 .badge:hover,
-.badge:focus-visible {
+.badge:focus-visible,
+.badge.is-demo-active {
     transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* .is-demo-active mirrors :hover/:focus-visible on touch devices, where
+   panel-glow.js auto-cycles each badge in turn (since :hover never
+   fires there) to demonstrate the glow/connector-line effect — a JS
+   class toggle can't trigger a real pseudo-class, so it needs its own
+   place in each selector list. */
 .badge--scrapbook:hover,
-.badge--scrapbook:focus-visible {
+.badge--scrapbook:focus-visible,
+.badge--scrapbook.is-demo-active {
     transform: scale(1.14) rotate(-8deg) translateY(-4px);
 }
 
 .badge--web00:hover,
-.badge--web00:focus-visible {
+.badge--web00:focus-visible,
+.badge--web00.is-demo-active {
     transform: scale(1.16) translateY(-8px);
 }
 
 .badge--accessible:hover,
-.badge--accessible:focus-visible {
+.badge--accessible:focus-visible,
+.badge--accessible.is-demo-active {
     transform: scale(1.14) rotate(8deg) translateY(-4px);
 }
 
@@ -3458,19 +3473,35 @@ body.landing {
         max-width: none;
         padding: 0 1.5rem;
         margin-top: auto;
-        margin-bottom: 2rem;
+        margin-bottom: 0;
         text-align: center;
     }
 
     .welcome-copy-text { white-space: normal; font-size: 0.85rem; }
+
+    /* The link normally nested inside .welcome-copy is hidden here in
+       favour of the standalone .welcome-copy-link--mobile sibling below,
+       which soaks up the remaining free space itself (margin-top: auto)
+       so it lands right above the badges with a small fixed gap, rather
+       than directly under the heading with the same evenly-distributed
+       space used above it. */
+    .welcome-copy .welcome-copy-link { display: none; }
+    .welcome-copy-link--mobile {
+        display: inline-flex;
+        justify-content: center;
+        margin: auto auto 0.9rem;
+    }
 
     /* Matches .page-topbar .home-logo's own mobile size. */
     .landing-topbar-logo img { height: 60px; }
 
     /* Row, not stacked — three side-by-side circles read better here
        than a tall column. Smaller than the shared 138px default so they
-       don't dominate a narrow screen. */
-    .badge-row { flex-direction: row; flex-wrap: nowrap; gap: 0.7rem; padding: 0 1.2rem; margin-top: auto; }
+       don't dominate a narrow screen. No margin-top:auto here any more —
+       .welcome-copy-link--mobile above now owns that job, so the row
+       just follows right after it with the small gap from the link's
+       own margin-bottom. */
+    .badge-row { flex-direction: row; flex-wrap: nowrap; justify-content: center; gap: 0.7rem; padding: 0 1.2rem; }
     .badge { width: 84px; height: 84px; padding: 0.4rem; }
     .badge-title { font-size: 0.64rem; }
     .badge-copy { font-size: 0.44rem; }
@@ -3481,25 +3512,26 @@ body.landing {
        breakpoint only. */
     [data-page="landing"] .helper-widget { display: none; }
 
-    /* Fixed to the bottom-left corner, mirroring Flo's own fixed
-       bottom-right one — the two now sit side by side at the same
-       height instead of needing a long scroll (and extra clearance
-       padding) to separate a flowing footer from her fixed figure. Each
-       is sized to genuinely fill its own half of the screen rather than
-       leaving a wide gap of empty floor between them. */
+    /* One horizontal line spanning the width, not anchored to the
+       left half — that was specifically to leave Flo's fixed
+       bottom-right figure room, and she doesn't appear here on mobile
+       any more. */
     .landing-footer {
         position: fixed;
-        left: 1rem;
+        left: 0;
+        right: 0;
         bottom: 1rem;
-        max-width: 52vw;
+        max-width: none;
         margin: 0;
-        padding: 0;
+        padding: 0 1.5rem;
         z-index: 100;
     }
-    .logo-strip { justify-content: flex-start; gap: 0.55rem; }
-    .logo-strip-item--feature { height: 70px; }
-    .logo-strip-stack { gap: 0.3rem; }
-    .logo-strip-stack .logo-strip-item img { max-height: 23px; }
+    .logo-strip { justify-content: center; align-items: center; gap: 1.1rem; }
+    .logo-strip-item--feature { height: 54px; }
+    /* Row, not stacked — all three logos read as one line together now
+       instead of a pair stacked beside the Heritage Fund badge. */
+    .logo-strip-stack { flex-direction: row; align-items: center; gap: 1rem; }
+    .logo-strip-stack .logo-strip-item img { max-height: 24px; }
     .logo-strip-label { font-size: 0.42rem; margin-bottom: 0.2rem; }
 
     .page-topbar { padding: 0.6rem 0.7rem; flex-wrap: wrap; row-gap: 0.4rem; }

@@ -91,6 +91,16 @@
             </a>
         </div>
 
+        <!-- Same link as .welcome-copy-link above, duplicated rather than
+             moved — desktop's copy stays inside .welcome-copy's own
+             absolute-positioned overlay (tied to the video's neon sign),
+             untouched; this one only ever shows on mobile (see styles.css),
+             sitting just above the badge row instead of under the heading. -->
+        <a href="process.html" class="welcome-copy-link welcome-copy-link--mobile">
+            <img src="images/aag-process-badge.png" alt="" width="40" height="40">
+            <span>See how the site was made</span>
+        </a>
+
         <!-- A flex row instead of each badge scattered individually —
              centres all three as one group near the top rather than
              needing per-badge translateX math to line them up. -->
