@@ -91,35 +91,42 @@
             </a>
         </div>
 
-        <!-- Same link as .welcome-copy-link above, duplicated rather than
-             moved — desktop's copy stays inside .welcome-copy's own
-             absolute-positioned overlay (tied to the video's neon sign),
-             untouched; this one only ever shows on mobile (see styles.css),
-             sitting just above the badge row instead of under the heading. -->
-        <a href="process.html" class="welcome-copy-link welcome-copy-link--mobile">
-            <img src="images/aag-process-badge.png" alt="" width="40" height="40">
-            <span>See how the site was made</span>
-        </a>
-
         <!-- A flex row instead of each badge scattered individually —
              centres all three as one group near the top rather than
-             needing per-badge translateX math to line them up. -->
+             needing per-badge translateX math to line them up. Also
+             carries a -mobile pair of glow-target coordinates: the
+             portrait mobile background video (see .panels-bg above) is
+             its own composition, not a crop of the desktop one, so each
+             object sits at a different point in-frame there — see
+             panel-glow.js for which pair actually gets used. -->
         <div class="badge-row">
-            <a href="scrapbook.html" class="badge badge--scrapbook" data-glow-target="scrapbook" data-glow-x="0.536" data-glow-y="0.587">
+            <a href="scrapbook.html" class="badge badge--scrapbook" data-glow-target="scrapbook" data-glow-x="0.536" data-glow-y="0.587" data-glow-x-mobile="0.575" data-glow-y-mobile="0.585">
                 <span class="badge-title">Collected</span>
                 <span class="badge-copy">An infinite tagged scrapbook</span>
             </a>
 
-            <a href="editorial.html" class="badge badge--web00" data-glow-target="web00" data-glow-x="0.448" data-glow-y="0.467">
+            <a href="editorial.html" class="badge badge--web00" data-glow-target="web00" data-glow-x="0.448" data-glow-y="0.467" data-glow-x-mobile="0.29" data-glow-y-mobile="0.515">
                 <span class="badge-title">Curated</span>
                 <span class="badge-copy">An immersive 00's web-disco</span>
             </a>
 
-            <a href="accessible.html" class="badge badge--accessible" data-glow-target="accessible" data-glow-x="0.587" data-glow-y="0.530">
+            <a href="accessible.html" class="badge badge--accessible" data-glow-target="accessible" data-glow-x="0.587" data-glow-y="0.530" data-glow-x-mobile="0.74" data-glow-y-mobile="0.50">
                 <span class="badge-title">Credited</span>
                 <span class="badge-copy">An easy way to find what you want</span>
             </a>
         </div>
+
+        <!-- Same link as .welcome-copy-link above, duplicated rather than
+             moved — desktop's copy stays inside .welcome-copy's own
+             absolute-positioned overlay (tied to the video's neon sign),
+             untouched; this one only ever shows on mobile (see styles.css),
+             sitting just below the badge row instead of under the heading.
+             Placed after .badge-row in source (not just visually via CSS
+             order) so tab order still matches what's on screen. -->
+        <a href="process.html" class="welcome-copy-link welcome-copy-link--mobile">
+            <img src="images/aag-process-badge.png" alt="" width="40" height="40">
+            <span>See how the site was made</span>
+        </a>
 
     </section>
 

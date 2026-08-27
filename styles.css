@@ -3475,21 +3475,21 @@ body.landing {
         margin-top: auto;
         margin-bottom: 0;
         text-align: center;
+        /* One line further up than its natural flex position. */
+        transform: translateY(-1.3rem);
     }
 
     .welcome-copy-text { white-space: normal; font-size: 0.85rem; }
 
     /* The link normally nested inside .welcome-copy is hidden here in
-       favour of the standalone .welcome-copy-link--mobile sibling below,
-       which soaks up the remaining free space itself (margin-top: auto)
-       so it lands right above the badges with a small fixed gap, rather
-       than directly under the heading with the same evenly-distributed
-       space used above it. */
+       favour of the standalone .welcome-copy-link--mobile element,
+       placed after .badge-row in the source (see index.html) so it
+       shows below the badges instead of under the heading. */
     .welcome-copy .welcome-copy-link { display: none; }
     .welcome-copy-link--mobile {
         display: inline-flex;
         justify-content: center;
-        margin: auto auto 0.9rem;
+        margin: 0.9rem auto 0;
     }
 
     /* Matches .page-topbar .home-logo's own mobile size. */
@@ -3497,11 +3497,11 @@ body.landing {
 
     /* Row, not stacked — three side-by-side circles read better here
        than a tall column. Smaller than the shared 138px default so they
-       don't dominate a narrow screen. No margin-top:auto here any more —
-       .welcome-copy-link--mobile above now owns that job, so the row
-       just follows right after it with the small gap from the link's
-       own margin-bottom. */
-    .badge-row { flex-direction: row; flex-wrap: nowrap; justify-content: center; gap: 0.7rem; padding: 0 1.2rem; }
+       don't dominate a narrow screen. .welcome-copy above is the only
+       thing left with margin-top:auto, so all the free space collects
+       there and the row lands right under the text (a small fixed gap)
+       instead of being pushed toward the bottom of the screen. */
+    .badge-row { flex-direction: row; flex-wrap: nowrap; justify-content: center; gap: 0.7rem; padding: 0 1.2rem; margin-top: 0.9rem; }
     .badge { width: 84px; height: 84px; padding: 0.4rem; }
     .badge-title { font-size: 0.64rem; }
     .badge-copy { font-size: 0.44rem; }
@@ -3511,6 +3511,16 @@ body.landing {
        her. Desktop still gets her; this is scoped inside the mobile
        breakpoint only. */
     [data-page="landing"] .helper-widget { display: none; }
+
+    /* Each .object-glow is a rim-light PNG hand-cut around one object's
+       exact silhouette in the desktop video's frame (1924x1076,
+       object-fit:cover — see the base rule above) — there's no version
+       of these cut for the portrait mobile video's own composition, so
+       showing them here would rim-light nothing real. The connector
+       line/dot (pure SVG, driven by the data-glow-*-mobile coordinates
+       in index.html — see panel-glow.js) still works correctly and
+       stays visible on its own. */
+    .object-glow { display: none; }
 
     /* One horizontal line spanning the width, not anchored to the
        left half — that was specifically to leave Flo's fixed
