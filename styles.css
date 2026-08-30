@@ -171,6 +171,67 @@ body[data-page="process"] {
     text-decoration: underline;
 }
 
+/* ===== PRIVACY PAGE ===== */
+/* Same light, warm reading palette as .pr-panel on process.html — a
+   plain long-form text page wants the same "readable, not the dark
+   editorial default" treatment, minus that page's own background photo. */
+[data-page="privacy"] {
+    --bg:      #faf7f2;
+    --text:    #1a1512;
+    --muted:   #6b6258;
+    --accent:  #d01359;
+    --border:  #e4ddd0;
+}
+
+.legal-page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 8.5rem 1.5rem 4rem;
+    line-height: 1.6;
+}
+
+.legal-page h1 {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.legal-updated {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 2rem;
+}
+
+.legal-page h2 {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 2rem 0 0.75rem;
+}
+
+.legal-page p {
+    margin-bottom: 1rem;
+}
+
+.legal-page ul {
+    margin: 0 0 1rem 1.25rem;
+}
+
+.legal-page li {
+    margin-bottom: 0.5rem;
+}
+
+.legal-page a {
+    color: var(--accent);
+}
+
+@media (max-width: 768px) {
+    /* .page-topbar wraps to two rows here (logo, then the mode-switcher
+       underneath) and runs taller than its single-row desktop height —
+       needs more clearance than the desktop padding-top alone gives. */
+    .legal-page { padding-top: 11rem; }
+}
+
 /* ===== BASE ===== */
 html { scroll-behavior: smooth; }
 
@@ -1276,6 +1337,28 @@ body.landing {
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.65);
     margin-bottom: 0.3rem;
+}
+
+/* A separate line below .logo-strip rather than woven into it — that
+   row's own flex layout (gap, centring, wrapping) is tuned precisely
+   for the three logos across both desktop and mobile, and a fourth,
+   differently-shaped item risks throwing that off. */
+.footer-privacy-link {
+    display: block;
+    margin-top: 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: none;
+}
+
+.footer-privacy-link:hover { color: rgba(255, 255, 255, 0.85); }
+
+@media (min-width: 1001px) {
+    .footer-privacy-link { text-align: left; }
 }
 
 .logo-placeholder {
@@ -4067,6 +4150,15 @@ button.acc-size-btn--lg { font-size: 1.4rem; }
 }
 
 .acc-credit-input { flex: 1 1 auto; }
+
+.acc-credit-privacy-note {
+    display: block;
+    margin-top: 0.6rem;
+    font-size: calc(0.7rem * var(--acc-scale, 1));
+    color: var(--muted);
+}
+
+.acc-credit-privacy-note a { color: inherit; text-decoration: underline; }
 
 .acc-btn {
     font-family: var(--font-body);
