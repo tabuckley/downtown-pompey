@@ -459,6 +459,11 @@ function buildCreditRequestBlock(item) {
     form.append(field, submitBtn);
     wrap.appendChild(form);
 
+    const privacyNote = document.createElement('p');
+    privacyNote.className = 'acc-credit-privacy-note';
+    privacyNote.innerHTML = 'We only use this to credit you — see <a href="privacy.html">privacy</a>.';
+    wrap.appendChild(privacyNote);
+
     let name = '';
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
