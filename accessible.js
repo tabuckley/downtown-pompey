@@ -36,8 +36,8 @@ const detailPane = document.getElementById('accDetailPane');
 // which drops them out of normal flow and collapses .acc-results-panel's
 // height (this page scrolls to fit variable content, it isn't a fixed-
 // height app shell) — so this only animates the pane being revealed, via
-// the same class + forced-reflow replay pattern as .flo-pop/.tile-in
-// elsewhere on the site.
+// the same class + forced-reflow replay pattern as .tile-in elsewhere on
+// the site.
 function revealPane(el) {
     el.hidden = false;
     el.classList.remove('acc-pane-enter');
@@ -54,10 +54,78 @@ const resultsEl = document.getElementById('accResults');
 const backLink = document.getElementById('accBackLink');
 const detailContent = document.getElementById('accDetailContent');
 
-// Display options (text size / high contrast / dark mode) live in Flo's
-// speech bubble on this page now — see helper.js. It sets the same
-// data-text-size/data-contrast/data-theme attributes on <body> that
-// styles.css keys off, so nothing here needs to know about them.
+// ===== DISPLAY OPTIONS (text size / high contrast / dark mode) =====
+// Independent, JS-set attributes on <body> (already carrying
+// data-mode="accessible") — styles.css keys off them to scale type,
+// invert the palette, and thicken borders/underline links. Persisted so a
+// visitor who needs these doesn't have to reset them every visit.
+const DISPLAY_PREFS_KEY = 'acc-display-prefs';
+const DEFAULT_DISPLAY_PREFS = { textSize: 'medium', contrast: false, dark: false };
+
+function loadDisplayPrefs() {
+    try {
+        return { ...DEFAULT_DISPLAY_PREFS, ...JSON.parse(localStorage.getItem(DISPLAY_PREFS_KEY)) };
+    } catch {
+        return { ...DEFAULT_DISPLAY_PREFS };
+    }
+}
+
+function saveDisplayPrefs(prefs) {
+    try {
+        localStorage.setItem(DISPLAY_PREFS_KEY, JSON.stringify(prefs));
+    } catch {
+        // Private browsing / storage disabled — prefs just won't persist.
+    }
+}
+
+function setupDisplayOptions() {
+    const sizeButtons = Array.from(document.querySelectorAll('.acc-size-btn'));
+    const contrastToggle = document.querySelector('[data-display-toggle="contrast"]');
+    const darkToggle = document.querySelector('[data-display-toggle="dark"]');
+    const displayPrefs = loadDisplayPrefs();
+
+    function applyDisplayPrefs() {
+        document.body.setAttribute('data-text-size', displayPrefs.textSize);
+        if (displayPrefs.contrast) document.body.setAttribute('data-contrast', 'high');
+        else document.body.removeAttribute('data-contrast');
+        if (displayPrefs.dark) document.body.setAttribute('data-theme', 'dark');
+        else document.body.removeAttribute('data-theme');
+
+        sizeButtons.forEach(b => {
+            const active = b.dataset.size === displayPrefs.textSize;
+            b.classList.toggle('active', active);
+            b.setAttribute('aria-pressed', String(active));
+        });
+        contrastToggle.classList.toggle('active', displayPrefs.contrast);
+        contrastToggle.setAttribute('aria-pressed', String(displayPrefs.contrast));
+        darkToggle.classList.toggle('active', displayPrefs.dark);
+        darkToggle.setAttribute('aria-pressed', String(displayPrefs.dark));
+    }
+
+    sizeButtons.forEach(b => {
+        b.addEventListener('click', () => {
+            displayPrefs.textSize = b.dataset.size;
+            saveDisplayPrefs(displayPrefs);
+            applyDisplayPrefs();
+        });
+    });
+
+    contrastToggle.addEventListener('click', () => {
+        displayPrefs.contrast = !displayPrefs.contrast;
+        saveDisplayPrefs(displayPrefs);
+        applyDisplayPrefs();
+    });
+
+    darkToggle.addEventListener('click', () => {
+        displayPrefs.dark = !displayPrefs.dark;
+        saveDisplayPrefs(displayPrefs);
+        applyDisplayPrefs();
+    });
+
+    applyDisplayPrefs();
+}
+
+setupDisplayOptions();
 
 let allItems = [];
 let searchIndex = [];

@@ -245,14 +245,10 @@ body {
 }
 
 /* ===== MODE SWITCHER =====
-   Styled to match Flo's own speech-bubble chips (.helper-chip /
-   .helper-bubble-actions below) instead of its own separate joined pill
-   bar — a plain row of independently-bordered pill buttons, so it reads
-   as the same kind of control as the helper widget elsewhere on the
-   page. Built on the same custom properties .helper-chip uses, so
-   scrapbook/accessible fall out correctly with no per-mode overrides
-   here — only editorial needs one, mirroring .helper-chip's own pixel
-   treatment below. */
+   A plain row of independently-bordered pill buttons rather than one
+   joined bar. Scrapbook/accessible fall out correctly from the shared
+   base rule with no per-mode overrides — only editorial needs one (its
+   own Win98 pushbutton treatment, below). */
 .mode-switcher {
     display: flex;
     gap: 0.8rem;
@@ -1383,498 +1379,8 @@ body.landing {
     color: #bbb;
 }
 
-/* ===== SITE HELPER ===== */
-/* Flo sits in the bottom-right corner at ~1/6 of the viewport height —
-   a torso-up figure (placeholder SVG until the final PNG is supplied, see
-   ARCHIE_IMAGE_URL in helper.js). The bubble stacks above it in the same
-   fixed-position flex column, so it repositions itself automatically if
-   the figure's size changes. */
-.helper-widget {
-    position: fixed;
-    bottom: 0;
-    right: 1.4rem;
-    z-index: 500;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.7rem;
-    pointer-events: none;
-}
-
-.helper-widget > * { pointer-events: auto; }
-
-.helper-figure-btn {
-    background: none;
-    border: none;
-    padding: 0;
-    margin: 0;
-    line-height: 0;
-    cursor: pointer;
-}
-
-.helper-figure-img {
-    display: block;
-    height: 25vh;
-    min-height: 195px;
-    max-height: 360px;
-    width: auto;
-    filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.35));
-}
-
-/* Retro bouncy pop-in — toggled by helper.js on every image swap (each
-   line of Flo's dialogue), not just the first appearance. Fast and mostly
-   scale-driven (a "blink" between poses) rather than a smooth fade —
-   opacity only dips partway, never to 0. Every stop keeps the same
-   translateX(1.4rem) as .helper-figure-img--photo's own static transform
-   (the flush-against-the-edge offset) baked in — an animated `transform`
-   fully replaces the element's transform for its duration rather than
-   composing with the static one, so without this Flo visibly snapped to
-   her un-shifted position for the whole animation and only jumped back
-   into place once it ended. */
-.helper-figure-img.flo-pop {
-    animation: flo-pop-in 0.18s ease-out;
-}
-
-@keyframes flo-pop-in {
-    0% { transform: translateX(1.4rem) scale(0.5); opacity: 0.5; }
-    55% { transform: translateX(1.4rem) scale(1.15); opacity: 1; }
-    100% { transform: translateX(1.4rem) scale(1); opacity: 1; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .helper-figure-img.flo-pop {
-        animation: none;
-    }
-}
-
-.helper-bubble {
-    position: relative;
-    align-self: flex-end;
-    width: min(220px, calc(100vw - 2.8rem));
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 0;
-    padding: 1rem 1.1rem;
-    margin-bottom: 0.3rem;
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    line-height: 1.55;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(8px);
-    pointer-events: none;
-    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
-}
-
-/* Structural no-op by default — see the comment in helper.js where this
-   wrapper is created. Scrapbook mode turns it into a real box. */
-.helper-bubble-page { display: contents; }
-
-.helper-bubble.open {
-    opacity: 1;
-    visibility: visible;
-    transform: none;
-    pointer-events: auto;
-}
-
-/* Speech-bubble tail, pointing down toward Flo's head */
-.helper-bubble::after {
-    content: '';
-    position: absolute;
-    bottom: -8px;
-    right: 34px;
-    width: 16px;
-    height: 16px;
-    background: var(--card-bg);
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    transform: rotate(45deg);
-}
-
-/* Scrapbook mode — a torn notebook page: ring-binder holes punched down
-   the left edge, faint blue ruled lines, a ragged torn edge everywhere
-   else, a strip of real washi tape holding it down, and a speech-bubble
-   tail at the bottom pointing at Flo. Replaces a CSS-only pink post-it —
-   read as a plain pink box rather than an actual sticky note, since a
-   post-it's whole visual identity is the small stuck-on square of paper,
-   not the colour alone.
-
-   Two earlier photographed-image attempts before that were abandoned for
-   the same root problem: a fixed-aspect-ratio image forces the box into
-   that same fixed shape, so however the box was sized the art had to be
-   stretched or cropped to fit. Nothing here is a raster image except the
-   tape (::before, a real washi-tape PNG already used elsewhere on this
-   page) — the torn silhouette is a clip-path, the punched holes are an
-   SVG mask, so the box still sizes to its content like the base
-   .helper-bubble does everywhere else. */
-[data-mode="scrapbook"] .helper-bubble {
-    /* Outer shell only — position + resting tilt. All paper styling lives
-       on .helper-bubble-page (below) instead, specifically so this
-       element stays unclipped and its own ::before/::after (tape, tail)
-       can hang past the page's torn edge rather than being cut off by a
-       clip-path/mask sitting on the same element they belong to. */
-    background: none;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    padding: 0;
-    transform: rotate(-1.5deg);
-    position: relative;
-    overflow: visible;
-    /* Wider than the shared 220px default — the page's own left padding
-       (2.5rem, for the punched-hole margin) eats more of the box than a
-       plain bubble's padding does, so at the shared width a normal line
-       of dialogue was wrapping into three-plus short lines instead of
-       reading as a page. */
-    width: min(270px, calc(100vw - 2.8rem));
-}
-
-[data-mode="scrapbook"] .helper-bubble.open {
-    /* The base rule's transform:none on .open would otherwise cancel the
-       resting tilt above — composing them here keeps the tilt through the
-       open/close transition instead of snapping flat. */
-    transform: rotate(-1.5deg);
-}
-
-[data-mode="scrapbook"] .helper-bubble-page {
-    display: block;
-    background:
-        repeating-linear-gradient(to bottom, transparent 0 27px, rgba(60, 110, 210, 0.16) 27px 28px),
-        #f2ead8;
-    background-position: 0 2.4rem;
-    color: #332b1e;
-    box-shadow: 3px 6px 14px rgba(0, 0, 0, 0.35);
-    padding: 1.8rem 1.2rem 1.8rem 2.5rem;
-    /* Straight left edge (0% x) for the punched holes; torn everywhere
-       else. Percentages, not fixed px, so the tear pattern holds its
-       shape as the box grows/shrinks with content. */
-    clip-path: polygon(
-        6% 0%, 17% 3%, 29% 0%, 41% 4%, 53% 0%, 65% 3%, 77% 0%, 89% 4%, 100% 1%,
-        97% 13%, 100% 24%, 96% 35%, 100% 46%, 97% 57%, 100% 68%, 96% 79%, 100% 90%, 98% 100%,
-        84% 97%, 69% 100%, 54% 97%, 39% 100%, 24% 97%, 11% 100%, 0% 95%,
-        0% 5%
-    );
-    /* Four punched holes, evenly spaced down the left margin. Built from
-       plain CSS radial-gradients at fixed pixel positions/radii, not a
-       stretched SVG image — an earlier version used one evenodd-path SVG
-       (outer rect + four circles cut out) stretched to the box's size via
-       mask-size:100% 100%, which worked fine while the box's aspect ratio
-       stayed close to the SVG's own 224x200 reference, but broke (silently
-       eating a chunk of the left side, cutting into real text) once a
-       short line of dialogue made the box wide-and-short enough to diverge
-       from that reference — a raster/vector image mask has its own
-       intrinsic size for mask-size:100% 100% to stretch, and Chromium's
-       compositing of that stretch isn't reliable at extreme ratios.
-       Gradients have no intrinsic size to mismatch, so the holes stay
-       fixed, round, and correctly placed at any box width or height (a
-       box short enough to clip a hole below its own bottom edge just
-       quietly loses that hole rather than distorting it). add/subtract
-       here means "start fully visible, then punch out each circle". */
-    mask-image:
-        radial-gradient(circle 6px at 20px 24px, black 0 6px, transparent 6px),
-        radial-gradient(circle 6px at 20px 75px, black 0 6px, transparent 6px),
-        radial-gradient(circle 6px at 20px 126px, black 0 6px, transparent 6px),
-        radial-gradient(circle 6px at 20px 177px, black 0 6px, transparent 6px),
-        linear-gradient(black, black);
-    -webkit-mask-image:
-        radial-gradient(circle 6px at 20px 24px, black 0 6px, transparent 6px),
-        radial-gradient(circle 6px at 20px 75px, black 0 6px, transparent 6px),
-        radial-gradient(circle 6px at 20px 126px, black 0 6px, transparent 6px),
-        radial-gradient(circle 6px at 20px 177px, black 0 6px, transparent 6px),
-        linear-gradient(black, black);
-    mask-repeat: no-repeat;
-    -webkit-mask-repeat: no-repeat;
-    /* Standard and -webkit- composite keywords aren't just prefix/value
-       aliases of each other — -webkit-mask-composite predates the
-       standard property and only understands the old Porter-Duff names
-       (destination-out/source-over), not add/subtract. Giving it the
-       standard keywords doesn't get ignored as unsupported the way an
-       unrecognised value normally would; Chromium appears to share
-       internal storage between the two properties, so an invalid
-       -webkit-mask-composite value here clobbered the valid mask-composite
-       one instead of being discarded, making all four holes (and
-       everything they were supposed to leave alone) render as fully
-       masked out. */
-    mask-composite: subtract, subtract, subtract, subtract, add;
-    -webkit-mask-composite: destination-out, destination-out, destination-out, destination-out, source-over;
-}
-
-[data-mode="scrapbook"] .helper-bubble-name {
-    color: #a3175c;
-}
-
-/* Washi tape (the same asset used on scrapbook photo tiles, see
-   scrapbook.js's TAPE_IMAGES) holding the top-left corner down — now on
-   the unclipped outer shell, so it genuinely overlaps the page's torn top
-   edge instead of being confined inside it. A real image, not a CSS
-   gradient — the printed "Downtown Pompey" text is the whole point,
-   matching the tape elsewhere on this page exactly. */
-[data-mode="scrapbook"] .helper-bubble::before {
-    content: '';
-    position: absolute;
-    top: -0.7rem;
-    left: 0.5rem;
-    width: 92px;
-    height: 30px;
-    background-image: url('images/tape/tape-1.png');
-    background-size: cover;
-    transform: rotate(-7deg);
-    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
-    pointer-events: none;
-    z-index: 1;
-}
-
-/* Speech-bubble tail, pointing down toward Flo's head — a small torn
-   triangular flap rather than the base rule's clean rotated square, so it
-   still reads as paper. Also on the unclipped outer shell now, so it can
-   hang below the page's torn bottom edge instead of sitting flush inside
-   it. */
-[data-mode="scrapbook"] .helper-bubble::after {
-    content: '';
-    position: absolute;
-    bottom: -13px;
-    right: 38px;
-    width: 22px;
-    height: 18px;
-    /* Slightly deeper than the page's own #f2ead8 — flush against paper
-       the exact same shade turned out completely invisible (confirmed by
-       swapping it red mid-build: the shape and position were always
-       right, it just had zero contrast against its own backdrop). A real
-       border, not a drop-shadow attempt — border is clipped to the
-       triangle along with the fill, giving a crisp fitted outline instead
-       of a soft shadow that was too faint to register at normal size. */
-    background: #e6dabb;
-    border: 1.5px solid rgba(51, 43, 30, 0.4);
-    clip-path: polygon(0% 0%, 100% 0%, 35% 100%);
-    filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.25));
-}
-
-.helper-bubble-name {
-    font-size: 0.6rem;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 0.5rem;
-}
-
-.helper-bubble-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 0.9rem;
-}
-
-.helper-chip {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.05em;
-    padding: 0.3rem 0.6rem;
-    border-radius: 99px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: color 0.2s, border-color 0.2s;
-}
-
-.helper-chip:hover {
-    color: var(--text);
-    border-color: var(--text);
-}
-
-/* Editorial — Flo's bubble as a pink Windows 98 dialog box: a titlebar
-   (repurposing .helper-bubble-name), a pale beveled body, and chunky
-   beveled pushbuttons instead of the pill chips used elsewhere. Real Win98
-   chrome bevels are always greyscale regardless of accent colour — kept
-   pink throughout instead (highlight/shadow both pink-family) since a hot-
-   pink reskin, not literal Win98, is the point. System font stack rather
-   than a webfont: MS Sans Serif/Tahoma were literally the OS's own UI
-   fonts, so no approximation is more authentic than the real thing on any
-   Windows box, with a plain sans-serif fallback elsewhere. This replaces
-   the previous Press Start 2P speech-bubble treatment for this one
-   component — the room hint and 3D room's own retro look are unrelated
-   and untouched. */
-[data-mode="editorial"] .helper-bubble {
-    border-radius: 0;
-    border: none;
-    background: #ffe3f0;
-    box-shadow:
-        0 0 0 1px #4a0e28,
-        inset 2px 2px 0 #fff,
-        inset -2px -2px 0 #a3175c,
-        6px 6px 0 rgba(0, 0, 0, 0.7);
-    padding: 0 0.7rem 0.7rem;
-    margin-bottom: 0;
-    font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
-    /* Slower than the shared 0.25s default — makes the reveal read as
-       Flo's own action rather than an instant popup. */
-    transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;
-}
-
-/* Sits the dialog box closer to Flo than the shared widget gap allows.
-   Flo herself stays pinned to the actual viewport corner (the shared
-   base rule's bottom:0/right:1.4rem) rather than the room window's inset
-   edge — she's page-level chrome floating over the framed 3D scene, not
-   confined inside it, and her speech bubble is allowed to overlap the
-   window's own border. */
-[data-mode="editorial"] .helper-widget {
-    gap: 0.25rem;
-}
-
-/* A proper triangle tail (not the base rule's rotated-square blob), built
-   from two stacked border-triangles so it still reads as Win98 chrome — a
-   1px-ish dark outline (::before, larger) behind a pink fill (::after,
-   2px smaller all round), same colours as the bubble's own bevel. */
-[data-mode="editorial"] .helper-bubble::before {
-    content: '';
-    position: absolute;
-    bottom: -11px;
-    right: 30px;
-    width: 0;
-    height: 0;
-    border-left: 11px solid transparent;
-    border-right: 11px solid transparent;
-    border-top: 11px solid #4a0e28;
-}
-
-[data-mode="editorial"] .helper-bubble::after {
-    content: '';
-    position: absolute;
-    bottom: -9px;
-    right: 30px;
-    width: 0;
-    height: 0;
-    border-left: 9px solid transparent;
-    border-right: 9px solid transparent;
-    border-top: 9px solid #ffe3f0;
-    /* The shared base rule's ::after also sets transform:rotate(45deg)
-       for its own (different) rotated-square tail — cascades per
-       property, not per rule, so it still applied here since this rule
-       never touched transform itself. Without this override the fill
-       triangle above sat rotated 45° off the outline triangle beneath
-       it, instead of both sitting flat pointing straight down. */
-    transform: none;
-}
-
-[data-mode="editorial"] .helper-bubble-name {
-    /* Escapes the bubble's own padding to sit flush as a full-width
-       titlebar strip, Win98-style. */
-    margin: 0 -0.7rem 0.7rem;
-    padding: 0.4rem 0.5rem;
-    background: #d01359;
-    color: #fff;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: none;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-/* Decorative close square in the titlebar corner — purely visual, the real
-   (functional) close button stays below in .helper-bubble-actions so no JS
-   needs to change. */
-[data-mode="editorial"] .helper-bubble-name::after {
-    content: '\00d7';
-    width: 1rem;
-    height: 1rem;
-    line-height: 0.9rem;
-    text-align: center;
-    background: #ffe3f0;
-    color: #4a0e28;
-    font-weight: 700;
-    box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #a3175c;
-}
-
-[data-mode="editorial"] .helper-bubble-text {
-    color: #4a0e28;
-    font-size: 0.82rem;
-    line-height: 1.5;
-}
-
-[data-mode="editorial"] .helper-bubble-actions {
-    justify-content: flex-end;
-}
-
-[data-mode="editorial"] .helper-chip {
-    font-family: Tahoma, Geneva, "Segoe UI", sans-serif;
-    font-size: 0.7rem;
-    color: #4a0e28;
-    background: #ffe3f0;
-    border-radius: 0;
-    border: none;
-    box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #a3175c, 0 0 0 1px #4a0e28;
-    padding: 0.35rem 0.8rem;
-    letter-spacing: normal;
-}
-
-[data-mode="editorial"] .helper-chip:hover {
-    background: #ffd0e7;
-    color: #4a0e28;
-    border-color: transparent;
-}
-
-[data-mode="editorial"] .helper-chip:active {
-    box-shadow: inset -1px -1px 0 #fff, inset 1px 1px 0 #a3175c, 0 0 0 1px #4a0e28;
-}
-
-/* Applied via helper.js (a class, not a page selector — see FLO_IMAGES
-   there) to any page whose Flo widget has real photos instead of the
-   placeholder SVG. Editorial's are landscape (~3:2, waist-up with
-   gesturing arms) where the placeholder .helper-figure-img everywhere
-   else is a tall, narrow SVG figure — the base rule's fixed height:25vh
-   + width:auto would make a photo like this render ~500px wide at the
-   max-height end, easily wide enough to overlap the bubble or run off a
-   narrow viewport.
-
-   A fixed height+width box with object-fit:contain (rather than height:
-   auto + a max-width cap) — the per-page photo sets don't all share one
-   aspect ratio (scrapbook's three poses were cropped independently, each
-   a slightly different ratio), so a shrink-to-fit box sized to whichever
-   dimension is tighter made Flo visibly change size/footprint every time
-   the dialogue advanced to a different pose. A fixed box scales each
-   photo to fit inside the same footprint every time, undistorted, same
-   idea as a responsive img but with a locked box instead of one that
-   also resizes to the image. These exact numbers were tuned for
-   editorial's photos specifically — if another page's turn out to need
-   different sizing, override with a `[data-page="x"].helper-figure-img
-   --photo` rule rather than changing this shared default. */
-.helper-figure-img--photo {
-    height: 369px;
-    width: 307px;
-    min-height: 0;
-    object-fit: contain;
-    /* Bottom-right, not centered — keeps Flo's feet and the widget's
-       flush-right edge consistent even when a narrower photo leaves
-       letterboxing space inside the fixed box. */
-    object-position: bottom right;
-    /* Flush against the right edge (no overflow past it, unlike the
-       previous 20%-off-screen treatment) — this cancels out
-       .helper-widget's own right:1.4rem offset exactly, so the box's
-       own right edge lands right on the viewport edge. Flush against the
-       bottom needs no equivalent rule: .helper-widget already sits at
-       bottom:0 with display:block on the image (no inline-baseline gap
-       to cancel there). */
-    transform: translateX(1.4rem);
-}
-
-/* Editorial only, per the extension note above — 20% bigger than the
-   shared default at every breakpoint (see the matching mobile/landscape
-   overrides further down). */
-[data-mode="editorial"] .helper-figure-img--photo {
-    height: 443px;
-    width: 368px;
-    /* transform is inherited unchanged from the shared base rule — Flo
-       stays flush against the real viewport edge, not the room window's. */
-}
-
-/* Mode switcher gets the exact same pixel-chip treatment as .helper-chip
-   above, so it reads as the same control in this room. */
-/* Same Win98 pushbutton recipe as Flo's Next/close chips — pale pink face,
-   dark maroon text, Tahoma. .active gets the inverted (sunken) bevel
+/* Win98 pushbutton recipe for the mode switcher in this room — pale pink
+   face, dark maroon text, Tahoma. .active gets the inverted (sunken) bevel
    instead of a solid fill, reading as "pressed in" for whichever page is
    current, same idea as a real Win98 pressed toolbar button. */
 [data-mode="editorial"] .mode-btn {
@@ -1903,57 +1409,6 @@ body.landing {
     box-shadow: inset -1px -1px 0 #fff, inset 1px 1px 0 #a3175c, 0 0 0 1px #4a0e28;
 }
 
-/* On narrow screens Flo's full-height figure sits over interactive
-   content underneath (e.g. filter chips) whenever the bubble is open —
-   shrink the figure so the widget takes less of the viewport. */
-@media (max-width: 480px) {
-    .helper-figure-img {
-        height: 14vh;
-        min-height: 110px;
-        max-height: 160px;
-    }
-    .helper-figure-img--photo {
-        height: 164px;
-        width: 143px;
-        min-height: 0;
-    }
-    [data-mode="editorial"] .helper-figure-img--photo {
-        height: 197px;
-        width: 172px;
-    }
-    .helper-bubble {
-        width: min(180px, calc(100vw - 5.5rem));
-        padding: 0.75rem 0.85rem;
-        font-size: 0.7rem;
-    }
-    [data-mode="scrapbook"] .helper-bubble {
-        width: min(230px, calc(100vw - 4.5rem));
-    }
-}
-
-/* Short viewports (landscape phones) — Flo's normal 195px min-height
-   figure eats over half of a ~375px-tall screen regardless of width, which
-   no reasonable amount of page-content padding can reliably out-pad (see
-   process.html's .pr-intro below, which needs both this AND its own
-   padding bump). Keyed on height, not width, so this also covers portrait
-   phones with an unusually short viewport (address bar expanded, etc). */
-@media (max-height: 480px) {
-    .helper-figure-img {
-        height: 20vh;
-        min-height: 90px;
-        max-height: 140px;
-    }
-    .helper-figure-img--photo {
-        height: 143px;
-        width: 123px;
-        min-height: 0;
-    }
-    [data-mode="editorial"] .helper-figure-img--photo {
-        height: 172px;
-        width: 148px;
-    }
-}
-
 /* ===== SCRAPBOOK ARCHIVE PAGE ===== */
 /* ===== FILTER BAR =====
    Always visible (no click needed to reveal filters) — but solid/opaque
@@ -1974,8 +1429,7 @@ body.landing {
    screen instead of the top — the top edge is already busy with the site's
    own logo/nav, but the bottom was empty, and a bottom bar needs none of
    the ~8rem clearance padding a top bar needed to duck under that nav, so
-   it can stay genuinely thin. Right edge stops short of Flo's corner
-   widget rather than running full-bleed underneath it. */
+   it can stay genuinely thin. */
 /* Same pink paper texture the whole page used to have — now confined to
    just this strip, since the page background itself is plain white. */
 .filter-bar-bottom {
@@ -1984,8 +1438,7 @@ body.landing {
     left: 0;
     right: 0;
     z-index: 200;
-    padding: 0.72rem 1.44rem 0.84rem;
-    padding-right: clamp(1.2rem, 22vw, 260px);
+    padding: 0.5rem 1.2rem 0.6rem;
     background-color: #ede5d8;
     background-image: url('textures/paper-pink.jpg');
     background-size: cover;
@@ -1997,8 +1450,8 @@ body.landing {
 .tag-bar {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.48rem;
-    padding: 0.24rem 0 0.6rem;
+    gap: 0.36rem;
+    padding: 0.2rem 0 0.4rem;
 }
 
 .tag-pill {
@@ -2006,9 +1459,9 @@ body.landing {
     background: #ffffff;
     border: 1px solid var(--accent);
     border-radius: 999px;
-    padding: 0.384rem 1.02rem;
+    padding: 0.28rem 0.78rem;
     font-family: var(--font-mono);
-    font-size: 0.816rem;
+    font-size: 0.7rem;
     color: var(--accent);
     cursor: pointer;
     white-space: nowrap;
@@ -2054,8 +1507,8 @@ body.landing {
     color: #ffffff;
     border: 1px solid #ffffff;
     border-radius: 999px;
-    padding: 0.384rem 1.02rem;
-    font-size: 0.816rem;
+    padding: 0.28rem 0.78rem;
+    font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.03em;
     text-transform: none;
@@ -2426,11 +1879,11 @@ body.landing {
 /* ===== LIGHTBOX ===== */
 /* Modal open/close (transitions.dev) instead of a hard display:none/flex
    cut — always display:flex (an invisible fixed-position overlay costs
-   nothing while closed, same reasoning as .helper-bubble), gated by
-   opacity/visibility/pointer-events so it's out of the tab order and hit-
-   testing while closed. Asymmetric timing on purpose: opening is slower
-   (250ms) so the reveal reads as deliberate, closing is quicker (150ms)
-   so dismissal feels snappy, not sluggish. */
+   nothing while closed), gated by opacity/visibility/pointer-events so
+   it's out of the tab order and hit-testing while closed. Asymmetric
+   timing on purpose: opening is slower (250ms) so the reveal reads as
+   deliberate, closing is quicker (150ms) so dismissal feels snappy, not
+   sluggish. */
 .lightbox {
     position: fixed;
     inset: 0;
@@ -2620,9 +2073,9 @@ body.landing {
     flex-direction: column;
     background: #ffe3f0;
     /* A few pixels thicker than the other Win98 boxes' 1px+2px bevel
-       (Flo's bubble, readme.txt) — at this box's much larger size, that
-       same thickness read as comparatively thin/negligible, where it's
-       clearly visible as a real border on the smaller boxes. Highlight
+       (readme.txt) — at this box's much larger size, that same thickness
+       read as comparatively thin/negligible, where it's clearly visible
+       as a real border on the smaller boxes. Highlight
        side is a light pink rather than the other boxes' literal white —
        at this box's scale a full-width/height white line read as its own
        distinct "white frame" rather than a subtle bevel. */
@@ -2894,10 +2347,10 @@ body.landing {
     image-rendering: crisp-edges;
 }
 
-/* Same pink Windows 98 dialog chrome as Flo's speech bubble and the room
-   window itself (titlebar + beveled body) — pinned to the real viewport
-   corner like Flo, not the room window's inset edge, so it's allowed to
-   overlap the window's own border rather than being squeezed inside it. */
+/* Same pink Windows 98 dialog chrome as the room window itself (titlebar
+   + beveled body) — pinned to the real viewport corner, not the room
+   window's inset edge, so it's allowed to overlap the window's own
+   border rather than being squeezed inside it. */
 .room-hint-window {
     position: fixed;
     bottom: 1.6rem;
@@ -3006,10 +2459,6 @@ body.landing {
        was a plain 0.32s ease, weaker than a considered curve for a panel
        this size sliding the full height of the viewport. */
     transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
-    /* Above .helper-widget (z-index 500) so the panel covers Flo when
-       open, rather than his fixed-position figure floating on top of it —
-       harmless while closed (translateX(100%) is fully off-screen
-       regardless of stacking order). */
     z-index: 550;
     color: #f0ece4;
     overflow-y: auto;
@@ -3637,19 +3086,11 @@ body.landing {
     .badge-title { font-size: 0.64rem; }
     .badge-copy { font-size: 0.44rem; }
 
-    /* Flo doesn't appear on this page at mobile widths — the composition
-       above (neon sign, text, badges) already fills the screen without
-       her. Desktop still gets her; this is scoped inside the mobile
-       breakpoint only. */
-    [data-page="landing"] .helper-widget { display: none; }
-
     /* .object-glow's own hiding rule lives in its own @media block below,
        at 1024px rather than this block's 768px — see that rule for why. */
 
     /* One horizontal line spanning the width, not anchored to the
-       left half — that was specifically to leave Flo's fixed
-       bottom-right figure room, and she doesn't appear here on mobile
-       any more. */
+       left half. */
     .landing-footer {
         position: fixed;
         left: 0;
@@ -3706,14 +3147,9 @@ body.landing {
        lines at a smaller size is the better trade-off on a 375px phone.
        width (not just max-width) — a fixed-position flex box with no
        explicit width shrinks to fit its content's unwrapped line first,
-       so max-width alone never actually triggers the wrap. The second
-       min() term specifically clears Flo's own now-bigger photo (a fixed
-       172px at this breakpoint, flush against the opposite corner) rather
-       than just being "narrower" — a flat px cap that worked at 375px
-       started overlapping her again on a 320px-wide phone, where her
-       fixed-width photo eats a bigger share of the screen. */
+       so max-width alone never actually triggers the wrap. */
     .room-hint-window {
-        width: min(calc(100vw - 3.2rem), calc(100vw - 172px - 1.6rem - 0.6rem));
+        width: calc(100vw - 3.2rem);
     }
     .room-hint {
         white-space: normal;
@@ -3726,14 +3162,7 @@ body.landing {
        to a single horizontally-scrolling row here only; desktop keeps the
        full wrapped grid with no scroll. */
     .tag-bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
-    /* Flo's figure doesn't shrink on mobile (min-height:195px, ~150px
-       wide), and his speech bubble (220px, right-aligned) reaches further
-       left still when open. Fully clearing the bubble every time would cost
-       more width than a mobile bar can spare, so this is a middle ground —
-       clears the idle figure with room to spare; a fully-open bubble may
-       still brush the corner briefly, which is an acceptable trade since
-       the bubble is transient and dismissible. */
-    .filter-bar-bottom { padding: 0.5rem 1rem 0.6rem; padding-right: 200px; }
+    .filter-bar-bottom { padding: 0.5rem 1rem 0.6rem; }
 
     .lightbox.open { flex-direction: column; }
     .lightbox-media { padding: 3.5rem 1rem 0.5rem; }
@@ -3765,19 +3194,13 @@ body.landing {
        mobile that box can render taller than the viewport (a long title
        + paragraph + top padding for the topbar easily exceeds ~640px),
        and once it does, centering silently pushes part of the content
-       off-screen with NO way to scroll to it, while Flo's fixed-
-       position bubble (which auto-opens and can be ~170px tall) sits on
-       top of whatever ends up in the bottom portion of the viewport —
-       no amount of bottom padding fixes this, since extra padding on an
-       already-overflowing centered box just grows the invisible part.
-       Switching to top-aligned flow sidesteps the problem entirely: the
-       box can still be exactly 100vh tall when content is short, but
-       when content is tall it just grows and the page scrolls normally,
-       like everywhere else on the web. Verified clear (100px+ of margin)
-       on every common modern phone size (390px+ wide); a genuinely short
-       viewport — old iPhone SE-class devices (~568-667px tall) or
-       landscape phones — can still see Flo's bubble brush the last
-       line of the paragraph. Known, accepted residual, not a full fix. */
+       off-screen with no way to scroll to it — no amount of bottom
+       padding fixes this, since extra padding on an already-overflowing
+       centered box just grows the invisible part. Switching to top-
+       aligned flow sidesteps the problem entirely: the box can still be
+       exactly 100vh tall when content is short, but when content is tall
+       it just grows and the page scrolls normally, like everywhere else
+       on the web. */
     /* Every .pr-panel card's own padding (2.4rem, see the base rule)
        already insets its content at every viewport width — nothing
        further needed here for that. Just the pieces that still
@@ -3942,17 +3365,6 @@ body.landing {
 }
 
 .acc-search-btn:hover { opacity: 0.9; }
-
-/* Reading settings — live inside Flo's speech bubble on this page (see
-   helper.js's isAccessiblePage branch) rather than a standalone panel in
-   the page's own markup. Stacked, not the sidebar's old flex-wrap row —
-   the bubble is only ~185px wide inside its own padding. */
-.helper-display-options {
-    display: flex;
-    flex-direction: column;
-    gap: 0.9rem;
-    margin: 0.9rem 0;
-}
 
 /* Same chip as the type/project filters, but the label itself carries the
    size — three growing "A"s read faster than a text label ever would. */
