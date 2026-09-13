@@ -111,6 +111,32 @@ const MODEL_SLOTS = [
 ];
 let modelSlot = 0;
 
+// PerspectiveCamera's fov is the VERTICAL angle — horizontal coverage
+// then falls out of vertical-fov * aspect, so on a narrow/portrait canvas
+// (mobile/tablet) the same 60° vertical fov gives a much narrower
+// horizontal view than it does on a wide desktop one. The room's three
+// low-poly collectibles (LOW_POLY_SLOTS in editorial.js) sit spread left/
+// right at z=+-0.83, which the desktop framing comfortably includes but a
+// portrait canvas was cropping the outer two out of. Rather than move the
+// objects or the (asset-authored, see applyCameraMarker) camera position,
+// this widens the vertical fov as aspect drops below 1 so the effective
+// horizontal fov stays roughly constant instead of shrinking — solving for
+// the vertical fov that reproduces the same horizontal fov the base 60°
+// gives at a 1:1 aspect, i.e. leaves square/landscape canvases untouched
+// (aspect ratio math: hfov = 2*atan(tan(vfov/2) * aspect); this inverts
+// that for a target hfov of 60° at aspect 1). Capped at 100° — the
+// tallest/narrowest realistic phone canvas (~0.4 aspect) only calls for
+// ~106°, and anything past ~100° starts reading as an obvious fisheye
+// rather than "zoomed out".
+const BASE_FOV_DEG = 60;
+const MAX_FOV_DEG = 100;
+function fovForAspect(aspect) {
+    if (aspect >= 1) return BASE_FOV_DEG;
+    const halfTargetHFovRad = THREE.MathUtils.degToRad(BASE_FOV_DEG / 2);
+    const vFovRad = 2 * Math.atan(Math.tan(halfTargetHFovRad) / aspect);
+    return Math.min(THREE.MathUtils.radToDeg(vFovRad), MAX_FOV_DEG);
+}
+
 export function initRoom(canvasId = 'room-canvas', onEnvironmentReady = () => {}) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
@@ -118,7 +144,8 @@ export function initRoom(canvasId = 'room-canvas', onEnvironmentReady = () => {}
     scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x0d0d0d, 16, 34);
 
-    camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+    const initialAspect = canvas.clientWidth / canvas.clientHeight;
+    camera = new THREE.PerspectiveCamera(fovForAspect(initialAspect), initialAspect, 0.1, 100);
     camera.position.copy(baseCamPos);
 
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -887,6 +914,7 @@ function onResize() {
     if (!renderer) return;
     const canvas = renderer.domElement;
     camera.aspect = canvas.clientWidth / canvas.clientHeight;
+    camera.fov = fovForAspect(camera.aspect);
     camera.updateProjectionMatrix();
     const w = canvas.clientWidth * RETRO_RENDER_SCALE;
     const h = canvas.clientHeight * RETRO_RENDER_SCALE;
