@@ -225,11 +225,11 @@ body[data-page="process"] {
     color: var(--accent);
 }
 
-@media (max-width: 768px) {
-    /* .page-topbar's mobile height (~79px: 60px logo + 0.6rem padding
-       top/bottom, single row) is shorter than its desktop height, so this
-       still needs its own clearance rather than just the desktop
-       padding-top alone. */
+@media (max-width: 1024px) {
+    /* .page-topbar's compact single-row height (~79px: 60px logo + 0.6rem
+       padding top/bottom) applies up to this same 1024px breakpoint (see
+       the main mobile/tablet block below), so this still needs its own
+       clearance rather than just the desktop padding-top alone. */
     .legal-page { padding-top: 6rem; }
 }
 
@@ -950,7 +950,7 @@ body.landing {
     padding: 3rem 1.5rem;
 }
 
-@media (min-width: 1001px) {
+@media (min-width: 1025px) {
     /* Locked/no-scroll homepage: .panels fills the viewport below the
        topbar (~56px). The footer used to need its own slice of this
        budget too, but it's position:fixed now (see .landing-footer)
@@ -1225,7 +1225,7 @@ body.landing {
    clear of the welcome copy over on the left. Eyeballed against the
    video's composition like the badges' own individual positions used
    to be, not computed from the object's exact video-frame fraction. */
-@media (min-width: 1001px) {
+@media (min-width: 1025px) {
     .badge-row {
         position: absolute;
         top: 78%;
@@ -1254,7 +1254,7 @@ body.landing {
     padding: 2rem 1.5rem;
 }
 
-@media (min-width: 1001px) {
+@media (min-width: 1025px) {
     .landing-footer {
         position: fixed;
         left: 2.5rem;
@@ -1283,7 +1283,7 @@ body.landing {
     justify-content: center;
 }
 
-@media (min-width: 1001px) {
+@media (min-width: 1025px) {
     .logo-strip { justify-content: flex-start; }
 }
 
@@ -1358,7 +1358,7 @@ body.landing {
 
 .footer-privacy-link:hover { color: rgba(255, 255, 255, 0.85); }
 
-@media (min-width: 1001px) {
+@media (min-width: 1025px) {
     .footer-privacy-link { text-align: left; }
 }
 
@@ -3528,7 +3528,25 @@ body.landing {
 }
 
 /* ===== REDESIGN RESPONSIVE ===== */
-@media (max-width: 768px) {
+/* 1024px, not the site's more usual 768px — matches index.html's own
+   video-selection breakpoint exactly (see .panels-bg there): tablets
+   already get the portrait mobile video up to 1024px, so the layout
+   treats that same width range as "mobile/tablet" too, rather than
+   introducing a second, slightly different cutoff. The desktop rules
+   elsewhere in this file were bumped from min-width:1001px to 1025px to
+   match, for a clean handoff with zero overlap — 768–1024px used to fall
+   through to unstyled base rules never meant to stand alone (.badge-
+   row's own base rule, e.g., is a plain flex column with no positioning
+   at all), so on an iPad Air/Pro-11 in portrait (820/834px) the
+   homepage's badges and welcome text landed stacked and overlapping
+   instead of laid out at all. (A brief attempt at fixing only the base-
+   rule gap by bumping this block to 1024px while leaving the desktop
+   rules at min-width:1001px left a worse 1001–1024px overlap instead,
+   where .badge-row's leftover position:absolute from the still-matching
+   desktop rule silently broke this block's own flex/margin-auto
+   layout — hence bumping the desktop side too rather than just this
+   one.) */
+@media (max-width: 1024px) {
     /* Locks the landing page to one screen on mobile, matching desktop's
        no-scroll behaviour, instead of the previous "mobile scrolls
        normally" design. 100vh (used everywhere else) is the LARGEST
@@ -3583,7 +3601,7 @@ body.landing {
     .welcome-copy {
         position: absolute;
         left: 50%;
-        top: 30%;
+        top: 37%;
         transform: translateX(-50%);
         max-width: none;
         width: 100%;
