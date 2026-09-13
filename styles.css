@@ -3156,13 +3156,13 @@ body.landing {
         font-size: 0.68rem;
     }
 
-    /* All 46 tags wrapped at mobile width need ~16 rows — the bar would
-       grow taller than the viewport itself and (being fixed) extend off
-       the top of the screen with no way to scroll to the rest. Falls back
-       to a single horizontally-scrolling row here only; desktop keeps the
-       full wrapped grid with no scroll. */
-    .tag-bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
     .filter-bar-bottom { padding: 0.5rem 1rem 0.6rem; }
+    .tag-bar { gap: 0.22rem; }
+    .tag-pill,
+    .tag-bar .room-items-toggle summary {
+        padding: 0.12rem 0.42rem;
+        font-size: 0.52rem;
+    }
 
     .lightbox.open { flex-direction: column; }
     .lightbox-media { padding: 3.5rem 1rem 0.5rem; }
