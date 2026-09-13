@@ -132,6 +132,21 @@ const LOW_POLY_SLOTS = [
     [0.63, 0.28, -0.83],
     [0.78, 0.28, 0],
 ];
+// Mobile/tablet gets two objects side by side instead of three — the third
+// slot's wider left/right spread (plus the middle one sitting further
+// back) needed a heavily widened camera fov to keep all three in frame on
+// a narrow/portrait canvas (see fovForAspect in three-scene.js), and even
+// then it read as an obvious fisheye rather than a natural "zoomed out"
+// shot. Two, using just the front pair (same depth, symmetric left/right),
+// frames cleanly at a normal fov instead. Matches the site's usual mobile/
+// tablet breakpoint (see three-scene.js/index.html/panel-glow.js).
+const MOBILE_LOW_POLY_SLOTS = [
+    [0.63, 0.28, 0.83],
+    [0.63, 0.28, -0.83],
+];
+const activeLowPolySlots = window.matchMedia('(max-width: 1024px)').matches
+    ? MOBILE_LOW_POLY_SLOTS
+    : LOW_POLY_SLOTS;
 // Per-model rotation corrections some scans need (a flat diorama that reads
 // sideways by default, a mesh that faces away from camera, etc.) — most
 // models need none of these (addLowPolyModel()'s own defaults are all 0),
@@ -182,7 +197,7 @@ async function populateLowPoly() {
         // fetch (see catch below) should leave whatever's already on
         // display alone rather than wiping it for nothing.
         clearLowPolyModels();
-        const picks = shuffle([...rows]).slice(0, LOW_POLY_SLOTS.length);
+        const picks = shuffle([...rows]).slice(0, activeLowPolySlots.length);
         const attempts = picks.map((row, i) => {
             const modelUrl = row['low poly url'];
             const filename = decodeURIComponent(modelUrl.split('/').pop() || '');
@@ -196,7 +211,7 @@ async function populateLowPoly() {
                 // parser's duplicate-header collision, but a thumbnail is
                 // plenty for the info panel display.
                 { title: row.title, description: row.description, type: row.type, thumbnail: row.link, credit: row.credit, tags: row.tags },
-                LOW_POLY_SLOTS[i],
+                activeLowPolySlots[i],
                 override.rotationZ,
                 override.baseRotY,
                 override.rotationX,
