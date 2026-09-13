@@ -226,10 +226,11 @@ body[data-page="process"] {
 }
 
 @media (max-width: 768px) {
-    /* .page-topbar wraps to two rows here (logo, then the mode-switcher
-       underneath) and runs taller than its single-row desktop height —
-       needs more clearance than the desktop padding-top alone gives. */
-    .legal-page { padding-top: 11rem; }
+    /* .page-topbar's mobile height (~79px: 60px logo + 0.6rem padding
+       top/bottom, single row) is shorter than its desktop height, so this
+       still needs its own clearance rather than just the desktop
+       padding-top alone. */
+    .legal-page { padding-top: 6rem; }
 }
 
 /* ===== BASE ===== */
@@ -3528,22 +3529,43 @@ body.landing {
 
 /* ===== REDESIGN RESPONSIVE ===== */
 @media (max-width: 768px) {
+    /* Locks the landing page to one screen on mobile, matching desktop's
+       no-scroll behaviour, instead of the previous "mobile scrolls
+       normally" design. 100vh (used everywhere else) is the LARGEST
+       possible viewport on mobile browsers — with the URL bar
+       hidden — so sizing to it left the document taller than the
+       actually-visible area whenever the bar was shown, letting the
+       page bounce-scroll a few px. Since .panels-bg is position:fixed,
+       that scroll made the fixed video and the in-flow text/badges
+       visibly drift apart instead of moving together. 100dvh tracks the
+       real visible viewport continuously, and overflow:hidden here is
+       belt-and-suspenders in case any device still reports a slightly
+       taller dvh than it renders. Scoped to body.landing only — every
+       other page still scrolls normally. */
+    body.landing {
+        min-height: 100dvh;
+        height: 100dvh;
+        overflow: hidden;
+        overscroll-behavior: none;
+    }
+
     /* Matches .page-topbar's own mobile padding, same reasoning as the
        desktop rule above. */
     .landing-topbar { padding: 0.6rem 0.7rem; }
     .landing-topbar-nav { gap: 1.1rem; font-size: 0.85rem; }
 
-    /* .panels itself is the flex column now — min-height gives auto
-       margins below real room to distribute. Text and badges both get
-       margin-top:auto, which splits the free space evenly above each:
-       some clears the header first, the text lands roughly where the
-       badge row used to sit, then an equal gap before the badge row
-       itself, now pushed all the way down to the bottom of the screen
-       instead of following right under the text. */
+    /* .panels itself is the flex column now. Badge row (+ its mobile
+       link) gets margin-top:auto, absorbing all free space above itself
+       so it's pushed to the bottom of the screen — .welcome-copy used
+       to share that same mechanism (both flex items with margin-top:
+       auto), but it's now position:absolute instead (see below) so it
+       can sit above the video's computer/notebook/column objects
+       independently of wherever the badge row ends up. height (not
+       min-height) + 100dvh, to match body.landing's own lock above. */
     .panels {
         display: flex;
         flex-direction: column;
-        min-height: calc(100vh - 80px);
+        height: calc(100dvh - 80px);
         /* Clears the fixed .landing-footer's own reserved zone (bottom:
            1rem + its own ~75px content height) — without this the badge
            row (pushed to the very bottom via margin-top:auto below) ran
@@ -3551,15 +3573,22 @@ body.landing {
         padding-bottom: 3.5rem;
     }
 
+    /* Pinned above the video's computer/notebook/column cluster (which
+       sit roughly mid-frame in the portrait mobile video — see the
+       data-glow-*-mobile fractions on .badge-row's targets below) and
+       under the neon "Downtown Pompey" sign higher up the frame.
+       position:absolute (not the flex-flow placement every other mobile
+       override here uses) so it's independent of wherever .badge-row's
+       own margin-top:auto pushes the badges — see .badge-row's comment. */
     .welcome-copy {
-        position: static;
+        position: absolute;
+        left: 50%;
+        top: 30%;
+        transform: translateX(-50%);
         max-width: none;
+        width: 100%;
         padding: 0 1.5rem;
-        margin-top: auto;
-        margin-bottom: 0;
         text-align: center;
-        /* One line further up than its natural flex position. */
-        transform: translateY(-1.3rem);
     }
 
     .welcome-copy-text { white-space: normal; font-size: 0.85rem; }
@@ -3580,11 +3609,12 @@ body.landing {
 
     /* Row, not stacked — three side-by-side circles read better here
        than a tall column. Smaller than the shared 138px default so they
-       don't dominate a narrow screen. .welcome-copy above is the only
-       thing left with margin-top:auto, so all the free space collects
-       there and the row lands right under the text (a small fixed gap)
-       instead of being pushed toward the bottom of the screen. */
-    .badge-row { flex-direction: row; flex-wrap: nowrap; justify-content: center; gap: 0.7rem; padding: 0 1.2rem; margin-top: 0.9rem; }
+       don't dominate a narrow screen. .welcome-copy is position:absolute
+       now (out of flow), so .badge-row is the first flow child here —
+       margin-top:auto on it directly is what pushes it to the bottom of
+       the screen (used to be inherited from .welcome-copy's own
+       margin-top:auto instead, back when both shared the flex flow). */
+    .badge-row { flex-direction: row; flex-wrap: nowrap; justify-content: center; gap: 0.7rem; padding: 0 1.2rem; margin-top: auto; }
     .badge { width: 84px; height: 84px; padding: 0.4rem; }
     .badge-title { font-size: 0.64rem; }
     .badge-copy { font-size: 0.44rem; }
@@ -3627,27 +3657,30 @@ body.landing {
     .logo-strip-stack .logo-strip-item img { max-height: 24px; }
     .logo-strip-label { font-size: 0.42rem; margin-bottom: 0.2rem; }
 
-    .page-topbar { padding: 0.6rem 0.7rem; flex-wrap: wrap; row-gap: 0.4rem; }
+    .page-topbar { padding: 0.6rem 0.7rem; flex-wrap: nowrap; justify-content: flex-start; gap: 0.6rem; }
     .page-topbar .home-logo { height: 60px; }
-    /* Fixed-size circles (66px, set on the base .mode-btn rule) already
-       clear the ~44px touch-target guideline and are narrower side-to-
-       side than the old text-driven pills ever were, so no mobile-specific
-       resizing is needed here any more. */
     /* Desktop centres the switcher with position:absolute over the whole
        topbar, which works there because there's room either side of the
-       logo — at mobile widths the three (now individually bordered,
-       touch-sized) buttons are wider than the viewport itself and would
-       sit directly on top of the logo instead. Drop back to a normal
-       flex item on its own full-width wrapped row instead (flex-basis
-       100% forces the wrap; the row-gap above spaces it from the logo
-       row), centring its own buttons within that row via
-       justify-content — measured clear of the logo at 320/375/390px. */
+       logo. At mobile widths there's no spare room either side, so
+       instead of wrapping to its own centred row underneath (the old
+       approach — pushed the topbar to ~128.7px tall and needed several
+       downstream padding-top values tuned around that height), the
+       switcher now drops back to a normal flex item sitting directly
+       next to the logo on the same row, and the buttons themselves
+       shrink from the 66px touch-target circles (built for their own
+       row, with room to spare) down to something that actually fits
+       beside a 60px logo on a 320px-wide phone. */
     .page-topbar .mode-switcher {
         position: static;
         transform: none;
-        flex: 1 1 100%;
-        justify-content: center;
-        gap: 0.5rem;
+        gap: 0.35rem;
+    }
+    .page-topbar .mode-btn {
+        width: 34px;
+        height: 34px;
+        padding: 0.15rem;
+        font-size: 0.38rem;
+        line-height: 1.05;
     }
 
     /* The desktop one-line treatment needs real width — wrapping to 2-3
@@ -3700,13 +3733,15 @@ body.landing {
     .lightbox-prev,
     .lightbox-next { top: 30vh; }
 
-    /* .page-topbar wraps to 2 rows on mobile (measured ~128.7px tall) but
-       sits above .info-panel (z-index 300 vs 250) — padding-top clears the
-       flow content (kicker/title/etc), but .info-close is position:absolute
-       relative to the panel's own top:0 box, so it needs its own explicit
-       override; padding alone doesn't move it. */
-    .info-panel { width: 100vw; padding-top: 9.2rem; }
-    .info-close { top: 8.8rem; }
+    /* .page-topbar sits above .info-panel (z-index 300 vs 250) — padding-top
+       clears the flow content (kicker/title/etc), but .info-close is
+       position:absolute relative to the panel's own top:0 box, so it needs
+       its own explicit override; padding alone doesn't move it. Values
+       matched to the mobile topbar's own single-row height (~79px, the
+       small mode-switcher buttons now sitting next to the logo rather than
+       wrapping to their own row underneath it). */
+    .info-panel { width: 100vw; padding-top: 6rem; }
+    .info-close { top: 5.6rem; }
     /* Desktop centers content vertically in a min-height:100vh box — on
        mobile that box can render taller than the viewport (a long title
        + paragraph + top padding for the topbar easily exceeds ~640px),
