@@ -3625,15 +3625,8 @@ body.landing {
        breakpoint only. */
     [data-page="landing"] .helper-widget { display: none; }
 
-    /* Each .object-glow is a rim-light PNG hand-cut around one object's
-       exact silhouette in the desktop video's frame (1924x1076,
-       object-fit:cover — see the base rule above) — there's no version
-       of these cut for the portrait mobile video's own composition, so
-       showing them here would rim-light nothing real. The connector
-       line/dot (pure SVG, driven by the data-glow-*-mobile coordinates
-       in index.html — see panel-glow.js) still works correctly and
-       stays visible on its own. */
-    .object-glow { display: none; }
+    /* .object-glow's own hiding rule lives in its own @media block below,
+       at 1024px rather than this block's 768px — see that rule for why. */
 
     /* One horizontal line spanning the width, not anchored to the
        left half — that was specifically to leave Flo's fixed
@@ -3657,7 +3650,7 @@ body.landing {
     .logo-strip-stack .logo-strip-item img { max-height: 24px; }
     .logo-strip-label { font-size: 0.42rem; margin-bottom: 0.2rem; }
 
-    .page-topbar { padding: 0.6rem 0.7rem; flex-wrap: nowrap; justify-content: flex-start; gap: 0.6rem; }
+    .page-topbar { padding: 0.6rem 0.7rem; flex-wrap: nowrap; justify-content: space-between; align-items: center; gap: 0.4rem; }
     .page-topbar .home-logo { height: 60px; }
     /* Desktop centres the switcher with position:absolute over the whole
        topbar, which works there because there's room either side of the
@@ -3665,22 +3658,30 @@ body.landing {
        instead of wrapping to its own centred row underneath (the old
        approach — pushed the topbar to ~128.7px tall and needed several
        downstream padding-top values tuned around that height), the
-       switcher now drops back to a normal flex item sitting directly
-       next to the logo on the same row, and the buttons themselves
-       shrink from the 66px touch-target circles (built for their own
-       row, with room to spare) down to something that actually fits
-       beside a 60px logo on a 320px-wide phone. */
+       switcher now drops back to a normal flex item on the same row as
+       the logo, pushed to the opposite (right) edge of the bar via
+       .page-topbar's own justify-content:space-between above rather than
+       sitting centred over it or immediately beside the logo. */
     .page-topbar .mode-switcher {
         position: static;
         transform: none;
-        gap: 0.35rem;
+        gap: 0.25rem;
     }
+    /* Same height as the logo beside it (60px) rather than the 66px
+       touch-target circles used when the switcher had its own row to
+       itself — a fixed circular width at that height doesn't fit three
+       across next to the full logo on a 320px-wide phone (3×60px alone
+       is already wider than the space left over), so this switches from
+       a circle to a pill: fixed height, width driven by its own padded
+       content instead. */
     .page-topbar .mode-btn {
-        width: 34px;
-        height: 34px;
-        padding: 0.15rem;
-        font-size: 0.38rem;
-        line-height: 1.05;
+        width: auto;
+        height: 60px;
+        padding: 0 0.4rem;
+        border-radius: 30px;
+        font-size: 0.52rem;
+        line-height: 1;
+        white-space: nowrap;
     }
 
     /* The desktop one-line treatment needs real width — wrapping to 2-3
@@ -3779,6 +3780,23 @@ body.landing {
     /* A further shrink from the (already-compact) 190px default — safety
        margin for the narrowest phones' own smaller card width. */
     .team-stack { width: 150px; height: 197px; }
+}
+
+/* Its own breakpoint (1024px), not folded into the 768px block above —
+   this has to match index.html's own video-selection breakpoint exactly,
+   which is deliberately wider than the site's usual 768px layout
+   breakpoint so tablets in portrait get the mobile video too (see
+   index.html's comment on .panels-bg). Each .object-glow is a rim-light
+   PNG hand-cut around one object's exact silhouette in the DESKTOP
+   video's frame (1924x1076, object-fit:cover — see the base rule above)
+   — there's no version of these cut for the portrait mobile video's own
+   composition, so anywhere that video is the one actually playing (up to
+   1024px), showing these would rim-light nothing real. The connector
+   line/dot (pure SVG, driven by the data-glow-*-mobile coordinates in
+   index.html and panel-glow.js's own matching 1024px check) still works
+   correctly and stays visible on its own. */
+@media (max-width: 1024px) {
+    .object-glow { display: none; }
 }
 
 /* ===== ACCESSIBLE ARCHIVE ===== */

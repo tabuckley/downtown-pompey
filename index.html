@@ -42,18 +42,49 @@
              background-image per panel, so it reads as one continuous
              scene regardless of how the panels themselves reflow at
              narrower widths. -->
-        <!-- <source media> is evaluated once at load, not live on resize —
-             fine here since a visit doesn't change device type mid-session.
-             The mobile cut is its own portrait composition, not just a
-             crop of the desktop one, so panel-glow.js's hover glow/
-             connector overlay (tuned to the desktop video's object
-             positions) may not land pixel-perfect on it — low-risk since
-             those only ever show on :hover, which touch devices rarely
-             trigger. -->
-        <video class="panels-bg" autoplay muted loop playsinline>
-            <source src="images/panels-bg-mobile.mp4" media="(max-width: 768px)">
-            <source src="images/panels-bg.mp4">
+        <!-- Which cut loads is picked by the inline script just below, not
+             a <source media> here — some mobile browsers evaluate a
+             <source>'s media attribute against the wrong (pre-viewport-
+             meta) width on first load, which was intermittently serving
+             the desktop cut to phones. matchMedia, read after the
+             viewport is already established, doesn't have that problem.
+             Picked once at load, not live on resize/rotation — fine here
+             since a visit doesn't change device type mid-session. The
+             mobile cut is its own portrait composition, not just a crop
+             of the desktop one, so panel-glow.js's hover glow/connector
+             overlay (tuned to the desktop video's object positions) may
+             not land pixel-perfect on it — low-risk since those only
+             ever show on :hover, which touch devices rarely trigger.
+             <noscript> keeps the old <source media> pair as a fallback
+             for the rare no-JS visitor. 1024px here (not the site's usual
+             768px layout breakpoint) is deliberately wider — it's tuned
+             to also catch tablets in portrait (iPad Mini/Air/Pro-11 all
+             fall well under it, iPad Pro 12.9" lands right at it), not
+             just phones. This only decides which video loads, not the
+             page's layout breakpoint (styles.css's own @media queries
+             for text/badge/nav sizing are unchanged at 768px) — a tablet
+             still gets the desktop layout, just with the portrait video
+             behind it, since the portrait cut suits a tall/narrow frame
+             regardless of touch-vs-mouse. Landscape tablets are wider
+             than 1024px and still get the desktop cut, since the
+             portrait video would crop down to a sliver of itself at a
+             landscape aspect ratio. -->
+        <video class="panels-bg" autoplay muted loop playsinline id="panelsBgVideo">
+            <noscript>
+                <source src="images/panels-bg-mobile.mp4" media="(max-width: 1024px)">
+                <source src="images/panels-bg.mp4">
+            </noscript>
         </video>
+        <script>
+            (function () {
+                var v = document.getElementById('panelsBgVideo');
+                var mobile = window.matchMedia('(max-width: 1024px)').matches;
+                var source = document.createElement('source');
+                source.src = mobile ? 'images/panels-bg-mobile.mp4' : 'images/panels-bg.mp4';
+                v.appendChild(source);
+                v.load();
+            })();
+        </script>
 
         <!-- Object-glow test: a soft highlight over each object in the
              video, sized/positioned identically to .panels-bg (fixed,

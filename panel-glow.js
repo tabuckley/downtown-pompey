@@ -75,11 +75,16 @@ function initPanelGlow() {
     // The portrait mobile background video is its own composition, not
     // a crop of the desktop one (see index.html) — each object sits at
     // a different point in-frame there, so the connector line needs its
-    // own coordinate pair on that breakpoint rather than reusing the
-    // desktop one. One-time check at load, same reasoning as the mobile
-    // <source media> itself: a visit doesn't change device type
-    // mid-session.
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    // own coordinate pair whenever that video is the one actually
+    // playing, rather than reusing the desktop one. This must match
+    // index.html's own video-selection breakpoint exactly (1024px, wider
+    // than the site's usual 768px layout breakpoint so tablets get the
+    // portrait cut too) — the layout breakpoint answers "compact or
+    // full UI?", this answers "which video is behind it?", and those two
+    // questions have different answers between 769–1024px. One-time
+    // check at load, same reasoning as the mobile <source>/matchMedia
+    // pick in index.html: a visit doesn't change device type mid-session.
+    const isMobile = window.matchMedia('(max-width: 1024px)').matches;
 
     const rigs = Array.from(panels).map((panel) => {
         const key = panel.dataset.glowTarget;
