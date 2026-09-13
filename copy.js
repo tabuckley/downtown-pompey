@@ -3,7 +3,7 @@ import { fetchSheet } from './sheet.js';
 let copyMapPromise = null;
 
 // Fetches the _copy tab once and shares the result with every caller on the
-// page (helper.js reads archie_* keys from the same map applyCopy uses).
+// page.
 export function getCopyMap() {
     if (!copyMapPromise) {
         copyMapPromise = fetchSheet('_copy')

@@ -53,8 +53,7 @@ if (stack) {
 // Every .pr-panel card has overflow:hidden and no scrollbar of its own —
 // #prScroll (below) is the page's one and only scrollable thing — so
 // content that would otherwise overflow a card shrinks via the --pr-scale
-// custom property (see styles.css) instead. Same step-down-until-it-fits
-// approach as Flo's scrapbook bubble (helper.js's fitTextToBubble).
+// custom property (see styles.css) instead.
 const SCALE_STEPS = [1, 0.94, 0.88, 0.82, 0.76, 0.7, 0.64, 0.58];
 const cards = [...document.querySelectorAll('.pr-panel')];
 

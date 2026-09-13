@@ -70,6 +70,21 @@
                         <span class="acc-filter-label">Project</span>
                         <div id="accProjectFilters" class="acc-chip-row"></div>
                     </div>
+                    <div class="acc-filter-group">
+                        <span class="acc-filter-label">Text size</span>
+                        <div class="acc-chip-row" role="group" aria-label="Text size">
+                            <button type="button" class="acc-chip acc-size-btn acc-size-btn--sm" data-size="small" aria-pressed="false">A</button>
+                            <button type="button" class="acc-chip acc-size-btn acc-size-btn--md" data-size="medium" aria-pressed="true">A</button>
+                            <button type="button" class="acc-chip acc-size-btn acc-size-btn--lg" data-size="large" aria-pressed="false">A</button>
+                        </div>
+                    </div>
+                    <div class="acc-filter-group">
+                        <span class="acc-filter-label">Display</span>
+                        <div class="acc-chip-row" role="group" aria-label="Display">
+                            <button type="button" class="acc-chip" data-display-toggle="contrast" aria-pressed="false">High contrast</button>
+                            <button type="button" class="acc-chip" data-display-toggle="dark" aria-pressed="false">Dark mode</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -91,8 +106,6 @@
 
     </main>
 
-    <div id="site-helper"></div>
-    <script type="module" src="helper.js"></script>
     <script type="module" src="accessible.js"></script>
 </body>
 </html>
