@@ -1,0 +1,398 @@
+// Flo — the site helper. Scripted, page-aware, Clippy-spirited.
+//
+// Dialogue is editable from the Google Sheet without touching code: add
+// rows to the _copy tab using the keys
+//   archie_<page>_intro   — shown automatically on first visit
+//   archie_<page>_tip_1, archie_<page>_tip_2, ... — cycled by "another tip?"
+// where <page> is landing / editorial / scrapbook / accessible (Flo
+// doesn't appear on the process page, and is hidden via CSS on mobile
+// for landing specifically — see .helper-widget in styles.css).
+// The defaults below are the fallback used until the sheet loads (or if a
+// key is left blank), so the helper always has something to say.
+
+import { getCopyMap } from './copy.js';
+
+// Placeholder torso-up figure — the fallback for any page with no entry
+// (or an empty one) in FLO_IMAGES below.
+const ARCHIE_IMAGE_URL = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260">
+  <path d="M20 260 Q20 140 100 140 Q180 140 180 260 Z" fill="#8b3a00" stroke="#3a2a10" stroke-width="5"/>
+  <circle cx="100" cy="72" r="58" fill="#c8b89a" stroke="#3a2a10" stroke-width="5"/>
+  <circle cx="80" cy="68" r="6.5" fill="#3a2a10"/>
+  <circle cx="120" cy="68" r="6.5" fill="#3a2a10"/>
+  <path d="M74 96 Q100 114 126 96" fill="none" stroke="#3a2a10" stroke-width="6" stroke-linecap="round"/>
+</svg>
+`.trim());
+
+// Per-page real photo sets, keyed by the same <page> value used above and
+// in document.body.dataset.page. Cycles one pose per line of dialogue
+// (the intro, then each tip) instead of showing one static image
+// throughout — order is display order, not the source filenames'
+// numbering. To bring a new page's photos in: drop the files in images/,
+// add its array here, done — buildHelper() below and the sizing rule in
+// styles.css (.helper-figure-img--photo) both key off this same object
+// and need no changes. Pages with no entry (or an empty array) keep
+// showing the placeholder SVG.
+const FLO_IMAGES = {
+    // Index here is imageIndex (intro=0, tip N=N), which must line up with
+    // whichever tips array actually ends up live — the _copy sheet's own
+    // archie_landing_tip_* rows when reachable (the normal case; currently
+    // 4 of them), or DEFAULT_SCRIPTS.landing.tips below otherwise. Kept
+    // the same length/order as the sheet's 4 tips specifically so "about
+    // page", last in both, always lands on the same image regardless of
+    // which source is actually driving the dialogue.
+    landing: [
+        'images/flo-landing-1.webp', // waving — intro
+        'images/flo-landing-2.webp', // three fingers (a nod to the 3D room) — editorial tip
+        'images/flo-landing-3.webp', // sunglasses, playful — scrapbook "fun one" tip
+        'images/flo-landing-4.webp', // reading a book — accessible/research tip
+        'images/flo-landing-6.webp', // clapping — "about page" tip
+    ],
+    editorial: [
+        // Matching pink duotone/halftone treatment across all three.
+        // Display order (pointing/intro, shrug, thoughtful) doesn't match
+        // the filenames' own numbering (shrug, thoughtful, pointing) —
+        // ordered here to line up with the intro + specific tip lines
+        // they're meant to land on.
+        'images/flo-editorial-3.png', // pointing — intro
+        'images/flo-editorial-1.png', // shrug — "don't be a din"
+        'images/flo-editorial-2.png', // thoughtful — "makes you think"
+    ],
+    scrapbook: [
+        'images/flo-scrapbook-1.webp', // holding up a note — intro
+        'images/flo-scrapbook-2.webp', // pointing
+        'images/flo-scrapbook-3.webp', // eating chips
+    ],
+    // Just the one pose — this page's bubble is a single static screen
+    // (short intro + the display-options controls, no Next/tip-cycling),
+    // so there's only ever one line of dialogue to illustrate.
+    accessible: [
+        'images/flo-accessible-1.webp', // waving
+    ],
+};
+
+const MAX_TIPS = 8;
+
+const DEFAULT_SCRIPTS = {
+    // Fallback for any page with no entry of its own below — keeps
+    // buildHelper() safe rather than showing "undefined" if one's ever
+    // missing.
+    // Generic fallback for any page with no entry of its own below —
+    // keeps buildHelper() safe rather than showing "undefined" if one's
+    // ever missing.
+    default: {
+        intro: "Hello! I'm Flo, the archive helper.",
+        tips: [],
+    },
+    landing: {
+        intro: "Hello! I'm Flo, the archive helper. Pick one of the buttons above — each shows the archive in a different way.",
+        tips: [
+            "Curated is the full art experience — a 3D room you can look around.",
+            "Collected is the fun one: scroll forever, filter by tags.",
+            "Credited is the clear, easy-to-read version for researchers and screen readers.",
+            "Also check out the about page to how those babes made all this.",
+        ],
+    },
+    editorial: {
+        intro: "You're in the room. Move your mouse to look around, and click any object on display to learn its story.",
+        tips: [
+            "The objects here are pulled from the archive — a new selection each visit.",
+            "Click a framed photo or object to open its info panel.",
+            "Want more control? The Collected view lets you search everything.",
+        ],
+    },
+    scrapbook: {
+        intro: "This is the whole archive in one endless scroll. Use the tags or the search bar to curate what you see.",
+        tips: [
+            "Pick more than one tag to narrow things down — items must match all of them.",
+            "The search box looks through titles and descriptions.",
+            "Click any item to see it big, with its full story.",
+            "Clear filters any time with the link next to the item count.",
+        ],
+    },
+    // This page's bubble is a single static screen — short intro plus the
+    // display-options controls (see buildHelper's accessible-page branch)
+    // — rather than the intro+cycling-tips pattern every other page uses,
+    // so there's no Next button and `tips` here goes unused.
+    accessible: {
+        intro: "This is the accessible view — clear, fast, and easy to navigate. Adjust it below:",
+        tips: [],
+    },
+};
+
+// Merges any archie_<page>_intro / archie_<page>_tip_N values found in the
+// _copy sheet on top of the defaults. Mutates `script` in place so anything
+// already holding a reference (buildHelper's closures) picks up the change.
+function applyArchieOverrides(page, script) {
+    getCopyMap().then(copy => {
+        const introKey = `archie_${page}_intro`;
+        if (copy[introKey]) script.intro = copy[introKey];
+
+        const tips = [];
+        for (let i = 1; i <= MAX_TIPS; i++) {
+            const val = copy[`archie_${page}_tip_${i}`];
+            if (val) tips.push(val);
+        }
+        if (tips.length) script.tips = tips;
+    });
+}
+
+function buildHelper() {
+    const mount = document.getElementById('site-helper');
+    if (!mount) return;
+
+    const page = document.body.dataset.page || 'landing';
+    // Clone the default so sheet overrides don't mutate the shared constant.
+    const script = { ...(DEFAULT_SCRIPTS[page] || DEFAULT_SCRIPTS.default) };
+    applyArchieOverrides(page, script);
+    let tipIndex = -1;
+    const floImages = FLO_IMAGES[page];
+    const hasFloPhotos = !!(floImages && floImages.length);
+    // The accessible page's bubble replaces the usual intro+cycling-tips
+    // pattern with a single static screen: a short intro plus the
+    // text-size/contrast/dark-mode controls (see setupDisplayOptions
+    // below) — those live here, in Flo, rather than a standalone panel
+    // in the page's own markup.
+    const isAccessiblePage = page === 'accessible';
+
+    const widget = document.createElement('div');
+    widget.className = 'helper-widget';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'helper-bubble';
+    bubble.setAttribute('role', 'status');
+    // .helper-bubble-page is a plain, unstyled wrapper on every page except
+    // scrapbook (display:contents there — structurally invisible, doesn't
+    // affect layout at all). Scrapbook needs it as a real box: its bubble
+    // is clipped to a torn-paper shape, and clip-path/mask on an element
+    // clips that element's OWN pseudo-elements too — so the tape and tail
+    // (::before/::after on .helper-bubble) can't hang past the torn edge
+    // if the clip-path lives on that same element. Moving the paper's
+    // clip-path/mask onto this inner wrapper instead leaves .helper-bubble
+    // itself unclipped, free for its tape/tail to overlap the page edge.
+    bubble.innerHTML = isAccessiblePage ? `
+        <div class="helper-bubble-page">
+            <div class="helper-bubble-name">Flo</div>
+            <div class="helper-bubble-text"></div>
+            <div class="helper-display-options">
+                <div class="acc-filter-group">
+                    <span class="acc-filter-label">Text size</span>
+                    <div class="acc-chip-row" role="group" aria-label="Text size">
+                        <button type="button" class="acc-chip acc-size-btn acc-size-btn--sm" data-size="small" aria-pressed="false">A</button>
+                        <button type="button" class="acc-chip acc-size-btn acc-size-btn--md" data-size="medium" aria-pressed="true">A</button>
+                        <button type="button" class="acc-chip acc-size-btn acc-size-btn--lg" data-size="large" aria-pressed="false">A</button>
+                    </div>
+                </div>
+                <div class="acc-filter-group">
+                    <span class="acc-filter-label">Display</span>
+                    <div class="acc-chip-row" role="group" aria-label="Display">
+                        <button type="button" class="acc-chip" data-display-toggle="contrast" aria-pressed="false">High contrast</button>
+                        <button type="button" class="acc-chip" data-display-toggle="dark" aria-pressed="false">Dark mode</button>
+                    </div>
+                </div>
+            </div>
+            <div class="helper-bubble-actions">
+                <button class="helper-chip" data-action="close">close ×</button>
+            </div>
+        </div>
+    ` : `
+        <div class="helper-bubble-page">
+            <div class="helper-bubble-name">Flo</div>
+            <div class="helper-bubble-text"></div>
+            <div class="helper-bubble-actions">
+                <button class="helper-chip" data-action="tip">Next</button>
+                <button class="helper-chip" data-action="close">close ×</button>
+            </div>
+        </div>
+    `;
+
+    const btn = document.createElement('button');
+    btn.className = 'helper-figure-btn';
+    btn.setAttribute('aria-label', 'Site helper — Flo');
+    btn.setAttribute('aria-expanded', 'false');
+    // The --photo class (not a page-name selector) is what styles.css's
+    // sizing override keys off — real photos are a different aspect ratio
+    // (landscape, waist-up with gesturing arms) than the tall narrow
+    // placeholder SVG, regardless of which page they end up on.
+    btn.innerHTML = `<img class="helper-figure-img${hasFloPhotos ? ' helper-figure-img--photo' : ''}" src="${hasFloPhotos ? floImages[0] : ARCHIE_IMAGE_URL}" alt="">`;
+
+    widget.appendChild(bubble);
+    widget.appendChild(btn);
+    mount.appendChild(widget);
+
+    const textEl = bubble.querySelector('.helper-bubble-text');
+    const figureImg = btn.querySelector('.helper-figure-img');
+
+    // Scrapbook's bubble is a fixed-size photo, not a box that grows with
+    // content (see styles.css) — so a tip too long for its safe area at
+    // normal size shrinks the type instead, in steps, until it fits or
+    // hits the floor. Short tips exit the loop on the first check and stay
+    // at full size; overflow-y:auto (already set) is the rare fallback if
+    // even the floor size doesn't fit. Other pages' bubble just grows with
+    // content and don't need this.
+    const SCRAPBOOK_FONT_STEPS = [0.78, 0.72, 0.66, 0.6, 0.56];
+    function fitTextToBubble() {
+        if (page !== 'scrapbook') return;
+        for (const size of SCRAPBOOK_FONT_STEPS) {
+            textEl.style.fontSize = size + 'rem';
+            if (textEl.scrollHeight <= textEl.clientHeight + 1) return;
+        }
+    }
+
+    // imageIndex is which floImages entry belongs to THIS text, not a
+    // rolling counter — intro is always floImages[0], tip N is always
+    // floImages[(N+1) % length]. Re-showing the same line of dialogue (e.g.
+    // closing and reopening Flo, which re-says the intro) always lands on
+    // the same image that way, instead of an ever-advancing index drifting
+    // the pairing apart from whatever text is actually on screen.
+    function say(text, imageIndex) {
+        textEl.textContent = text;
+        if (hasFloPhotos) {
+            const src = floImages[imageIndex % floImages.length];
+            // Remove-reflow-readd, not just re-add — a CSS animation
+            // doesn't restart just because the class is already present,
+            // and it's already present from the previous line of dialogue
+            // by the second image onward. Reading offsetWidth forces the
+            // browser to apply the removal before the class goes back on.
+            const playPop = () => {
+                figureImg.classList.remove('flo-pop');
+                void figureImg.offsetWidth;
+                figureImg.classList.add('flo-pop');
+            };
+            // Setting .src and adding the animation class in the same
+            // tick used to fire the pop-in immediately regardless of
+            // whether the new image had actually finished loading —
+            // an <img> keeps showing its OLD pixels until the new src
+            // is ready, so the bounce played on the outgoing pose and
+            // the incoming one just snapped in afterward, unanimated,
+            // whenever the network/decode happened to finish. Waiting
+            // for the real load event lines the animation up with the
+            // pose it's actually animating in. figureImg.src reads back
+            // as an absolute URL even when set with a relative one, so
+            // resolve src the same way before comparing — otherwise a
+            // repeat of the pose already showing (e.g. cycling back to
+            // an earlier tip) never matches and waits on a load event
+            // that a same-URL reassignment isn't guaranteed to refire.
+            const absoluteSrc = new URL(src, window.location.href).href;
+            if (figureImg.src === absoluteSrc && figureImg.complete) {
+                playPop();
+            } else {
+                figureImg.addEventListener('load', playPop, { once: true });
+                figureImg.src = src;
+            }
+        }
+        fitTextToBubble();
+        bubble.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+    }
+
+    function close() {
+        bubble.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+    }
+
+    function nextTip() {
+        tipIndex = (tipIndex + 1) % script.tips.length;
+        say(script.tips[tipIndex], tipIndex + 1);
+    }
+
+    // ===== ACCESSIBLE PAGE: display options (text size / contrast / dark) =====
+    // Independent, JS-set attributes on <body> (already carrying
+    // data-mode="accessible") — styles.css keys off them to scale type,
+    // invert the palette, and thicken borders/underline links. Persisted so
+    // a visitor who needs these doesn't have to reset them every visit.
+    if (isAccessiblePage) {
+        const DISPLAY_PREFS_KEY = 'acc-display-prefs';
+        const DEFAULT_DISPLAY_PREFS = { textSize: 'medium', contrast: false, dark: false };
+
+        const loadDisplayPrefs = () => {
+            try {
+                return { ...DEFAULT_DISPLAY_PREFS, ...JSON.parse(localStorage.getItem(DISPLAY_PREFS_KEY)) };
+            } catch {
+                return { ...DEFAULT_DISPLAY_PREFS };
+            }
+        };
+
+        const saveDisplayPrefs = (prefs) => {
+            try {
+                localStorage.setItem(DISPLAY_PREFS_KEY, JSON.stringify(prefs));
+            } catch {
+                // Private browsing / storage disabled — prefs just won't persist.
+            }
+        };
+
+        const sizeButtons = Array.from(bubble.querySelectorAll('.acc-size-btn'));
+        const contrastToggle = bubble.querySelector('[data-display-toggle="contrast"]');
+        const darkToggle = bubble.querySelector('[data-display-toggle="dark"]');
+        const displayPrefs = loadDisplayPrefs();
+
+        const applyDisplayPrefs = () => {
+            document.body.setAttribute('data-text-size', displayPrefs.textSize);
+            if (displayPrefs.contrast) document.body.setAttribute('data-contrast', 'high');
+            else document.body.removeAttribute('data-contrast');
+            if (displayPrefs.dark) document.body.setAttribute('data-theme', 'dark');
+            else document.body.removeAttribute('data-theme');
+
+            sizeButtons.forEach(b => {
+                const active = b.dataset.size === displayPrefs.textSize;
+                b.classList.toggle('active', active);
+                b.setAttribute('aria-pressed', String(active));
+            });
+            contrastToggle.classList.toggle('active', displayPrefs.contrast);
+            contrastToggle.setAttribute('aria-pressed', String(displayPrefs.contrast));
+            darkToggle.classList.toggle('active', displayPrefs.dark);
+            darkToggle.setAttribute('aria-pressed', String(displayPrefs.dark));
+        };
+
+        sizeButtons.forEach(b => {
+            b.addEventListener('click', () => {
+                displayPrefs.textSize = b.dataset.size;
+                saveDisplayPrefs(displayPrefs);
+                applyDisplayPrefs();
+            });
+        });
+
+        contrastToggle.addEventListener('click', () => {
+            displayPrefs.contrast = !displayPrefs.contrast;
+            saveDisplayPrefs(displayPrefs);
+            applyDisplayPrefs();
+        });
+
+        darkToggle.addEventListener('click', () => {
+            displayPrefs.dark = !displayPrefs.dark;
+            saveDisplayPrefs(displayPrefs);
+            applyDisplayPrefs();
+        });
+
+        applyDisplayPrefs();
+    }
+
+    btn.addEventListener('click', () => {
+        if (bubble.classList.contains('open')) close();
+        else say(script.intro, 0);
+    });
+
+    bubble.addEventListener('click', (e) => {
+        const action = e.target.dataset.action;
+        if (action === 'tip') nextTip();
+        if (action === 'close') close();
+    });
+
+    // Auto-introduce on every visit to the page — skipped specifically on
+    // narrow viewports for two pages: accessible, where the search form +
+    // type/project filters already fill the whole first screen and Flo's
+    // own auto-opening bubble would land right on top of the filters
+    // instead of below them like on every other page; and landing, whose
+    // stacked circle badges run the full column and put one directly under
+    // Flo's corner too (confirmed: her bubble covers the Accessible badge's
+    // text). Neither is about the bubble's position at open time — it's a
+    // fixed corner that can end up over arbitrary content once the page
+    // scrolls or stacks — so not auto-opening is what actually avoids it
+    // for most visits; Flo is still fully available via click either way.
+    const skipAutoIntro = (page === 'accessible' || page === 'landing') && window.matchMedia('(max-width: 480px)').matches;
+    if (!skipAutoIntro) {
+        setTimeout(() => say(script.intro, 0), 1400);
+    }
+}
+
+buildHelper();

@@ -36,8 +36,8 @@ const detailPane = document.getElementById('accDetailPane');
 // which drops them out of normal flow and collapses .acc-results-panel's
 // height (this page scrolls to fit variable content, it isn't a fixed-
 // height app shell) — so this only animates the pane being revealed, via
-// the same class + forced-reflow replay pattern as .tile-in elsewhere on
-// the site.
+// the same class + forced-reflow replay pattern as .flo-pop/.tile-in
+// elsewhere on the site.
 function revealPane(el) {
     el.hidden = false;
     el.classList.remove('acc-pane-enter');
