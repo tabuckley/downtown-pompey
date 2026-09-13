@@ -3703,18 +3703,12 @@ body.landing {
         white-space: nowrap;
     }
 
-    /* The desktop one-line treatment needs real width — wrapping to 2-3
-       lines at a smaller size is the better trade-off on a 375px phone.
-       width (not just max-width) — a fixed-position flex box with no
-       explicit width shrinks to fit its content's unwrapped line first,
-       so max-width alone never actually triggers the wrap. */
-    .room-hint-window {
-        width: calc(100vw - 3.2rem);
-    }
-    .room-hint {
-        white-space: normal;
-        font-size: 0.68rem;
-    }
+    /* The readme.txt hint window doesn't earn its keep on a small screen
+       — "move to look around" means less on a touch device (drag, not
+       mouse-move, is what actually orbits the room here), and removing
+       it frees up room for the 3D room itself to breathe. Desktop keeps
+       it. */
+    .room-hint-window { display: none; }
 
     .filter-bar-bottom { padding: 0.5rem 1rem 0.6rem; }
     .tag-bar { gap: 0.3rem; }
