@@ -2599,9 +2599,10 @@ body.landing {
    clearance instead of the plain pad: .page-topbar (fixed, ~90px logo +
    padding) sits above everything site-wide, and 3rem of pad alone would
    run the window's titlebar straight under it — 8.5rem is measured
-   against the topbar's actual live rendered height (122px desktop,
-   ~129px once it wraps to two rows on mobile) plus a buffer, not
-   guessed. */
+   against the topbar's actual live rendered desktop height (122px) plus
+   a buffer, not guessed. Mobile/tablet gets its own smaller value (see
+   the max-width:1024px override further down) matching the topbar's
+   compact single-row height there instead of this desktop figure. */
 /* Plain white "desktop" behind the room window, classic Windows 98 style —
    swapped from the tiled animated glow-logo (images/dtp-glow-tile.gif) to
    try a flatter, more authentic look. */
@@ -3709,6 +3710,15 @@ body.landing {
        it frees up room for the 3D room itself to breathe. Desktop keeps
        it. */
     .room-hint-window { display: none; }
+
+    /* .room-window's desktop top:8.5rem (see its own comment above) was
+       measured against the topbar's OLD two-row mobile height (~129px)
+       — now that the topbar is a single compact row here (~79px, small
+       mode-switcher buttons next to the logo), that clearance left a
+       real gap of dead white space above the room window that nothing
+       else on the page needed. Matches the same ~6rem figure used for
+       .legal-page/.acc-main at this breakpoint. */
+    .room-window { top: 6rem; }
 
     .filter-bar-bottom { padding: 0.5rem 1rem 0.6rem; }
     .tag-bar { gap: 0.3rem; }
