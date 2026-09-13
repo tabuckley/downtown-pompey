@@ -3863,13 +3863,26 @@ body.landing {
     border-radius: var(--radius);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
     .acc-search-view {
         grid-template-columns: 1fr;
         gap: 2rem;
     }
     .acc-search-panel {
         position: static;
+    }
+    /* Viewing an item's detail used to leave the full search panel (title,
+       intro, search form, Type/Project filters) sitting above it in this
+       single-column stack — on desktop that's a useful, always-visible
+       sidebar (position:sticky, above), but stacked here it was just dead
+       weight to scroll past before reaching the thing you actually opened.
+       :has() targets the panel only while #accDetailPane is the visible
+       one; the display-options group (text size/contrast/dark) stays
+       visible throughout since those affect how the detail content itself
+       reads, unlike the search-specific controls. */
+    .acc-search-view:has(#accDetailPane:not([hidden])) .acc-search-panel > :not(.acc-filters),
+    .acc-search-view:has(#accDetailPane:not([hidden])) .acc-filters > :not(.acc-display-toolbar) {
+        display: none;
     }
 }
 
@@ -4231,8 +4244,11 @@ button.acc-size-btn--lg { font-size: 1.4rem; }
     margin-top: 0.6rem;
 }
 
-@media (max-width: 640px) {
-    .acc-main { padding: 7.5rem 5vw 4rem; }
+@media (max-width: 1024px) {
+    /* .page-topbar's compact single-row height (~79px) at this same
+       breakpoint needs far less clearance than the desktop 8rem this
+       inherits otherwise — see the matching note on .legal-page. */
+    .acc-main { padding: 6rem 5vw 4rem; }
     .acc-result-link { flex-wrap: wrap; }
 }
 
