@@ -3717,11 +3717,11 @@ body.landing {
     }
 
     .filter-bar-bottom { padding: 0.5rem 1rem 0.6rem; }
-    .tag-bar { gap: 0.22rem; }
+    .tag-bar { gap: 0.3rem; }
     .tag-pill,
     .tag-bar .room-items-toggle summary {
-        padding: 0.12rem 0.42rem;
-        font-size: 0.52rem;
+        padding: 0.22rem 0.6rem;
+        font-size: 0.62rem;
     }
 
     .lightbox.open { flex-direction: column; }

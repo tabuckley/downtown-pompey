@@ -154,7 +154,18 @@ const LIGHTBOX_CLOSE_MS = parseFloat(
 ) || 150;
 
 // ===== TAG BAR =====
-TAGS.forEach(tag => {
+// Mobile/tablet gets a random ~25% sample of TAGS instead of the full
+// list — reshuffled fresh on every load (not persisted), so a different
+// handful surfaces each visit rather than the same ~39-tag wall every
+// time. Desktop is untouched: it still wraps the full list with nothing
+// hidden. matchMedia here matches index.html/panel-glow.js's own
+// mobile/tablet breakpoint (1024px).
+const isMobileOrTablet = window.matchMedia('(max-width: 1024px)').matches;
+const tagsToShow = isMobileOrTablet
+    ? [...TAGS].sort(() => Math.random() - 0.5).slice(0, Math.round(TAGS.length * 0.25))
+    : TAGS;
+
+tagsToShow.forEach(tag => {
     const pill = document.createElement('button');
     pill.className = 'tag-pill';
     pill.textContent = tag;
