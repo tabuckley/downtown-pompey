@@ -141,8 +141,8 @@ const LOW_POLY_SLOTS = [
 // frames cleanly at a normal fov instead. Matches the site's usual mobile/
 // tablet breakpoint (see three-scene.js/index.html/panel-glow.js).
 const MOBILE_LOW_POLY_SLOTS = [
-    [0.63, 0.28, 0.83],
-    [0.63, 0.28, -0.83],
+    [0.63, 0.28, 0.45],
+    [0.63, 0.28, -0.45],
 ];
 const activeLowPolySlots = window.matchMedia('(max-width: 1024px)').matches
     ? MOBILE_LOW_POLY_SLOTS
