@@ -3601,7 +3601,7 @@ body.landing {
     .welcome-copy {
         position: absolute;
         left: 50%;
-        top: 37%;
+        top: calc(37% - 4px);
         transform: translateX(-50%);
         max-width: none;
         width: 100%;
