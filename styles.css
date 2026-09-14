@@ -3687,21 +3687,23 @@ body.landing {
         transform: none;
         gap: 0.25rem;
     }
-    /* Same height as the logo beside it (60px) rather than the 66px
-       touch-target circles used when the switcher had its own row to
-       itself — a fixed circular width at that height doesn't fit three
-       across next to the full logo on a 320px-wide phone (3×60px alone
-       is already wider than the space left over), so this switches from
-       a circle to a pill: fixed height, width driven by its own padded
-       content instead. */
+    /* Smaller than the 66px touch-target circles used when the switcher
+       had its own row to itself, but still a true circle (equal width/
+       height) — an auto-width pill here read as three differently-
+       shaped, differently-sized blobs (one per label's own character
+       count) instead of a matching set, since "Curated"/"Collected"/
+       "Credited" are three different lengths. 46px is the largest
+       uniform circle that still fits three across next to the full logo
+       on a 320px-wide phone (measured: ~149px free after the logo and
+       topbar/switcher gaps, 3×46px + 2×4px gap = 146px). white-space
+       reverts to the base rule's normal (not nowrap) so a label wraps
+       inside its circle exactly like the desktop 66px version does. */
     .page-topbar .mode-btn {
-        width: auto;
-        height: 60px;
-        padding: 0 0.4rem;
-        border-radius: 30px;
-        font-size: 0.52rem;
-        line-height: 1;
-        white-space: nowrap;
+        width: 46px;
+        height: 46px;
+        padding: 0.2rem;
+        font-size: 0.4rem;
+        line-height: 1.05;
     }
 
     /* editorial.js's normalHint() swaps in a short touch-appropriate line
