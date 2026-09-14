@@ -4268,6 +4268,21 @@ button.acc-size-btn--lg { font-size: 1.4rem; }
        inherits otherwise — see the matching note on .legal-page. */
     .acc-main { padding: 6rem 5vw 4rem; }
     .acc-result-link { flex-wrap: wrap; }
+
+    /* Filters (Type/Project/Text size/Display, stacked in one column here)
+       measured at ~541px tall on a 390px phone — more than title+intro+
+       search form combined — mostly from Project's 10 chips and the
+       group-to-group gaps. Tightened spacing and chip padding, not the
+       --acc-scale-driven font-size (that stays user-controlled via the
+       Text size buttons; shrinking the reading type itself would cut
+       against this page's whole point as the "easy to read" view). Chip
+       height still clears ~33px, short of the desktop-tuned ~42px note
+       above but consistent with the smaller touch targets already used
+       elsewhere on this site's mobile views. */
+    .acc-filters { gap: 0.9rem; margin-bottom: 0.9rem; }
+    .acc-filter-label { margin-bottom: 0.3rem; }
+    .acc-chip-row { gap: 0.3rem; }
+    .acc-chip { padding: 0.4rem 0.85rem; }
 }
 
 /* ===== REDUCED MOTION ===== */
