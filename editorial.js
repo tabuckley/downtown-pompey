@@ -11,7 +11,7 @@ const roomHint = document.getElementById('roomHint');
 const LOADING_HINT = 'Loading room…';
 function normalHint() {
     return window.matchMedia('(pointer: coarse)').matches
-        ? 'Drag to look around · tap an object to learn its story'
+        ? 'Tap an object to learn its story'
         : 'Move to look around · click an object to learn its story';
 }
 
