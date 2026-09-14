@@ -3792,7 +3792,34 @@ body.landing {
     }
     /* A further shrink from the (already-compact) 190px default — safety
        margin for the narrowest phones' own smaller card width. */
-    .team-stack { width: 150px; height: 197px; }
+    .team-stack { width: 130px; height: 170px; }
+    /* .pr-team.pr-panel's own width override (94vw, unchanged from
+       desktop) plus .team-layout's fixed 2.6rem gap left almost nothing
+       for the bios column on the narrowest phones (verified: ~32px at
+       320px wide, not enough for a wrapped name), even after the
+       team-stack shrink above and the general .pr-panel widening further
+       up this block. Widened further and tightened the gap specifically
+       here. */
+    .pr-team.pr-panel { width: min(96vw, 620px); }
+    .team-layout { gap: 1rem; }
+
+    /* The base rule keeps every card perfectly square (width and height
+       both min(62vh, 84vw, 620px)) — deliberately, per its own comment,
+       to stay consistent across aspect ratios. But a square sized by 84vw
+       on a portrait phone is short (≈270-330px), and fitCardText()'s
+       shrink-to-fit (process.js, bottoms out at 0.58x) genuinely can't
+       compress a chapter's worth of paragraph text into that — measured
+       several .pr-chapter cards still overflowing vertically by 200px+
+       even at minimum scale, meaning real paragraph text was being
+       silently clipped (overflow:hidden hides it, it doesn't just spill
+       over the edge) rather than shown. Width and height are decoupled
+       here instead of forced equal, since what a chapter actually needs
+       is more vertical room, not a wider square — verified this
+       eliminates the overflow on every card at 320-430px. */
+    .pr-panel {
+        width: min(92vw, 620px);
+        height: min(85vh, 620px);
+    }
 }
 
 /* Its own breakpoint (1024px), not folded into the 768px block above —
