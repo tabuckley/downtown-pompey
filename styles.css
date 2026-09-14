@@ -3704,12 +3704,15 @@ body.landing {
         white-space: nowrap;
     }
 
-    /* The readme.txt hint window doesn't earn its keep on a small screen
-       — "move to look around" means less on a touch device (drag, not
-       mouse-move, is what actually orbits the room here), and removing
-       it frees up room for the 3D room itself to breathe. Desktop keeps
-       it. */
-    .room-hint-window { display: none; }
+    /* Desktop's one-line treatment (white-space:nowrap, no width cap)
+       needs real width — editorial.js's normalHint() already swaps in a
+       shorter touch-appropriate line here ("Drag to look around · tap an
+       object...", via a pointer:coarse check, not this width breakpoint)
+       but even that wraps to 2 lines on a narrow phone, so this still
+       needs its own wrap + width cap rather than running off the right
+       edge of the screen. */
+    .room-hint-window { width: calc(100vw - 3.2rem); }
+    .room-hint { white-space: normal; font-size: 0.7rem; }
 
     /* .room-window's desktop top:8.5rem (see its own comment above) was
        measured against the topbar's OLD two-row mobile height (~129px)
